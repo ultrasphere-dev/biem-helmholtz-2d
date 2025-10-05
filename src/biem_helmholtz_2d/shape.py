@@ -19,6 +19,10 @@ class Shape(metaclass=ABCMeta):
     def ddx(self, t: Tensor) -> Tensor:
         pass
 
+    @abstractmethod
+    def __eq__(self, other: object) -> bool:
+        pass
+
     def jacobian(self, t: Tensor) -> Tensor:
         return xp.sqrt(xp.sum(self.dx(t) ** 2, dim=VECTOR_AXIS))
 

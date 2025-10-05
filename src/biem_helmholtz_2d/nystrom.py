@@ -1,9 +1,15 @@
 from typing import Any, Callable, Protocol
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from .quadrature import kussmaul_martensen_kress_quadrature, trapezoidal_quadrature, garrick_wittich_quadrature
-
+import attrs
 
 class KernelResult(Protocol):
+    analytic: Array
+    singular_log: Array
+    singular_cauchy: Array
+
+@attrs.frozen(kw_only=True)
+class KernelResultImpl(KernelResult):
     analytic: Array
     singular_log: Array
     singular_cauchy: Array
