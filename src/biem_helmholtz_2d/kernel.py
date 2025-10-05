@@ -1,157 +1,55 @@
-from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
-from typing import Literal
-
-import attrs
-import xp
-import xp.nn as nn
-from xp.special import bessel_j0, bessel_j1, bessel_y0, bessel_y1
-
+from scipy.special import hankel1 
 from .shape import Shape
-
-
-def _hankel(order: Literal[0, 1], x: xp.Tensor, kind: Literal[1, 2]) -> xp.Tensor:
-    bessel_kind_1 = bessel_j0 if order == 0 else bessel_j1
-    bessel_kind_2 = bessel_y0 if order == 0 else bessel_y1
-    mp = 1 if kind == 1 else -1
-    return bessel_kind_1(x) + mp * 1j * bessel_kind_2(x)
-
-
-@attrs.frozen(kw_only=True)
-class Kernel(nn.Module, metaclass=ABCMeta):
-    k: float
-    shape: Shape
-
-    def __attrs_post_init__(self) -> None:
-        super().__init__()
-
-    @abstractmethod
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        pass
-
-
-def _is_diagonal(t: xp.Tensor, tau: xp.Tensor, eps: float = 1e-6) -> xp.Tensor:
-    absFmod = xp.abs(xp.fmod(t - tau, 2 * xp.pi))
-    # return absFmod < eps or absFmod > 2 * xp.pi - eps ambiguous
+from array_api._2024_12 import Array, ArrayNamespaceFull
+from .nystrom import Kernel
+from array_api_compat import array_namespace
+def _is_diagonal(x: Array, y: Array, eps: float = 1e-6) -> Array:
+    xp = array_namespace(x, y)
+    absFmod = xp.abs(xp.fmod(x - y, 2 * xp.pi))
     return (absFmod < eps) | (absFmod > 2 * xp.pi - eps)
 
-
-@attrs.frozen(kw_only=True)
-class KernelDiagonal(Kernel):
-    kernel_diagonal: Kernel
-    kernel_nondiagonal: Kernel
-
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        # return xp.where(
-        #     # _is_diagonal(t, tau),
-        #     xp.eye(len(t), device=t.device, dtype=t.dtype).bool(),
-        #     self.kernel_diagonal(t, tau),
-        #     self.kernel_nondiagonal(t, tau),
-        # )
-        eye = xp.eye(len(t), device=t.device, dtype=t.dtype)
-        return eye * self.kernel_diagonal(t, tau) + (1 - eye) * xp.nan_to_num(
-            self.kernel_nondiagonal(t, tau), nan=0.0, posinf=0.0, neginf=0.0
-        )
-
-
-class L(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return (
+def double_layer(k: float, shapex: Shape, shapey: Shape) -> Kernel:
+    def inner(x: Array, y: Array, /) -> Array:
+        xp = array_namespace(x, y)
+        r = xp.linalg.vector_norm(shapex(x) - shapey(y), axis=-1)
+        n_dot_diff =( shapey.dx(y)[..., 1]
+                * (shapey.x(y) - shapex.x(x))[..., 0]
+                - shapey.dx(y)[..., 0]
+                * (shapey.x(y) - shapex.x(x))[..., 1])
+        L = (
             1j
-            * self.k
+            * k
             / 2.0
-            * (
-                self.shape.dx(tau)[..., 1]
-                * (self.shape.x(tau) - self.shape.x(t))[..., 0]
-                - self.shape.dx(tau)[..., 0]
-                * (self.shape.x(tau) - self.shape.x(t))[..., 1]
-            )
-            * _hankel(1, self.k * self.shape.r(t, tau), 1)
-            / self.shape.r(t, tau)
+            * n_dot_diff
+            * hankel1(1, k * r)
+            / r
         )
+        L1_nondiag = k / (2.0 * xp.pi) * n_dot_diff * bessel_j1(k * r) / r
+        L2_diag = (
+            shapex.dx(x)[..., 0] * shapex.ddx(x)[..., 1]
+            - shapex.dx(x)[..., 1] * shapex.ddx(x)[..., 0]
+        ) / (2.0 * xp.pi * shapex.jacobian(x) ** 2)
 
-
-class M(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return (
-            1j
-            / 2.0
-            * _hankel(0, self.k * self.shape.r(t, tau), 1)
-            * self.shape.jacobian(tau)
-        )
-
-
-class L1(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return xp.where(
-            _is_diagonal(t, tau),
-            0,
-            (
-                self.k
-                / (2.0 * xp.pi)
-                * (
-                    self.shape.dx(tau)[..., 1]
-                    * (self.shape.x(t) - self.shape.x(tau))[..., 0]
-                    - self.shape.dx(tau)[..., 0]
-                    * (self.shape.x(t) - self.shape.x(tau))[..., 1]
-                )
-                * bessel_j1(self.k * self.shape.r(t, tau))
-                / self.shape.r(t, tau)
-            ),
-        )
-
-
-class M1(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return (
-            -1
-            / (2.0 * xp.pi)
-            * bessel_j0(self.k * self.shape.r(t, tau))
-            * self.shape.jacobian(tau)
-        )
-
-
-@attrs.frozen(kw_only=True)
-class LM2(Kernel):
-    kernel_original: Kernel
-    kernel1: Kernel
-
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return self.kernel_original(t, tau) - self.kernel1(t, tau) * xp.log(
-            4 * xp.sin((t - tau) / 2.0) ** 2
-        )
-
-
-class L2Diagonal(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return (
-            self.shape.dx(t)[..., 0] * self.shape.ddx(t)[..., 1]
-            - self.shape.dx(t)[..., 1] * self.shape.ddx(t)[..., 0]
-        ) / (2.0 * xp.pi * self.shape.jacobian(t) ** 2)
-
-
-class M2Diagonal(Kernel):
-    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
-        return self.shape.jacobian(t) * (
+def single_layer(k: float, shapex: Shape, shapey: Shape) -> Kernel:
+    def inner(x: Array, y: Array, /) -> Array:
+        xp = array_namespace(x, y)
+        r = xp.linalg.vector_norm(shapex.x(x) - shapey.x(y), axis=-1)
+        M = 1j / 2.0 * hankel1(0, k * r) * shapey.jacobian(y)
+        M1_nondiag = -1 / (2.0 * xp.pi) * bessel_j0(k * r) * shapey.jacobian(y)
+        M2_diag = shapex.jacobian(x) * (
             1j / 2.0
             - 0.5772156649015329 / xp.pi
             - 1.0
             / (2.0 * xp.pi)
-            * xp.log((self.k * self.shape.jacobian(t)) ** 2 / 4.0)
+            * xp.log((k * shapex.jacobian(x)) ** 2 / 4.0)
         )
 
 
-def get_final_kernels(k: float, shape: Shape) -> tuple[Kernel, Kernel, Kernel, Kernel]:
-    l1 = L1(k=k, shape=shape)
-    lo = L(k=k, shape=shape)
-    l2nd = LM2(k=k, shape=shape, kernel_original=lo, kernel1=l1)
-    l2d = L2Diagonal(k=k, shape=shape)
-    l2 = KernelDiagonal(k=k, shape=shape, kernel_nondiagonal=l2nd, kernel_diagonal=l2d)
+def get_kernel_2(kernel_original: Array, kernel1: Array, x: Array, y: Array) -> Array:
+    xp = array_namespace(x, y)
+    return kernel_original - kernel1 * xp.log(
+            4 * xp.sin((x - y) / 2.0) ** 2
+        )
 
-    m1 = M1(k=k, shape=shape)
-    mo = M(k=k, shape=shape)
-    m2nd = LM2(k=k, shape=shape, kernel_original=mo, kernel1=m1)
-    m2d = M2Diagonal(k=k, shape=shape)
-    m2 = KernelDiagonal(k=k, shape=shape, kernel_nondiagonal=m2nd, kernel_diagonal=m2d)
-    return m1, m2, l1, l2
+

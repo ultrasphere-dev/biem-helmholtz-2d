@@ -29,6 +29,7 @@ dependencies = [
   "array-api-compat>=1.11.2",
   "array-api-extra>=0.1.1",
   "rich>=10",
+  "scipy>=1.13.1",
   "typer>=0.15,<1",
   "types-array-api>=1.1.4",
 ]

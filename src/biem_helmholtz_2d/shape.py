@@ -19,9 +19,6 @@ class Shape(metaclass=ABCMeta):
     def ddx(self, t: Tensor) -> Tensor:
         pass
 
-    def r(self, t: Tensor, tau: Tensor) -> Tensor:
-        return xp.sqrt(xp.sum((self.x(t) - self.x(tau)) ** 2, dim=VECTOR_AXIS))
-
     def jacobian(self, t: Tensor) -> Tensor:
         return xp.sqrt(xp.sum(self.dx(t) ** 2, dim=VECTOR_AXIS))
 

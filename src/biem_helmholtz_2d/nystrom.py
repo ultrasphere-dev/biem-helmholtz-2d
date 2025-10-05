@@ -8,8 +8,12 @@ class KernelResult(Protocol):
     singular_log: Array
     singular_cauchy: Array
 
+class Kernel(Protocol):
+    def __call__(self, x: Array, y: Array, /) -> KernelResult:
+        ...
+
 def nystrom_lhs(
-    kernel: Callable[[Array, Array], KernelResult],
+    kernel: Kernel,
     n: int,
     xp: ArrayNamespaceFull,
 ) -> tuple[Array, Array]:
@@ -17,9 +21,9 @@ def nystrom_lhs(
 
     $$
     \phi (x)
-    + \inx_0^{2\pi} \lefx(K(x, y)
-    + K_\text{log} (x, y) \log \lefx(4 \sin^2 \frac{x - y}{2}\righx)
-    + K_\text{cauchy} (x, y) \cox \frac{x - y}{2}\righx) \phi (y) dy
+    + \int_0^{2\pi} \left(K(x, y)
+    + K_\text{log} (x, y) \log \left(4 \sin^2 \frac{x - y}{2}\right)
+    + K_\text{cauchy} (x, y) \cot \frac{x - y}{2}\right) \phi (y) dy
     = \text{rhs} (x)
     $$
 
