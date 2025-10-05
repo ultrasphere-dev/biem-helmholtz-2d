@@ -8,13 +8,12 @@ class KernelResult(Protocol):
     singular_log: Array
     singular_cauchy: Array
 
-def nystrom(
+def nystrom_lhs(
     kernel: Callable[[Array, Array], KernelResult],
-    rhs: Callable[[Array], Array],
     n: int,
     xp: ArrayNamespaceFull,
-) -> Array:
-    r"""Solves integral equation
+) -> tuple[Array, Array]:
+    r"""Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
 
     $$
     \phi (x)
@@ -28,13 +27,16 @@ def nystrom(
     ----------
     kernel : Kernel
         Kernel function $K (x, y)$, $K_\text{log} (x, y)$, and $K_\text{cauchy} (x, y)$
-    rhs : Array
-        Right-hand side function $\text{rhs} (t)$
+    n : int
+        Number of discretization points / 2
+    xp : ArrayNamespaceFull
+        The array namespace.
 
     Returns
     -------
-    Array
-        solution evaluated at $t_j$ of shape (2n,).
+    tuple[Array, Array]
+        The roots $x_j$ of shape (2n,)
+        and the left-hand side matrix $A$ of shape (2n, 2n).
     """
     x, w = trapezoidal_quadrature(n, xp=xp)
     y = x[None, :]
@@ -49,6 +51,4 @@ def nystrom(
         + k.singular_log * w_log
         + k.singular_cauchy * w_cauchy
     )
-    b = rhs(x[:, 0])
-    phi = xp.linalg.solve(A, b)
-    return phi
+    return x[:, 0], A
