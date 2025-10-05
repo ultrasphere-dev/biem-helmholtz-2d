@@ -1,14 +1,15 @@
 from typing import Any, Callable, Protocol
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from .quadrature import kussmaul_martensen_kress_quadrature, trapezoidal_quadrature, garrick_wittich_quadrature
-class Kernel(Protocol):
-    def __call__(self, x: Array, y: Array, /) -> Array:
-        ...
+
+
+class KernelResult(Protocol):
+    analytic: Array
+    singular_log: Array
+    singular_cauchy: Array
 
 def nystrom(
-    kernel: Kernel,
-    kernel_log: Kernel,
-    kernel_cauchy: Kernel,
+    kernel: Callable[[Array, Array], KernelResult],
     rhs: Callable[[Array], Array],
     n: int,
     xp: ArrayNamespaceFull,
@@ -18,19 +19,15 @@ def nystrom(
     $$
     \phi (x)
     + \inx_0^{2\pi} \lefx(K(x, y)
-    + K_\xexx{log} (x, y) \log \lefx(4 \sin^2 \frac{x - y}{2}\righx)
-    + K_\xexx{cauchy} (x, y) \cox \frac{x - y}{2}\righx) \phi (y) dy
-    = \xexx{rhs} (x)
+    + K_\text{log} (x, y) \log \lefx(4 \sin^2 \frac{x - y}{2}\righx)
+    + K_\text{cauchy} (x, y) \cox \frac{x - y}{2}\righx) \phi (y) dy
+    = \text{rhs} (x)
     $$
 
     Parameters
     ----------
     kernel : Kernel
-        Analytic kernel function $K(t, \tau)$
-    kernel_log : Kernel
-        Analytic kernel function $K_\text{log} (t, \tau)$
-    kernel_cauchy : Kernel
-        Analytic kernel function $K_\text{cauchy} (t, \tau)$
+        Kernel function $K (x, y)$, $K_\text{log} (x, y)$, and $K_\text{cauchy} (x, y)$
     rhs : Array
         Right-hand side function $\text{rhs} (t)$
 
@@ -40,6 +37,18 @@ def nystrom(
         solution evaluated at $t_j$ of shape (2n,).
     """
     x, w = trapezoidal_quadrature(n, xp=xp)
+    y = x[None, :]
     w = w[None, :]
     _, w_log = kussmaul_martensen_kress_quadrature(n, xp=xp, x=x)
     _, w_cauchy = garrick_wittich_quadrature(n, xp=xp, x=x)
+    x = x[:, None]
+    # x: (2n, 1), y: (1, 2n), w: (1, 2n), w_log: (2n, 2n), w_cauchy: (2n, 2n)
+    k = kernel(x, y)
+    A = xp.eye(2 * n, dtype=x.dtype, device=x.device) + (
+        k.analytic * w
+        + k.singular_log * w_log
+        + k.singular_cauchy * w_cauchy
+    )
+    b = rhs(x[:, 0])
+    phi = xp.linalg.solve(A, b)
+    return phi
