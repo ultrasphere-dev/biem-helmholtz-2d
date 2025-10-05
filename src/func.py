@@ -1,94 +1,72 @@
-from abc import ABCMeta, abstractmethod
+from array_api_compat import array_namespace
+from array_api._2024_12 import Array, ArrayNamespaceFull
 
-import attrs
-import torch
-import torch.nn as nn
-from torchsphharm.eigenfunction import shift_nth_row_n_steps
+def kussmaul_martensen_kress_quadrature(n: int, /, *, xp: ArrayNamespaceFull, t: Array | None = None) -> tuple[Array, Array]:
+    r"""Kussmaul-Martensen (Kress) quadrature.
 
-from .shape import VECTOR_AXIS, Shape
+    Returns $R_j (t)$$, where
 
+    $$
+    \int_0^{2\pi} \log \left(4 \sin^2 \frac{t - \tau}{2}\right) f(\tau) d\tau
+    \approx \sum_{j=0}^{2n-1} R_j (t) f(t_j)
+    $$
 
-def Lk(t: torch.Tensor, tk: torch.Tensor, n: float) -> torch.Tensor:
-    return torch.where(
-        t == tk, 1, torch.sin(n * (t - tk)) / torch.tan((t - tk) / 2) / (2 * n)
-    )
+    Parameters
+    ----------
+    n : int
+        Number of discretization points / 2
+    t : Array
+        The target points of shape (...,).
+        If None, it will be set to 0.
 
+    Returns
+    -------
+    Array
+        The roots $t_k$ of shape (2n,).
+        and weights $R_j (t)$ of shape (..., 2n).
+    """
+    if t is None:
+        t_ = xp.array(0.0)
+    else:
+        t_ = t
+    x = xp.pi * xp.arange(2 * n) / n
+    m = xp.arange(1, n)
+    w = - 2 * xp.pi / n * xp.sum(
+        1 / m * xp.cos(m * (t_[..., None, None] - x[:, None])), axis=-1
+    ) - xp.pi / n**2 * xp.cos(n * (t_[..., None] - x))
+    return x, w
 
-def RWeight(t: torch.Tensor, tk: torch.Tensor, n: int) -> torch.Tensor:
-    m = (
-        torch.arange(n - 1, dtype=t.dtype, device=t.device).reshape(
-            [1] * int(t.ndim) + [-1]
-        )
-        + 1
-    )
-    res = -2 * torch.pi / n * torch.sum(
-        1 / m * torch.cos(m * (t).unsqueeze(-1)), dim=-1
-    ) - torch.pi / n**2 * torch.cos(n * (t))
-    res = res.repeat(1, res.shape[0])
-    res = shift_nth_row_n_steps(res, dim_row=1, dim_shift=0, cut_padding=False)
-    # add one more row to the end of the matrix
-    res = torch.cat((res, torch.zeros_like(res[0]).unsqueeze(0)), dim=0)
-    res = res[: res.shape[0] // 2] + res[res.shape[0] // 2 :]
-    return res
+def garrick_wittich_quadrature(n: int, /, *, xp: ArrayNamespaceFull, t: Array | None = None) -> tuple[Array, Array]:
+    r"""Garrick-Wittich quadrature.
 
+    Returns $T_j (t)$$, where
 
-@attrs.frozen(kw_only=True)
-class GFunc(nn.Module, metaclass=ABCMeta):
-    k: float
+    $$
+    \int_0^{2\pi} \cot \frac{t - \tau}{2} f(\tau) d\tau
+    \approx \sum_{j=0}^{2n-1} R_j (t) f(t_j)
+    $$
 
-    def __attrs_post_init__(self) -> None:
-        super().__init__()
+    Parameters
+    ----------
+    n : int
+        Number of discretization points / 2
+    t : Array
+        The target points of shape (...,).
+        If None, it will be set to 0.
 
-    @abstractmethod
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        pass
-
-
-@attrs.frozen(kw_only=True)
-class PlaneWaveGFunc(GFunc):
-    direction: torch.Tensor
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        u_in = torch.exp(
-            torch.tensor(1j)
-            * self.k
-            * torch.einsum("...i,i->...", x, self.direction.to(x))
-        )
-        return -u_in
-
-
-@attrs.frozen(kw_only=True)
-class UInf(nn.Module):
-    k: float
-    eta: float
-    shape: Shape
-
-    def forward(
-        self, *, t: torch.Tensor, phi: torch.Tensor, direction: torch.Tensor
-    ) -> torch.Tensor:
-        gamma = torch.exp(torch.tensor(-1j * torch.pi / 4)) / torch.sqrt(
-            torch.tensor(8 * torch.pi * self.k)
-        )
-        n = t.shape[-1] // 2
-        xhat = direction / torch.linalg.vector_norm(
-            direction, dim=VECTOR_AXIS, keepdim=True
-        )
-        y = self.shape.x(t)
-        dy = self.shape.dx(t)
-        ny = torch.stack([dy[..., 1], -dy[..., 0]], dim=VECTOR_AXIS)
-        ny = ny / torch.linalg.vector_norm(ny, dim=VECTOR_AXIS, keepdim=True)
-        inner = (
-            (self.k * torch.einsum("...tv,...v->...t", ny, xhat) + self.eta)
-            * torch.exp(-1j * self.k * torch.einsum("...v,...tv->...t", xhat, y))
-            * self.shape.jacobian(t)
-            * phi
-        )
-        return (
-            gamma
-            * torch.pi
-            / n
-            * torch.sum(
-                inner,
-                dim=-1,
-            )
-        )
+    Returns
+    -------
+    Array
+        The roots $t_k$ of shape (2n,).
+        and weights $R_j (t)$ of shape (..., 2n).
+    """
+    if t is None:
+        t_ = xp.array(0.0)
+    else:
+        t_ = t
+    x = xp.pi * xp.arange(2 * n) / n
+    m = xp.arange(1, n)
+    w = - 1 / n * xp.sum(
+        m * xp.cos(m * (t_[..., None, None] - x[:, None])), axis=-1
+    ) - 1/ 2 * xp.cos(n * (t_[..., None] - x))
+    return x, w

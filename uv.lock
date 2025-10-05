@@ -2,7 +2,8 @@ version = 1
 revision = 2
 requires-python = ">=3.9"
 resolution-markers = [
-    "python_full_version >= '3.11'",
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
     "python_full_version == '3.10.*'",
     "python_full_version < '3.10'",
 ]
@@ -43,6 +44,61 @@ wheels = [
 ]
 
 [[package]]
+name = "array-api-compat"
+version = "1.11.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/1e/d04312a19a67744298b7546885149488b8afbb965dfe693aa4964bb60586/array_api_compat-1.11.2.tar.gz", hash = "sha256:a3b7f7b6af18f4c42e79423b1b2479798998b6a74355069d77a01a5282755b5d", size = 50776, upload-time = "2025-03-20T13:11:55.095Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/d8/3388c7da49f522e51ab2f919797db28782216cadc9ecc9976160302cfcd6/array_api_compat-1.11.2-py3-none-any.whl", hash = "sha256:b1d0059714a4153b3ae37c989e47b07418f727be5b22908dd3cf9d19bdc2c547", size = 53149, upload-time = "2025-03-20T13:11:53.815Z" },
+]
+
+[[package]]
+name = "array-api-compat"
+version = "1.12.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8d/bd/9fa5c7c5621698d5632cc852a79fbbdc28024462c9396698e5fdcb395f37/array_api_compat-1.12.0.tar.gz", hash = "sha256:585bc615f650de53ac24b7c012baecfcdd810f50df3573be47e6dd9fa20df974", size = 99883, upload-time = "2025-05-16T08:49:59.897Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/b1/0542e0cab6f49f151a2d7a42400f84f706fc0b64e85dc1f56708b2e9fd37/array_api_compat-1.12.0-py3-none-any.whl", hash = "sha256:a0b4795b6944a9507fde54679f9350e2ad2b1e2acf4a2408a098cdc27f890a8b", size = 58156, upload-time = "2025-05-16T08:49:58.129Z" },
+]
+
+[[package]]
+name = "array-api-extra"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/85/a5/92a02664bde4e3832871afeff462c79dd14bbe61b635aea1779a2040beb4/array_api_extra-0.1.1.tar.gz", hash = "sha256:91b685fc90b6c5364760053127b9ee3d256caeb3563ca327c6fc98123fd5c973", size = 43835, upload-time = "2024-09-24T20:39:02.041Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/cf/41838a2aae38e03d53d74817e4eb2f8b2d4e1e21f93e39fb4915cbd42e0d/array_api_extra-0.1.1-py3-none-any.whl", hash = "sha256:8e6c76ad941782c4ed2c7624d4457bc457813f9ae6c5d2abd2b74d6fe4bccb84", size = 4768, upload-time = "2024-09-24T20:39:00.765Z" },
+]
+
+[[package]]
+name = "array-api-extra"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+]
+dependencies = [
+    { name = "array-api-compat", version = "1.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/be/387d596e0ed6d191988d7b61bb0e252bb8023965485218a33bd1a8ccc72a/array_api_extra-0.9.0.tar.gz", hash = "sha256:2d49e38394f5a96caef17b80964d228636e6fdf1dada33697ab8ec3f5364eb77", size = 81579, upload-time = "2025-09-09T11:02:40.65Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/17/8a7503c9dc3f8cc2868c632291e5d224822b05ae62f1279c529c459368d2/array_api_extra-0.9.0-py3-none-any.whl", hash = "sha256:36b34e29380b678007f151511be950cb2ea199606fe4a7ad466efc5044ea9e44", size = 48234, upload-time = "2025-09-09T11:02:39.069Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -69,8 +125,14 @@ name = "biem-helmholtz-2d"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "array-api-compat", version = "1.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "array-api-compat", version = "1.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "array-api-extra", version = "0.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "array-api-extra", version = "0.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "rich" },
     { name = "typer" },
+    { name = "types-array-api", version = "1.1.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "types-array-api", version = "1.1.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 
 [package.dev-dependencies]
@@ -87,8 +149,11 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "array-api-compat", specifier = ">=1.11.2" },
+    { name = "array-api-extra", specifier = ">=0.1.1" },
     { name = "rich", specifier = ">=10" },
     { name = "typer", specifier = ">=0.15,<1" },
+    { name = "types-array-api", specifier = ">=1.1.4" },
 ]
 
 [package.metadata.requires-dev]
@@ -207,7 +272,8 @@ name = "click"
 version = "8.3.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.11'",
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
     "python_full_version == '3.10.*'",
 ]
 dependencies = [
@@ -956,6 +1022,38 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/21/ca/950278884e2ca20547ff3eb109478c6baf6b8cf219318e6bc4f666fad8e8/typer-0.19.2.tar.gz", hash = "sha256:9ad824308ded0ad06cc716434705f691d4ee0bfd0fb081839d2e426860e7fdca", size = 104755, upload-time = "2025-09-23T09:47:48.256Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/00/22/35617eee79080a5d071d0f14ad698d325ee6b3bf824fc0467c03b30e7fa8/typer-0.19.2-py3-none-any.whl", hash = "sha256:755e7e19670ffad8283db353267cb81ef252f595aa6834a0d1ca9312d9326cb9", size = 46748, upload-time = "2025-09-23T09:47:46.777Z" },
+]
+
+[[package]]
+name = "types-array-api"
+version = "1.1.4"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/69/6c/082e7afbbbdaae72df4ce69a0348f48a9a59b8989a4c868724f6aa61cfb6/types_array_api-1.1.4.tar.gz", hash = "sha256:b9b564d1f96f9e229b146d045c7851f21e55c05a221c060aa325d3076eedbcb3", size = 371481, upload-time = "2025-06-29T13:30:04.768Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ac/e6/396c090049639f930a2754be08b6658ff8d8bb5602337711662ede6bb80a/types_array_api-1.1.4-py3-none-any.whl", hash = "sha256:efc59fd9f6ce1c68233bcb09d7c16fce7a9a2e0ba44d4bac0f6e22b29099a246", size = 374498, upload-time = "2025-06-29T13:30:03.297Z" },
+]
+
+[[package]]
+name = "types-array-api"
+version = "1.1.5"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+]
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d7/4c/fbe49eeac5a788b8cbd99e345c3f1af0be9c315d5ce27995d56571f694ef/types_array_api-1.1.5.tar.gz", hash = "sha256:cb3f8aff3068070e33d00506dcae15b5fd39aa91d89de64cdd5f4896bf9e1e60", size = 371466, upload-time = "2025-08-20T02:17:55.81Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/28/fd379b60408257a703ede09e576de8e97d994d04e8af08b7242aa834a0e5/types_array_api-1.1.5-py3-none-any.whl", hash = "sha256:08cff80a5e5acd57e0a24321d933e640ae7be78bf7c31d803d0eb3329d9a90c1", size = 374479, upload-time = "2025-08-20T02:17:53.403Z" },
 ]
 
 [[package]]

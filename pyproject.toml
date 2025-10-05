@@ -26,8 +26,11 @@ classifiers = [
 ]
 
 dependencies = [
+  "array-api-compat>=1.11.2",
+  "array-api-extra>=0.1.1",
   "rich>=10",
   "typer>=0.15,<1",
+  "types-array-api>=1.1.4",
 ]
 urls."Bug Tracker" = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/issues"
 urls.Changelog = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/blob/main/CHANGELOG.md"

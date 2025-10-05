@@ -4,14 +4,14 @@ from abc import ABCMeta, abstractmethod
 from typing import Literal
 
 import attrs
-import torch
-import torch.nn as nn
-from torch.special import bessel_j0, bessel_j1, bessel_y0, bessel_y1
+import xp
+import xp.nn as nn
+from xp.special import bessel_j0, bessel_j1, bessel_y0, bessel_y1
 
 from .shape import Shape
 
 
-def _hankel(order: Literal[0, 1], x: torch.Tensor, kind: Literal[1, 2]) -> torch.Tensor:
+def _hankel(order: Literal[0, 1], x: xp.Tensor, kind: Literal[1, 2]) -> xp.Tensor:
     bessel_kind_1 = bessel_j0 if order == 0 else bessel_j1
     bessel_kind_2 = bessel_y0 if order == 0 else bessel_y1
     mp = 1 if kind == 1 else -1
@@ -27,14 +27,14 @@ class Kernel(nn.Module, metaclass=ABCMeta):
         super().__init__()
 
     @abstractmethod
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         pass
 
 
-def _is_diagonal(t: torch.Tensor, tau: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
-    absFmod = torch.abs(torch.fmod(t - tau, 2 * torch.pi))
-    # return absFmod < eps or absFmod > 2 * torch.pi - eps ambiguous
-    return (absFmod < eps) | (absFmod > 2 * torch.pi - eps)
+def _is_diagonal(t: xp.Tensor, tau: xp.Tensor, eps: float = 1e-6) -> xp.Tensor:
+    absFmod = xp.abs(xp.fmod(t - tau, 2 * xp.pi))
+    # return absFmod < eps or absFmod > 2 * xp.pi - eps ambiguous
+    return (absFmod < eps) | (absFmod > 2 * xp.pi - eps)
 
 
 @attrs.frozen(kw_only=True)
@@ -42,21 +42,21 @@ class KernelDiagonal(Kernel):
     kernel_diagonal: Kernel
     kernel_nondiagonal: Kernel
 
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
-        # return torch.where(
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
+        # return xp.where(
         #     # _is_diagonal(t, tau),
-        #     torch.eye(len(t), device=t.device, dtype=t.dtype).bool(),
+        #     xp.eye(len(t), device=t.device, dtype=t.dtype).bool(),
         #     self.kernel_diagonal(t, tau),
         #     self.kernel_nondiagonal(t, tau),
         # )
-        eye = torch.eye(len(t), device=t.device, dtype=t.dtype)
-        return eye * self.kernel_diagonal(t, tau) + (1 - eye) * torch.nan_to_num(
+        eye = xp.eye(len(t), device=t.device, dtype=t.dtype)
+        return eye * self.kernel_diagonal(t, tau) + (1 - eye) * xp.nan_to_num(
             self.kernel_nondiagonal(t, tau), nan=0.0, posinf=0.0, neginf=0.0
         )
 
 
 class L(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         return (
             1j
             * self.k
@@ -73,7 +73,7 @@ class L(Kernel):
 
 
 class M(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         return (
             1j
             / 2.0
@@ -83,13 +83,13 @@ class M(Kernel):
 
 
 class L1(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
-        return torch.where(
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
+        return xp.where(
             _is_diagonal(t, tau),
             0,
             (
                 self.k
-                / (2.0 * torch.pi)
+                / (2.0 * xp.pi)
                 * (
                     self.shape.dx(tau)[..., 1]
                     * (self.shape.x(t) - self.shape.x(tau))[..., 0]
@@ -103,10 +103,10 @@ class L1(Kernel):
 
 
 class M1(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         return (
             -1
-            / (2.0 * torch.pi)
+            / (2.0 * xp.pi)
             * bessel_j0(self.k * self.shape.r(t, tau))
             * self.shape.jacobian(tau)
         )
@@ -117,28 +117,28 @@ class LM2(Kernel):
     kernel_original: Kernel
     kernel1: Kernel
 
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
-        return self.kernel_original(t, tau) - self.kernel1(t, tau) * torch.log(
-            4 * torch.sin((t - tau) / 2.0) ** 2
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
+        return self.kernel_original(t, tau) - self.kernel1(t, tau) * xp.log(
+            4 * xp.sin((t - tau) / 2.0) ** 2
         )
 
 
 class L2Diagonal(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         return (
             self.shape.dx(t)[..., 0] * self.shape.ddx(t)[..., 1]
             - self.shape.dx(t)[..., 1] * self.shape.ddx(t)[..., 0]
-        ) / (2.0 * torch.pi * self.shape.jacobian(t) ** 2)
+        ) / (2.0 * xp.pi * self.shape.jacobian(t) ** 2)
 
 
 class M2Diagonal(Kernel):
-    def forward(self, t: torch.Tensor, tau: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor, tau: xp.Tensor) -> xp.Tensor:
         return self.shape.jacobian(t) * (
             1j / 2.0
-            - 0.5772156649015329 / torch.pi
+            - 0.5772156649015329 / xp.pi
             - 1.0
-            / (2.0 * torch.pi)
-            * torch.log((self.k * self.shape.jacobian(t)) ** 2 / 4.0)
+            / (2.0 * xp.pi)
+            * xp.log((self.k * self.shape.jacobian(t)) ** 2 / 4.0)
         )
 
 

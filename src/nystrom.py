@@ -2,9 +2,9 @@ from logging import getLogger
 
 import attrs
 import attrs.setters
-import torch
-import torch.linalg
-import torch.nn as nn
+import xp
+import xp.linalg
+import xp.nn as nn
 from attrs import field
 from cm_time import timer
 
@@ -30,7 +30,7 @@ class Nystrom(nn.Module):
         super().__init__()
         self.m1, self.m2, self.l1, self.l2 = get_final_kernels(self.k, self.shape)
 
-    def A(self, t: torch.Tensor) -> torch.Tensor:
+    def A(self, t: xp.Tensor) -> xp.Tensor:
         n = len(t) // 2
         tj = t.unsqueeze(0)
         ti = t.unsqueeze(1)
@@ -46,9 +46,9 @@ class Nystrom(nn.Module):
             l2 = self.l2(ti, tj)
         with timer() as tres:
             res = (
-                -torch.pi / n * (l2 + 1j * self.eta * m2)
+                -xp.pi / n * (l2 + 1j * self.eta * m2)
                 - r * (l1 + 1j * self.eta * m1)
-                + torch.eye(n * 2, device=t.device, dtype=t.dtype)
+                + xp.eye(n * 2, device=t.device, dtype=t.dtype)
             )
         LOG.debug(
             f"{tr.elapsed=}, {tm1.elapsed=}, {tm2.elapsed=}, "
@@ -56,15 +56,15 @@ class Nystrom(nn.Module):
         )
         return res
 
-    def b(self, t: torch.Tensor) -> torch.Tensor:
+    def b(self, t: xp.Tensor) -> xp.Tensor:
         return 2 * self.g(self.shape.x(t))
 
-    def forward(self, t: torch.Tensor) -> torch.Tensor:
+    def forward(self, t: xp.Tensor) -> xp.Tensor:
         with timer() as ta:
             A = self.A(t)
         with timer() as tb:
             b = self.b(t)
         with timer() as tphi:
-            phi = torch.linalg.solve(A, b).squeeze()
+            phi = xp.linalg.solve(A, b).squeeze()
         LOG.debug(f"{ta.elapsed=}, {tb.elapsed=}, {tphi.elapsed=}")
         return phi
