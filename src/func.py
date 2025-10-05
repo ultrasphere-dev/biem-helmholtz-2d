@@ -43,7 +43,7 @@ def garrick_wittich_quadrature(n: int, /, *, xp: ArrayNamespaceFull, t: Array | 
 
     $$
     \int_0^{2\pi} \cot \frac{t - \tau}{2} f(\tau) d\tau
-    \approx \sum_{j=0}^{2n-1} R_j (t) f(t_j)
+    \approx \sum_{j=0}^{2n-1} T_j (t) f(t_j)
     $$
 
     Parameters
