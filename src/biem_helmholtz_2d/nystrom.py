@@ -16,7 +16,20 @@ class KernelResultImpl(KernelResult):
 
 class Kernel(Protocol):
     def __call__(self, x: Array, y: Array, /) -> KernelResult:
-        ...
+        """Kernel function.
+
+        Parameters
+        ----------
+        x : Array
+            An array of shape (...,).
+        y : Array
+            An array of shape (...,).
+
+        Returns
+        -------
+        KernelResult
+            The kernel function values of shape (..., ...(fixed)).
+        """
 
 def nystrom_lhs(
     kernel: Kernel,

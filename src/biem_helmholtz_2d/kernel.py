@@ -4,6 +4,7 @@ from .shape import Shape
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from .nystrom import Kernel, KernelResultImpl
 from array_api_compat import array_namespace
+
 def _is_diagonal(x: Array, y: Array, eps: float = 1e-6) -> Array:
     xp = array_namespace(x, y)
     absFmod = xp.abs(xp.fmod(x - y, 2 * xp.pi))
