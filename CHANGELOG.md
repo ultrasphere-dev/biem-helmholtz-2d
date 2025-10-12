@@ -1,5 +1,7 @@
 # Changelog
 
+## v1.0.0-rc.1 (2025-10-12)
+
 ## v0.0.0 (2025-10-05)
 
 ### Documentation
