@@ -69,13 +69,13 @@ $
 #theorem[Kussmaul--Martensen (Kress) quadrature for $U_N$][
   $forall N in NN. forall f in U_N.$
   $
-  integral_0^(2 pi) log(4 sin^2 x/2) f(t) dd(t) = sum_(j=0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) (cos m t_j)/m)
+  integral_0^(2 pi) log(4 sin^2 t/2) f(t) dd(t) = sum_(j=0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) (cos m t_j)/m)
   $
 ]
 #proof[
   $
-  integral_0^(2 pi) log(4 sin^2 x/2) f(t) dd(t) &=_(because #ref(<dft>)) integral_0^(2 pi) log(4 sin^2 x/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) e^(i m t))) dd(t) \
-  &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) integral_0^(2 pi) log(4 sin^2 x/2) e^(i m t) dd(t)) \
+  integral_0^(2 pi) log(4 sin^2 t/2) f(t) dd(t) &=_(because #ref(<dft>)) integral_0^(2 pi) log(4 sin^2 t/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) e^(i m t))) dd(t) \
+  &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) integral_0^(2 pi) log(4 sin^2 t/2) e^(i m t) dd(t)) \
   &= sum_(j=0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) (-(2 pi)/(abs(m))) e^(- i m t_j)) \
   &= sum_(j=0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) (cos m t_j)/m)
   $
@@ -84,18 +84,17 @@ $
 #theorem[Garrick--Wittich quadrature for $U_N$][
   $forall N in NN. forall f in U_N.$
   $
-  p.v. integral_0^(2 pi) cot(x/2) f'(t) dd(t) = sum_(j = 0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) m cos(m t_j))
+  p.v. integral_0^(2 pi) cot(t/2) f'(t) dd(t) = sum_(j = 0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) m cos(m t_j))
   $
 ]
 #proof[
   $
-  p.v. integral_0^(2 pi) cot(x/2) f'(t) dd(t) 
-  &=_(because #ref(<dft>)) p.v. integral_0^(2 pi) cot(x/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) (e^(i m t))')) dd(t) \
-  &= p.v. integral_0^(2 pi) cot(x/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m e^(i m t)))) dd(t) \
-  &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m space p.v. integral_0^(2 pi) cot(x/2) e^(i m t) dd(t))) \
+  p.v. integral_0^(2 pi) cot(t/2) f'(t) dd(t) 
+  &=_(because #ref(<dft>)) p.v. integral_0^(2 pi) cot(t/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) (e^(i m t))')) dd(t) \
+  &= p.v. integral_0^(2 pi) cot(t/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m e^(i m t)))) dd(t) \
+  &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m space p.v. integral_0^(2 pi) cot(t/2) e^(i m t) dd(t))) \
   &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m dot 2 pi i sign(m))) \
   &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) (- 2 pi abs(m)) e^(- i m t_j)) \
   &= sum_(j = 0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) m cos(m t_j))
-  
   $
 ]
