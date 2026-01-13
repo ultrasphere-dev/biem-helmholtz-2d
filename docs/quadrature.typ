@@ -31,7 +31,7 @@ $
 #definition[
   $U_N := span({e^(i m x) | m in ZZ, abs(m) < N})$
 ]
-#theorem[
+#theorem[Trapezoidal Rule for $U_N$][
   $forall N in NN. N$-point trapezoidal rule is exact for $U_N$.
 ]
 #theorem[
@@ -51,20 +51,28 @@ $
 #theorem[
 $forall N in NN. forall f in U_N.$
 $
+f(x) = sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) e^(i m x))
+$
+]
+#proof[
+$
 f(x) &= sum_(abs(m) < N) integral_0^(2 pi) f(t) e^(-i m t)/sqrt(2 pi) dd(t) dot e^(i m x)/sqrt(2 pi) \
 &= 1/(2 pi) sum_(abs(m) < N) (2 pi)/N' sum_(j=0)^(N'-1) f(t_j) e^(-i m t_j) dot e^(i m x) \
-&= sum_(j = 0)^(N'-1) f(t_j) dot ((1/N' sum_(abs(m) < N) e^(- i m t_j)) e^(i m x))
+&= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) e^(i m x))
 $
 ]
 
-Assume $f = P_n f$, then
-
-$
-integral_0^(2 pi) cot(x/2) f'(x) d(x) 
-&=_("Fourier Expansion\nTrapezoidal Rule") integral_0^(2 pi) cot(x/2) dv(,x)(1/(2π) sum_(0 <= abs(m) <= n) pi/n sum_(j=0)^(2n-1) f(t_j) e^(-i m t_j) e^(i m x)) dd(x) \
-&= integral_0^(2 pi) cot(x/2) (1/(2π) sum_(1 <= abs(m) <= n) pi/n sum_(j=0)^(2n-1) f(t_j) e^(-i m t_j) i m e^(i m x)) dd(x) \
-&= 1/(2π) sum_(1 <= abs(m) <= n) pi/n sum_(j=0)^(n-1) f(t_j) e^(-i m t_j) i m integral_0^(2 pi) cot(x/2)  e^(i m x) dd(x) \
-&=_(#ref(<cot-integral>)) 1/(2π) sum_(1 <= abs(m) <= n) pi/n sum_(j=0)^(n-1) f(t_j) e^(-i m t_j) i m dot 2 pi i sign(m) \
-&= sum_(j =0)^(n-1) f(t_j) dot (- pi/n sum_(1 <= abs(m) <= n) m sign(m) e^(-i m t_j)) \
-&= sum_(j =0)^(n-1) f(t_j) dot ((2 pi)/n sum_(1 <= m <= n) m sin(m t_j)) \
-$
+#theorem[Kussmaul--Martensen (Kress) quadrature][
+  $forall N in NN. forall f in U_N.$
+  $
+  integral_0^(2 pi) log(4 sin^2 x/2) f(t) dd(t) = sum_(j=0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) (cos m t_j)/m)
+  $
+]
+#proof[
+  $
+  integral_0^(2 pi) log(4 sin^2 x/2) f(t) dd(t) &= integral_0^(2 pi) log(4 sin^2 x/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) e^(i m t))) dd(t) \
+  &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) integral_0^(2 pi) log(4 sin^2 x/2) e^(i m t) dd(t)) \
+  &= sum_(j=0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) (-(2 pi)/(abs(m))) e^(- i m t_j)) \
+  &= sum_(j=0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) (cos m t_j)/m)
+  $
+]
