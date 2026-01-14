@@ -1,8 +1,7 @@
-from array_api_compat import array_namespace
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
 def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array, Array]:
-    r"""Trapezoidal quadrature.
+    r"""Trapezoidal quadrature for [0, 2π].
 
     Returns $x_j$ and $w_j$, where
 
@@ -19,21 +18,22 @@ def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array,
     Returns
     -------
     Array
-        The roots $x_j$ of shape (2n,).
-        and weights $w_j$ of shape (2n,).
+        The roots $x_j$ of shape (2n - 1,).
+        and weights $w_j$ of shape (2n - 1,).
     """
-    x = xp.pi * xp.arange(2 * n) / n
-    w = xp.full((1,), 2 * xp.pi / (2 * n))
+    n_quad = 2 * n - 1
+    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
+    w = xp.full((1,), 2 * xp.pi / n_quad)
     return x, w
 
 def kussmaul_martensen_kress_quadrature(n: int, /, *, xp: ArrayNamespaceFull, x: Array | None = None) -> tuple[Array, Array]:
     r"""Kussmaul-Martensen (Kress) quadrature.
 
-    Returns $y_j$ and $R_j (t)$, where
+    Returns $x_j$ and $R_j$, where
 
     $$
-    \int_0^{2\pi} \log \left(4 \sin^2 \frac{x - y}{2}\right) f(y) dy
-    \approx \sum_{j=0}^{2n-1} R_j (y) f(y_j)
+    \int_0^{2\pi} \log \left(4 \sin^2 \frac{x}{2}\right) f(x) dx
+    \approx \sum_{j=0}^{2n-1} R_j f(x_j)
     $$
 
     Parameters
@@ -47,13 +47,9 @@ def kussmaul_martensen_kress_quadrature(n: int, /, *, xp: ArrayNamespaceFull, x:
     Returns
     -------
     Array
-        The roots $y_j$ of shape (2n,).
-        and weights $T_j (x)$ of shape (..., 2n).
+        The roots $x_j$ of shape (2n - 1,).
+        and weights $R_j$ of shape (2n - 1,).
     """
-    if x is None:
-        t_ = xp.array(0.0)
-    else:
-        t_ = x
     x = xp.pi * xp.arange(2 * n) / n
     m = xp.arange(1, n)
     w = - 2 * xp.pi / n * xp.sum(
@@ -64,11 +60,11 @@ def kussmaul_martensen_kress_quadrature(n: int, /, *, xp: ArrayNamespaceFull, x:
 def garrick_wittich_quadrature(n: int, /, *, xp: ArrayNamespaceFull, x: Array | None = None) -> tuple[Array, Array]:
     r"""Garrick-Wittich quadrature.
 
-    Returns $y_j$ and $T_j (x)$, where
+    Returns $x_j$ and $T_j (x)$, where
 
     $$
-    \int_0^{2\pi} \cot \frac{x - y}{2} f(y) dy
-    \approx \sum_{j=0}^{2n-1} T_j (x) f(y_j)
+    p.v. \int_0^{2\pi} \cot \frac{x}{2} f(x) dy
+    \approx \sum_{j=0}^{2n-1} T_j (x) f(x_j)
     $$
 
     Parameters
@@ -82,8 +78,8 @@ def garrick_wittich_quadrature(n: int, /, *, xp: ArrayNamespaceFull, x: Array | 
     Returns
     -------
     Array
-        The roots $y_j$ of shape (2n,).
-        and weights $R_j (x)$ of shape (..., 2n).
+        The roots $x_j$ of shape (2n - 1,).
+        and weights $T_j$ of shape (2n - 1,).
     """
     if x is None:
         t_ = xp.asarray(0.0)
