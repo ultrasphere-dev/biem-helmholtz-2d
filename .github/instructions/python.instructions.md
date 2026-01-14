@@ -1,0 +1,6 @@
+- This repository is about numerical analysis. You need to make very sure about the formulation before implementing the code.
+- All methods should be array API compatible.
+  - Never import `numpy` directly
+  - Use `array_api.latest.Array` as the array type hint
+  - Use `array_api_compat.array_namespace()` to get the array API namespace `xp`
+  - If no array is passed as function, add `xp` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`
