@@ -4,3 +4,6 @@
   - Use `array_api.latest.Array` as the array type hint
   - Use `array_api_compat.array_namespace()` to get the array API namespace `xp`
   - If no array is passed as function, add `xp` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`
+- Tests should be also array API compatible.
+  - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `asarray(), zeros(), arange()`) within the test function.
+  - Do not try to read the contents of `tests/conftest.py`.
