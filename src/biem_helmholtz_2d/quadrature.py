@@ -33,16 +33,21 @@ def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array,
 
 
 def kussmaul_martensen_kress_quadrature(
-    n: int, /, *, xp: ArrayNamespaceFull
+    n: int,
+    /,
+    *,
+    xp: ArrayNamespaceFull,
 ) -> tuple[Array, Array]:
     r"""
     Kussmaul-Martensen (Kress) quadrature.
 
     Returns $x_j$ and $R_j$, where
 
+    Let $n' := 2n - 1$ and $x_j := 2\pi j / n'$.
+
     $$
-    \int_0^{2\pi} \log \left(4 \sin^2 \frac{x}{2}\right) f(x) dx
-    \approx \sum_{j=0}^{2n-1} R_j f(x_j)
+    \int_0^{2\pi} \log \left(4 \sin^2 \frac{t}{2}\right) f(t) dt
+    \approx \sum_{j=0}^{n'-1} R_j f(x_j)
     $$
 
     Parameters
@@ -59,25 +64,33 @@ def kussmaul_martensen_kress_quadrature(
         and weights $R_j$ of shape (2n - 1,).
 
     """
-    x = xp.pi * xp.arange(2 * n) / n
+    n_quad = 2 * n - 1
+    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
     m = xp.arange(1, n)
-    w = -2 * xp.pi / n * xp.sum(
-        1 / m * xp.cos(m * (t_[..., None, None] - x[:, None])), axis=-1
-    ) - xp.pi / n**2 * xp.cos(n * (t_[..., None] - x))
+    w = (
+        -(4 * xp.pi)
+        / n_quad
+        * xp.sum(xp.cos(m[:, None] * x[None, :]) / m[:, None], axis=0)
+    )
     return x, w
 
 
 def garrick_wittich_quadrature(
-    n: int, /, *, xp: ArrayNamespaceFull
+    n: int,
+    /,
+    *,
+    xp: ArrayNamespaceFull,
 ) -> tuple[Array, Array]:
     r"""
     Garrick-Wittich quadrature.
 
-    Returns $x_j$ and $T_j (x)$, where
+    Returns $x_j$ and $T_j$, where
+
+    Let $n' := 2n - 1$ and $x_j := 2\pi j / n'$.
 
     $$
-    p.v. \int_0^{2\pi} \cot \frac{x}{2} f(x) dy
-    \approx \sum_{j=0}^{2n-1} T_j (x) f(x_j)
+    p.v. \int_0^{2\pi} \cot \frac{t}{2} f'(t) dt
+    \approx \sum_{j=0}^{n'-1} T_j f(x_j)
     $$
 
     Parameters
@@ -94,13 +107,12 @@ def garrick_wittich_quadrature(
         and weights $T_j$ of shape (2n - 1,).
 
     """
-    if x is None:
-        t_ = xp.asarray(0.0)
-    else:
-        t_ = x
-    x = xp.pi * xp.arange(2 * n) / n
+    n_quad = 2 * n - 1
+    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
     m = xp.arange(1, n)
-    w = -1 / n * xp.sum(
-        m * xp.cos(m * (t_[..., None, None] - x[:, None])), axis=-1
-    ) - 1 / 2 * xp.cos(n * (t_[..., None] - x))
+    w = (
+        -(4 * xp.pi)
+        / n_quad
+        * xp.sum(m[:, None] * xp.cos(m[:, None] * x[None, :]), axis=0)
+    )
     return x, w

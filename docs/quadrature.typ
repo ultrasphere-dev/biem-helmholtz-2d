@@ -89,7 +89,7 @@ $
 ]
 #proof[
   $
-  p.v. integral_0^(2 pi) cot(t/2) f'(t) dd(t) 
+  p.v. integral_0^(2 pi) cot(t/2) f'(t) dd(t)
   &=_(because #ref(<dft>)) p.v. integral_0^(2 pi) cot(t/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) (e^(i m t))')) dd(t) \
   &= p.v. integral_0^(2 pi) cot(t/2) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m e^(i m t)))) dd(t) \
   &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(0 < abs(m) < N) e^(- i m t_j) (i m space p.v. integral_0^(2 pi) cot(t/2) e^(i m t) dd(t))) \
