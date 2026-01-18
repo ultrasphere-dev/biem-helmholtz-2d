@@ -1,12 +1,20 @@
-from typing import Any, Callable, Protocol
-from array_api._2024_12 import Array, ArrayNamespaceFull
-from .quadrature import kussmaul_martensen_kress_quadrature, trapezoidal_quadrature, garrick_wittich_quadrature
+from typing import Protocol
+
 import attrs
+from array_api._2024_12 import Array, ArrayNamespaceFull
+
+from .quadrature import (
+    garrick_wittich_quadrature,
+    kussmaul_martensen_kress_quadrature,
+    trapezoidal_quadrature,
+)
+
 
 class KernelResult(Protocol):
     analytic: Array
     singular_log: Array
     singular_cauchy: Array
+
 
 @attrs.frozen(kw_only=True)
 class KernelResultImpl(KernelResult):
@@ -14,9 +22,11 @@ class KernelResultImpl(KernelResult):
     singular_log: Array
     singular_cauchy: Array
 
+
 class Kernel(Protocol):
     def __call__(self, x: Array, y: Array, /) -> KernelResult:
-        """Kernel function.
+        """
+        Kernel function.
 
         Parameters
         ----------
@@ -29,14 +39,17 @@ class Kernel(Protocol):
         -------
         KernelResult
             The kernel function values of shape (..., ...(fixed)).
+
         """
+
 
 def nystrom_lhs(
     kernel: Kernel,
     n: int,
     xp: ArrayNamespaceFull,
 ) -> tuple[Array, Array]:
-    r"""Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
+    r"""
+    Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
 
     $$
     \phi (x)
@@ -60,6 +73,7 @@ def nystrom_lhs(
     tuple[Array, Array]
         The roots $x_j$ of shape (2n,)
         and the left-hand side matrix $A$ of shape (2n, 2n).
+
     """
     x, w = trapezoidal_quadrature(n, xp=xp)
     y = x[None, :]
@@ -70,8 +84,6 @@ def nystrom_lhs(
     # x: (2n, 1), y: (1, 2n), w: (1, 2n), w_log: (2n, 2n), w_cauchy: (2n, 2n)
     k = kernel(x, y)
     A = xp.eye(2 * n, dtype=x.dtype, device=x.device) + (
-        k.analytic * w
-        + k.singular_log * w_log
-        + k.singular_cauchy * w_cauchy
+        k.analytic * w + k.singular_log * w_log + k.singular_cauchy * w_cauchy
     )
     return x[:, 0], A

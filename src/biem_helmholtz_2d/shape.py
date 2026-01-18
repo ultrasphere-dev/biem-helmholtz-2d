@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from array_api_compat import array_namespace
+from collections.abc import Sequence
+
 import attrs
 from array_api._2024_12 import Array
-from numpy.typing import NDArray
-from typing import Sequence
+from array_api_compat import array_namespace
 
 
 class Shape(metaclass=ABCMeta):
@@ -27,6 +27,7 @@ class Shape(metaclass=ABCMeta):
         xp = array_namespace(t)
         return xp.sqrt(xp.sum(self.dx(t) ** 2, axis=-1))
 
+
 @attrs.define(frozen=True)
 class Shapes:
     shapes: Sequence[Shape]
@@ -37,20 +38,21 @@ class Shapes:
             [shape.x(t) for shape in self.shapes],
             axis=-2,
         )
-    
+
     def dx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack(
             [shape.dx(t) for shape in self.shapes],
             axis=-2,
         )
-    
+
     def ddx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack(
             [shape.ddx(t) for shape in self.shapes],
             axis=-2,
         )
+
 
 @attrs.define(frozen=True)
 class KressShape(Shape):

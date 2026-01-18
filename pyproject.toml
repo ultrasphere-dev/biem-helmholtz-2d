@@ -11,15 +11,12 @@ license = { text = "MIT" }
 authors = [
   { name = "ultrasphere-dev", email = "34j.95a2p@simplelogin.com" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Developers",
   "Natural Language :: English",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Software Development :: Libraries",
@@ -40,10 +37,17 @@ urls.documentation = "https://biem-helmholtz-2d.readthedocs.io"
 urls.repository = "https://github.com/ultrasphere-dev/biem-helmholtz-2d"
 scripts.biem-helmholtz-2d = "biem_helmholtz_2d.cli:app"
 
+[project.optional-dependencies]
+cli = [
+    "rich>=14.1.0",
+    "typer>=0.19.2",
+]
+
 [dependency-groups]
 dev = [
   "pytest>=8,<9",
   "pytest-cov>=6,<7",
+  "torch>=2.9.1",
 ]
 docs = [
   "furo>=2023.5.20; python_version>='3.11'",

@@ -1,12 +1,7 @@
 from logging import DEBUG, INFO, basicConfig, getLogger
 from pathlib import Path
 
-import numpy as np
-import xp
 import typer
-from acoustic_obstacle_scattering.r2.main import get_uinf
-from cm_time import timer
-from rich.logging import RichHandler
 
 # import tracemalloc
 
@@ -51,4 +46,3 @@ def farfield_showcase() -> None:
     Path(".cache").mkdir(exist_ok=True)
     fig.savefig(".cache/farfield_showcase_2d.svg")
     fig.savefig(".cache/farfield_showcase_2d.png")
-

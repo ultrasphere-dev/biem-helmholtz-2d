@@ -1,7 +1,16 @@
+from typing import Any
+
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
 
-def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array, Array]:
+def trapezoidal_quadrature(
+    n: int,
+    /,
+    *,
+    xp: ArrayNamespaceFull,
+    device: Any,
+    dtype: Any,
+) -> tuple[Array, Array]:
     r"""
     Trapezoidal quadrature for [0, 2π].
 
@@ -18,6 +27,10 @@ def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array,
         Harmonics which order is less than n are integrated exactly.
     xp: ArrayNamespaceFull
         The array namespace.
+    device: Any
+        The device.
+    dtype: Any
+        The dtype.
 
     Returns
     -------
@@ -27,8 +40,10 @@ def trapezoidal_quadrature(n: int, /, *, xp: ArrayNamespaceFull) -> tuple[Array,
 
     """
     n_quad = 2 * n - 1
-    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
-    w = xp.full((1,), 2 * xp.pi / n_quad)
+    two_pi = 2 * xp.pi
+    j = xp.asarray(xp.arange(n_quad), dtype=dtype, device=device)
+    x = two_pi * j / n_quad
+    w = xp.full((1,), two_pi / n_quad, dtype=dtype, device=device)
     return x, w
 
 
@@ -37,6 +52,8 @@ def kussmaul_martensen_kress_quadrature(
     /,
     *,
     xp: ArrayNamespaceFull,
+    device: Any,
+    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Kussmaul-Martensen (Kress) quadrature.
@@ -56,6 +73,10 @@ def kussmaul_martensen_kress_quadrature(
         Harmonics which order is less than n are integrated exactly.
     xp: ArrayNamespaceFull
         The array namespace.
+    device: Any
+        The device.
+    dtype: Any
+        The dtype.
 
     Returns
     -------
@@ -65,10 +86,14 @@ def kussmaul_martensen_kress_quadrature(
 
     """
     n_quad = 2 * n - 1
-    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
+    two_pi = xp.asarray(xp.pi, dtype=dtype, device=device) + xp.asarray(
+        xp.pi, dtype=dtype, device=device
+    )
+    j = xp.arange(n_quad)
+    x = two_pi * j / n_quad
     m = xp.arange(1, n)
     w = (
-        -(4 * xp.pi)
+        -(two_pi + two_pi)
         / n_quad
         * xp.sum(xp.cos(m[:, None] * x[None, :]) / m[:, None], axis=0)
     )
@@ -80,6 +105,8 @@ def garrick_wittich_quadrature(
     /,
     *,
     xp: ArrayNamespaceFull,
+    device: Any,
+    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Garrick-Wittich quadrature.
@@ -99,6 +126,10 @@ def garrick_wittich_quadrature(
         Harmonics which order is less than n are integrated exactly.
     xp: ArrayNamespaceFull
         The array namespace.
+    device: Any
+        The device.
+    dtype: Any
+        The dtype.
 
     Returns
     -------
@@ -108,10 +139,14 @@ def garrick_wittich_quadrature(
 
     """
     n_quad = 2 * n - 1
-    x = 2 * xp.pi * xp.arange(n_quad) / n_quad
+    two_pi = xp.asarray(xp.pi, dtype=dtype, device=device) + xp.asarray(
+        xp.pi, dtype=dtype, device=device
+    )
+    j = xp.arange(n_quad)
+    x = two_pi * j / n_quad
     m = xp.arange(1, n)
     w = (
-        -(4 * xp.pi)
+        -(two_pi + two_pi)
         / n_quad
         * xp.sum(m[:, None] * xp.cos(m[:, None] * x[None, :]), axis=0)
     )
