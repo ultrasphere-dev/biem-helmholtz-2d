@@ -71,7 +71,7 @@ For integration of singular functions, one would need to split the function into
   lim_(z -> 0) n02 (z) = 2/pi (log (f'(0))/2 + C) #<n02-0>
   $
 ]
-#theorem[Integral of $hk_0$][
+#theorem[Integral of $N'_0$][
   Let $f in e C[[e]] without e^2 C[[e]], g in C [[e]]$.
   $
   integral_0^(2 pi) g(t) N_0 (f(t)) dd(t) 
@@ -107,10 +107,11 @@ For integration of singular functions, one would need to split the function into
   $
   n01' (z) &= 1/pi J'_0 (f(z)) f'(z) #<n01d> \
   n02d (z) &= (n01 (z) - 2/pi) cot(z/2) + n02' (z)  quad (z != 0) #<n02d-not0>\
-  n02zd (z) &:= z N'_0 (f(z)) - z n01' (z) log (4 sin^2 z/2) quad (z != 0) #<n02zd-not0>
+  n02zd (z) &:= z N'_0 (f(z)) - z n01' (z) log (4 sin^2 z/2) quad (z != 0) #<n02zd-not0> \
+  &= (2 z)/pi cot(z/2) + z n02d (z) quad (z != 0) #<n02zd-not0-2>
   $
   Note that analycity of $n02zd$ at $0$ is not obvious but $
-  lim_(z -> 0) n02d (z) = lim_(z -> 0) n01 (z) z cot(z/2) = n01 (0) dot 2 = 2/pi #<n02d-0>
+  lim_(z -> 0) n02zd (z) = lim_(z -> 0) n01 (z) z cot(z/2) = n01 (0) dot 2 = 2/pi #<n02zd-0>
   $
   Note that analycity of $n02', n02d$ at $0$ is not obvious.
   Let $g(z) := f(z) / z$, then
@@ -127,16 +128,16 @@ For integration of singular functions, one would need to split the function into
   &= 2/pi lim_(z -> 0) ((g'(z))/g(z) + 1/z - 1/2 (2/z + z C[[z]])) \
   &= 2/pi ((g'(0))/g(0)) \
   &= (f''(0))/(pi f'(0))
-  #<n02zd-0>
+  #<n02d-0>
   $
 ]
 #theorem[
-  Let $f in e CC[[e]] without e^2 CC[[e]], g in C[[e]]$.
+  Let $f in e CC[[e]] without e^2 CC[[e]], g in e C[[e]]$.
   $
   integral_0^(2 pi) g(t) N'_0 (f(t)) dd(t) 
-  &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01' (t_j) + w_j n02d (t_j)) \
+  &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j t_j n01' (t_j) + w_j n02zd (t_j)) \
   $
-  Note that $N'_0$ is continuous but not analytic, thus we are splitting the integral into two parts.
+  Note that $g(t) N'_0(t)$ is continuous but not analytic, thus we are splitting the integral into two parts.
 ]
 #algorithm[
   Assume we have implementation of $J_0, J'_0, N'_0, f, f', f''$.
