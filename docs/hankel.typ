@@ -95,12 +95,14 @@ For integration of singular functions, one would need to split the function into
   $
 ]
 #let n02d = $N_0^((2,f,d))$
+#let n03d = $N_0^((3,f,d))$
 #let n02zd = $N_0^((2,f,z d))$
 #lemma[
   $
   J'_0 (z) &= 0 + z CC[[z]] \
   N'_0 (f(z)) &= n01' (z) log(4 sin^2 z/2) + n01 (z) cot(z/2) + n02' (z) \
   &= n01' (z) log(4 sin^2 z/2) + 2/pi cot(z/2) + n02d (z) \
+  &= 2/pi cot(z/2) + n03d (z) \
   z N'_0 (f(z)) &= z n01' (z) log(4 sin^2 z/2) + n02zd (z) \
   $
   where
@@ -146,4 +148,12 @@ For integration of singular functions, one would need to split the function into
   + Compute ${n02d (t_j)}_(j = 0)^(N' - 1)$ using @n02d-not0, 1, 2 ($n02d (t_0)$ will be temporarily `NaN`).
   + Replace $n02d (t_0)$ with the value from @n02d-0.
   + Compute the sum.
+]
+#theorem[
+  Let $f in e CC[[e]] without e^2 CC[[e]], g in e C[[e]]$.
+  $
+  integral_0^(2 pi) g'(t) N'_0 (f(t)) dd(t) 
+  &= integral_0^(2 pi) g'(t) (2/pi cot(t/2) + n03d (t)) dd(t) \
+  &= integral_0^(2 pi) g'(t) (2/pi cot(t/2)) dd(t) + integral_0^(2 pi) g(t) n03d' (t) dd(t) \
+  $
 ]

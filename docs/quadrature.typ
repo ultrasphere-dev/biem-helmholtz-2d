@@ -98,3 +98,15 @@ $
   &= sum_(j = 0)^(N'-1) f(t_j) dot (-(4 pi)/N' sum_(m = 1)^(N-1) m cos(m t_j))
   $
 ]
+// #theorem[Trapezoidal Rule for differentiated functions in $U_N$][
+//   Let $N' := dim U_N = 2 N - 1$.
+//   Let $t_j := (2 pi j)/N'$ for $j = 0, ..., N' - 1$.
+//   $forall f, g in U_N.$
+// ]
+// #proof[
+//   $
+//   integral_0^(2 pi) f'(t) g(t) dd(t) &= integral_0^(2 pi) g(t) (sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) (e^(i m t))')) dd(t) \
+//   &= sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) integral_0^(2 pi) g(t) (i m e^(i m t)) dd(t)) \
+//   &=_(because #ref(<dft-trapezoidal>)) sum_(j = 0)^(N'-1) f(t_j) dot (1/N' sum_(abs(m) < N) e^(- i m t_j) (i m (2 pi)/N' sum_(k=0)^(N'-1) g(t_k) e^(i m t_k))) \
+//   $
+// ]
