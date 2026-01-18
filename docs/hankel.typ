@@ -6,13 +6,14 @@
 #show: thmrules.with(qed-symbol: $square$)
 #let definition = thmplain("definition", "Definition")
 #let theorem = thmplain("theorem", "Theorem")
+#let algorithm = thmplain("algorithm", "Algorithm")
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
 #let span = $op("span")$
 #let sign = $op("sign")$
 #let hk = $H^((1))$
 
-= Integration of $N_0, hk_0$
+= Integration of $N_0, N'_0$
 
 #definition[Euler--Mascheroni Constant][
   $
@@ -32,6 +33,9 @@
   e^k C[[e]] &:= {f(e^(i z)) | f(z) in z^k CC[[z]]}
   $
 ]
+
+== Integration of $N_0$
+
 #lemma[
   $
   J_0 (z) &= 1 + z CC[[z]] \
@@ -70,39 +74,64 @@
   &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j n01 (t_j) + w_j n02 (t_j)) \
   $
 ]
-Implementation: assume we have implementation of $J_0, N_0, f, f'$.
-+ Compute ${N_0 (f(t_j))}_(j = 0)^(N' - 1)$ directly ($N_0 (f(t_0))$ will be `NaN`).
-+ Compute ${n01 (t_j)}_(j = 0)^(N' - 1)$ using @n01.
-+ Compute ${n02 (t_j)}_(j = 0)^(N' - 1)$using @n02-not0  ($n02 (t_0)$ will be temporarily `NaN`).
-+ Replace $n02 (t_0)$ with the value from @n02-0.
-+ Compute the sum.
+#algorithm[
+  Assume we have implementation of $J_0, N_0, f, f'$.
+  + Compute ${N_0 (f(t_j))}_(j = 0)^(N' - 1)$ directly ($N_0 (f(t_0))$ will be `NaN`).
+  + Compute ${n01 (t_j)}_(j = 0)^(N' - 1)$ using @n01.
+  + Compute ${n02 (t_j)}_(j = 0)^(N' - 1)$using @n02-not0, 1, 2  ($n02 (t_0)$ will be temporarily `NaN`).
+  + Replace $n02 (t_0)$ with the value from @n02-0.
+  + Compute the sum.
+]
+
+== Integration of $N'_0$
+
 #lemma[
   $
   dv(,t) (log 4 sin^2 (t/2)) = cot(t/2)
   $
 ]
+#let n02d = $N_0^((2,f,d))$
 #lemma[
   $
   J'_0 (z) &= 0 + z CC[[z]] \
-  N'_0 (f(z)) &= n01 (z) cot(z/2) + n01' (z) log(4 sin^2 z/2) + n02' (z) \
+  N'_0 (f(z)) &= n01' (z) log(4 sin^2 z/2) + n01 (z) cot(z/2) + n02' (z) \
+  &= n01' (z) log(4 sin^2 z/2) + n02d (z) \
   $
   where
   $
-  n01' (z) &= 1/pi J'_0 (f(z)) f'(z) \
-  n02' (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) \
+  n01' (z) &= 1/pi J'_0 (f(z)) f'(z) #<n01d> \
+  n02d (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) #<n02d-not0>
   $
-  Note that analycity of $n02'$ at $0$ is not obvious but by L'Hospital's rule we have
+  Note that analycity of $n02d, n02'$ at $0$ is not obvious.
+  Let $g(z) := f(z) / z$, then
+  - $f'(z) = g(z) + z g'(z)$
+  - $f'(0) = g(0)$
+  - $f''(z) = g'(z) + g'(z) + z g''(z) = 2 g'(z) + z g''(z)$
+  - $f''(0) = 2 g'(0)$
+  Then
   $
-  lim_(z -> 0) n02' (z) &= lim_(z -> 0) 2/pi ((f'(z))/f(z) -1/2 cot(z/2)) J_0 (f(z)) \
-  &= 1/pi lim_(z -> 0)  (2 f'(z) - f(z) cot(z/2))/f(z) \
-  &= 1/pi lim_(z -> 0)  (2 f''(z) - f'(z) cot(z/2) + (1/2) f(z) sin^(-2) (z/2))/(f'(z)) \
-  &= (f''(0))/(pi f'(0)) #<n02d-0>
+  lim_(z -> 0) n02d (z) &= lim_(z -> 0) n02' (z) \
+  &= lim_(z -> 0) 2/pi ((f'(z))/f(z) -1/2 cot(z/2)) J_0 (f(z)) \
+  &= 2/pi lim_(z -> 0)  ((f'(z))/f(z) - 1/2 cot(z/2)) \
+  &= 2/pi lim_(z -> 0) ((g'(z) z + g(z))/ (g(z) z) - 1/2 cot(z/2)) \
+  &= 2/pi lim_(z -> 0) ((g'(z))/g(z) + 1/z - 1/2 (2/z + z C[[z]])) \
+  &= 2/pi ((g'(0))/g(0)) \
+  &= (f''(0))/(pi f'(0))
+  #<n02d-0>
   $
 ]
 #theorem[
   Let $f in e CC[[e]], g in C[[e]], h in e C[[e]]$.
   $
-  p.v. integral_0^(2 pi) g(t) N_0' (f(t)) dd(t) 
-  &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01 (t_j) + w_j n02' (t_j)) \
+  integral_0^(2 pi) g(t) N_0' (f(t)) dd(t) 
+  &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01' (t_j) + w_j n02d (t_j)) \
   $
+]
+#algorithm[
+  Assume we have implementation of $J_0, J'_0, N'_0, f, f', f''$.
+  + Compute ${N'_0 (f(t_j))}_(j = 0)^(N' - 1)$ directly ($N'_0 (f(t_0))$ will be `NaN`).
+  + Compute ${n01' (t_j)}_(j = 0)^(N' - 1)$ using @n01d.
+  + Compute ${n02d (t_j)}_(j = 0)^(N' - 1)$ using @n02d-not0, 1, 2 ($n02d (t_0)$ will be temporarily `NaN`).
+  + Replace $n02d (t_0)$ with the value from @n02d-0.
+  + Compute the sum.
 ]
