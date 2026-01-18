@@ -3,7 +3,11 @@
   - Never import `numpy` directly, unless for constants like `np.pi` for context when `xp` is not available.
   - Use `array_api.latest.Array` as the array type hint
   - Use `array_api_compat.array_namespace()` to get the array API namespace `xp`
-  - If no array is passed as function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively.
+  - If no array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively.
+  - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`. 
+  - The docstring should mention the shape of the input / ouput arrays and description should end with `... of shape (..., a, b)`.
+  - Never wrap `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant).
 - Tests should be also array API compatible.
-  - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `asarray(), zeros(), arange()`) within the test function.
+  - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
+  - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.
   - Do not try to read the contents of `tests/conftest.py`.
