@@ -7,6 +7,7 @@
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`. 
   - The docstring should mention the shape of the input / ouput arrays and description should end with `... of shape (..., a, b)`.
   - Never wrap `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant).
+  - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=device, dtype=dtype)`. (Do not specify dtype in the inner `asarray`).
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
   - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.

@@ -2,7 +2,7 @@ from array_api._2024_12 import Array
 from array_api_compat import array_namespace
 from scipy.special import hankel1
 
-from .nystrom import Kernel, KernelResultImpl
+from .bie import Kernel, KernelResultImpl
 from .shape import Shape
 
 

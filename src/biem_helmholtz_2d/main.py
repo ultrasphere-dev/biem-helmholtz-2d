@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import xp
 
-from .nystrom import Nystrom
+from .bie import Nystrom
 from .quadrature import PlaneWaveGFunc, UInf
 from .shape import KressShape
 
