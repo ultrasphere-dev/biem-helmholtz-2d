@@ -12,7 +12,7 @@
 #let sign = $op("sign")$
 #let hk = $H^((1))$
 
-= Integration of $hk_0$
+= Integration of $N_0, hk_0$
 
 #definition[Euler--Mascheroni Constant][
   $
@@ -46,7 +46,7 @@
 #let n01 = $N_0^((1,f))$
 #let n02 = $N_0^((2,f))$
 #lemma[
-  Let $f in e CC[[e]]$
+  Let $f in e CC[[e]] without e^2 C[[e]]$.
   $
   N_0 (f(z)) &= 1/pi log(4 sin^2 z/2) J_0 (f(z)) + 2/pi (log f(z)/2 - log 2 sin z/2 + C) J_0 (f(z)) + z CC[[z]] \
   &= 1/pi log(4 sin^2 z/2) J_0 (f(z)) + 2/pi (log f(z)/(4sin z/2) + C) J_0 (f(z)) + z CC[[z]] \
@@ -60,17 +60,17 @@
   
   Note that analycity of $n02$ at $0$ is not obvious but by L'Hospital's rule we have
   $
-  lim_(z -> 0) n02 (z) = 2/pi (log (f'(z))/2 + C) #<n02-0>
+  lim_(z -> 0) n02 (z) = 2/pi (log (f'(0))/2 + C) #<n02-0>
   $
 ]
 #theorem[Integral of $hk_0$][
-  Let $f in e C[[e]], g in C [[e]]$.
+  Let $f in e C[[e]] without e^2 C[[e]], g in C [[e]]$.
   $
   integral_0^(2 pi) g(t) N_0 (f(t)) dd(t) 
   &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j n01 (t_j) + w_j n02 (t_j)) \
   $
 ]
-Implementation: assume we have implementation of $J_0, N_0, f$.
+Implementation: assume we have implementation of $J_0, N_0, f, f'$.
 + Compute ${N_0 (f(t_j))}_(j = 0)^(N' - 1)$ directly ($N_0 (f(t_0))$ will be `NaN`).
 + Compute ${n01 (t_j)}_(j = 0)^(N' - 1)$ using @n01.
 + Compute ${n02 (t_j)}_(j = 0)^(N' - 1)$using @n02-not0  ($n02 (t_0)$ will be temporarily `NaN`).
@@ -91,15 +91,18 @@ Implementation: assume we have implementation of $J_0, N_0, f$.
   n01' (z) &= 1/pi J'_0 (f(z)) f'(z) \
   n02' (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) \
   $
+  Note that analycity of $n02'$ at $0$ is not obvious but by L'Hospital's rule we have
+  $
+  lim_(z -> 0) n02' (z) &= lim_(z -> 0) 2/pi ((f'(z))/f(z) -1/2 cot(z/2)) J_0 (f(z)) \
+  &= 1/pi lim_(z -> 0)  (2 f'(z) - f(z) cot(z/2))/f(z) \
+  &= 1/pi lim_(z -> 0)  (2 f''(z) - f'(z) cot(z/2) + (1/2) f(z) sin^(-2) (z/2))/(f'(z)) \
+  &= (f''(0))/(pi f'(0)) #<n02d-0>
+  $
 ]
 #theorem[
   Let $f in e CC[[e]], g in C[[e]], h in e C[[e]]$.
   $
   p.v. integral_0^(2 pi) g(t) N_0' (f(t)) dd(t) 
   &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01 (t_j) + w_j n02' (t_j)) \
-  $
-  Note that analycity of $n02'$ at $0$ is not obvious but by L'Hospital's rule we have
-  $
-  lim_(z -> 0) n02' (z) = lim_(z -> 0) (N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2)) = 2/pi (f''(0)/(2 f'(0)) + 1/6 + C) f'(0)
   $
 ]
