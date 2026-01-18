@@ -34,7 +34,11 @@
   $
 ]
 
-== Integration of $N_0$
+For integration of singular functions, one would need to split the function into analytic and singular parts. Both of the following is needed:
+- The coefficient (analytic function) of the singular part
+- The limit of the remainder (analytic function) evaluated at the singularity
+
+== Integration of $N_0 (z)$
 
 #lemma[
   $
@@ -58,8 +62,8 @@
   $
   where $n01, n02 in e C[[e]]$ and 
   $
-  n01 (z) &= 1/pi J_0 (f(z)) #<n01> \
-  n02 (z) &= N_0 (f(z)) - n01 (z) log (4 sin^2 z/2) quad (z != 0) #<n02-not0>
+  n01 (z) &:= 1/pi J_0 (f(z)) #<n01> \
+  n02 (z) &:= N_0 (f(z)) - n01 (z) log (4 sin^2 z/2) quad (z != 0) #<n02-not0>
   $
   
   Note that analycity of $n02$ at $0$ is not obvious but by L'Hospital's rule we have
@@ -83,7 +87,7 @@
   + Compute the sum.
 ]
 
-== Integration of $N'_0$
+== Integration of $N'_0 (z)$
 
 #lemma[
   $
@@ -91,18 +95,24 @@
   $
 ]
 #let n02d = $N_0^((2,f,d))$
+#let n02zd = $N_0^((2,f,z d))$
 #lemma[
   $
   J'_0 (z) &= 0 + z CC[[z]] \
   N'_0 (f(z)) &= n01' (z) log(4 sin^2 z/2) + n01 (z) cot(z/2) + n02' (z) \
-  &= n01' (z) log(4 sin^2 z/2) + n02d (z) \
+  &= n01' (z) log(4 sin^2 z/2) + 2/pi cot(z/2) + n02d (z) \
+  z N'_0 (f(z)) &= z n01' (z) log(4 sin^2 z/2) + n02zd (z) \
   $
   where
   $
   n01' (z) &= 1/pi J'_0 (f(z)) f'(z) #<n01d> \
-  n02d (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) quad (z != 0) #<n02d-not0>
+  n02d (z) &= (n01 (z) - 2/pi) cot(z/2) + n02' (z)  quad (z != 0) #<n02d-not0>\
+  n02zd (z) &:= z N'_0 (f(z)) - z n01' (z) log (4 sin^2 z/2) quad (z != 0) #<n02zd-not0>
   $
-  Note that analycity of $n02d, n02'$ at $0$ is not obvious.
+  Note that analycity of $n02zd$ at $0$ is not obvious but $
+  lim_(z -> 0) n02d (z) = lim_(z -> 0) n01 (z) z cot(z/2) = n01 (0) dot 2 = 2/pi #<n02d-0>
+  $
+  Note that analycity of $n02', n02d$ at $0$ is not obvious.
   Let $g(z) := f(z) / z$, then
   - $f'(z) = g(z) + z g'(z)$
   - $f'(0) = g(0)$
@@ -111,21 +121,22 @@
   Then
   $
   lim_(z -> 0) n02d (z) &= lim_(z -> 0) n02' (z) \
-  &= lim_(z -> 0) 2/pi ((f'(z))/f(z) -1/2 cot(z/2)) J_0 (f(z)) \
+   &= lim_(z -> 0) 2/pi ((f'(z))/f(z) -1/2 cot(z/2)) J_0 (f(z)) \
   &= 2/pi lim_(z -> 0)  ((f'(z))/f(z) - 1/2 cot(z/2)) \
   &= 2/pi lim_(z -> 0) ((g'(z) z + g(z))/ (g(z) z) - 1/2 cot(z/2)) \
   &= 2/pi lim_(z -> 0) ((g'(z))/g(z) + 1/z - 1/2 (2/z + z C[[z]])) \
   &= 2/pi ((g'(0))/g(0)) \
   &= (f''(0))/(pi f'(0))
-  #<n02d-0>
+  #<n02zd-0>
   $
 ]
 #theorem[
   Let $f in e CC[[e]] without e^2 CC[[e]], g in C[[e]]$.
   $
-  integral_0^(2 pi) g(t) N_0' (f(t)) dd(t) 
+  integral_0^(2 pi) g(t) N'_0 (f(t)) dd(t) 
   &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01' (t_j) + w_j n02d (t_j)) \
   $
+  Note that $N'_0$ is continuous but not analytic, thus we are splitting the integral into two parts.
 ]
 #algorithm[
   Assume we have implementation of $J_0, J'_0, N'_0, f, f', f''$.
