@@ -100,7 +100,7 @@
   where
   $
   n01' (z) &= 1/pi J'_0 (f(z)) f'(z) #<n01d> \
-  n02d (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) #<n02d-not0>
+  n02d (z) &= N'_0 (f(z)) - n01' (z) log (4 sin^2 z/2) quad (z != 0) #<n02d-not0>
   $
   Note that analycity of $n02d, n02'$ at $0$ is not obvious.
   Let $g(z) := f(z) / z$, then
@@ -121,7 +121,7 @@
   $
 ]
 #theorem[
-  Let $f in e CC[[e]], g in C[[e]], h in e C[[e]]$.
+  Let $f in e CC[[e]] without e^2 CC[[e]], g in C[[e]]$.
   $
   integral_0^(2 pi) g(t) N_0' (f(t)) dd(t) 
   &approx sum_(j = 0)^(N' - 1) g(t_j) (R_j' n01' (t_j) + w_j n02d (t_j)) \
