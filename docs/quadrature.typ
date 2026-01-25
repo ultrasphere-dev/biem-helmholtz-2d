@@ -32,13 +32,14 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #definition[Cauchy Principle value on a circle][
   Let $alpha in (0, 1], f in C^(0, alpha) (0, 2 pi)$
   $
-  p.v. integral_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
+  "p.v." integral_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
   $
 ]
 #definition[Hadamard Finite-Part on a circle][
   Let $alpha in (0, 1], n in NN without {1}, f in C^(n,alpha) (0, 2 pi)$
   $
-  p.f. integral_0^(2 pi) f(x) cot^n (x/2) dd(x) := lim_(epsilon -> 0) F_0(epsilon)
+  "p.f." integral_0^(2 pi) f(x) cot^n (x/2) dd(x)
+  &:= lim_(epsilon -> 0) F_0(epsilon)
   $
   where
   $
@@ -47,22 +48,62 @@ Integral equations coming from common partial differential equations in $RR^2$ o
   lim_(epsilon -> 0) log(4 sin^2 (epsilon/2)) 1/(F_1 (epsilon)) < infinity
   $
 ]
-
-#lemma[
+#theorem[Hadamard Finite-Part on a circle][
+  Let
   $
-    p.v. integral_0^(2 pi) cot(x/2) e^(i m x) dd(x) = 2 pi i sign(m) quad m in ZZ without {0} #<cot-integral> \
-    integral_0^(2 pi) log(4 sin^2 x/2) e^(i m x) dd(x) = cases(0 &(m = 0), -(2 pi)/(abs(m)) &(m in ZZ without {0})) #<log-integral>
+  forall n in NN. (T_n f) (t) &:= "p.f." integral_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
+  $
+  then
+  $
+  forall n in NN. (T_(n + 1) f) (t)
+  &:= -2/n dv(,t) (T_(n) f) (t) - (T_(n - 1) f) (t)
+  $
+  where
+  $
+  (T_1 f) (t) &:= "p.v." integral_0^(2 pi) f(x) cot ((x - t)/2) dd(x) \
+  (T_0 f) (t)&:= integral_0^(2 pi) f(x) dd(x)
   $
 ]
+
+#theorem[
+  Let
+  $
+  I_(m,n) = "p.f." integral_0^(2 pi) e^(i m t) cot^n (t/2) dif t
+  $
+  then following recurrence relation holds:
+  $
+  I_(m,n) &= (2 i m)/(n-1) I_(m,n-1) - I_(m,n-2)
+  $
+  with initial values:
+  $
+  I_(m,0) &= 0, &quad I_(m,1) &= 2 pi i sgn(m) quad (m != 0)\
+  I_(0,0) &= 2 pi, &quad I_(0,1) &= 0
+  $
+]
+#theorem[
+  Let
+  $
+  J_(m,n) &= "p.f." integral_0^(2 pi) e^(i m t) log(4 sin^2 (t/2)) cot^n (t/2) dif t
+  $
+  then following recurrence relation holds:
+  $
+  J_(m,n) &= (2 i m)/(n-1) J_(m,n-1) - J_(m,n-2) + 2/(n-1) I_(m,n)
+  $
+  with initial values:
+  $
+  J_(m,0) &= -(2 pi)/abs(m), &quad J_(m,1) &= 2 pi i sgn(m) ( 2 H_(abs(m)) - 1/abs(m) ) quad (m != 0) \
+  J_(0,0) &= 0, &quad J_(0,1) &= 0
+  $
+]
+
+== Subspace $U_N$
+
 #lemma[
   $forall N' in NN. t_j := (2 pi j)/N'. forall m in ZZ.$
   $
     (2 pi)/N' sum_(j=0)^(N'-1) e^(i m t_j) = cases(2 pi &(m equiv 0 mod N'), 0 &("otherwise"))
   $
 ] <fourier-sum>
-
-== Subspace $U_N$
-
 #definition[
   $U_N := span({e^(i m x) | m in ZZ, abs(m) < N})$
 ]
