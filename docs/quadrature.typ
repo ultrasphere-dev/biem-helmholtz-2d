@@ -11,11 +11,45 @@
 #let span = $op("span")$
 #let sign = $op("sign")$
 
-== Basic Properties
+== Integrals involving Fourier basis functions
+
+The below thorem is used everywhere.
+
+#theorem[Fourier Integral][
+  $
+    integral_0^(2 pi) e^(i m x) dd(x) = cases(2 pi &(m = 0), 0 &(m in ZZ without {0})) #<fourier-integral>
+$
+]
+#proof[
+  $
+    integral_0^(2 pi) e^(i m x) dd(x) & = (e^(i m dot 2 pi) - e^(i m dot 0))/(i m)  \
+                                   & = cases(2 pi &(m = 0), 0 &(m in ZZ without {0}))
+  $
+]
+
+Integral equations coming from common partial differential equations in $RR^2$ often involve singular integrals, derivative of integrals.
+
+#definition[Cauchy Principle value on a circle][
+  Let $alpha in (0, 1], f in C^(0, alpha) (0, 2 pi)$
+  $
+  p.v. integral_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
+  $
+]
+#definition[Hadamard Finite-Part on a circle][
+  Let $alpha in (0, 1], n in NN without {1}, f in C^(n,alpha) (0, 2 pi)$
+  $
+  p.f. integral_0^(2 pi) f(x) cot^n (x/2) dd(x) := lim_(epsilon -> 0) F_0(epsilon)
+  $
+  where
+  $
+  forall epsilon in (0, pi). integral_(epsilon)^(2 pi - epsilon) f(x) cot^n (x/2) dd(x) = F_0 (epsilon) + F_1 (epsilon) \
+  lim_(epsilon -> 0) F_0 (epsilon) < infinity \
+  lim_(epsilon -> 0) log(4 sin^2 (epsilon/2)) 1/(F_1 (epsilon)) < infinity
+  $
+]
 
 #lemma[
   $
-    integral_0^(2 pi) e^(i m x) dd(x) = cases(2 pi &(m = 0), 0 &(m in ZZ without {0})) #<fourier-integral> \
     p.v. integral_0^(2 pi) cot(x/2) e^(i m x) dd(x) = 2 pi i sign(m) quad m in ZZ without {0} #<cot-integral> \
     integral_0^(2 pi) log(4 sin^2 x/2) e^(i m x) dd(x) = cases(0 &(m = 0), -(2 pi)/(abs(m)) &(m in ZZ without {0})) #<log-integral>
   $
