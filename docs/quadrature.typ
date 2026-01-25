@@ -72,7 +72,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
   $
   then following recurrence relation holds:
   $
-  forall n in NN without {1}. I_(m,n) &= (2 i m)/(n-1) I_(m,n-1) - I_(m,n-2)
+  forall m in ZZ. forall n in NN without {1}. I_(m,n) &= (2 i m)/(n-1) I_(m,n-1) - I_(m,n-2)
   $
   with initial values:
   $
@@ -87,7 +87,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
   $
   then following recurrence relation holds:
   $
-  forall n in NN without {1}. J_(m,n) &= (2 i m)/(n-1) J_(m,n-1) - J_(m,n-2) + 2/(n-1) I_(m,n)
+  forall m in ZZ. forall n in NN without {1}. J_(m,n) &= (2 i m)/(n-1) J_(m,n-1) - J_(m,n-2) + 2/(n-1) I_(m,n)
   $
   with initial values:
   $
