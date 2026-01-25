@@ -144,7 +144,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[Garrick--Wittich quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
   $
-    "p.f." integral_0^(2 pi) f(x) cot^n (t/2) dd(x) = sum_(j=0)^(N'-1) f(t_j) P_j^(N',n)
+    "p.f." integral_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) P_j^(N',n)
   $
   $
   P_j^(N',n) := 1/N' sum_(abs(m) < N) I_(m,n) e^(- i m t_j)
@@ -153,7 +153,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[Generalized Kussmaul--Martensen (Kress) quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
   $
-    "p.f." integral_0^(2 pi) f(x) log(4 sin^2 ((x - t)/2)) cot^n (t/2) dd(x) = sum_(j=0)^(N'-1) f(t_j) Q_j^(N',n)
+    "p.f." integral_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) Q_j^(N',n)
   $
   $
   Q_j^(N',n) := 1/N' sum_(abs(m) < N) J_(m,n) e^(- i m t_j)
