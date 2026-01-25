@@ -49,13 +49,13 @@ Integral equations coming from common partial differential equations in $RR^2$ o
   $
 ]
 #theorem[Hadamard Finite-Part on a circle][
-  Let
+  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi). $Let
   $
-  forall n in NN. (T_n f) (t) &:= "p.f." integral_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
+  (T_n f) (t) &:= "p.f." integral_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
   $
   then
   $
-  forall n in NN. (T_(n + 1) f) (t)
+  (T_(n + 1) f) (t)
   &:= -2/n dv(,t) (T_(n) f) (t) - (T_(n - 1) f) (t)
   $
   where
