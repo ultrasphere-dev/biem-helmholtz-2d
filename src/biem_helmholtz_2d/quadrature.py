@@ -197,7 +197,7 @@ def cot_power_shifted_quadrature(
     r"""
     Shifted finite-part trapezoidal rule for $\cot^{\mathrm{power}}(t/2)$.
 
-    Let $N' := 2 N - 1$ and $t_j := t_\mathrm{start} + 2\pi j / N'$.
+    Let $N' := 2 N - 1$ and $t_j := 2\pi j / N'$.
     For $t_s := t_\mathrm{start}$, the rule matches the Typst statement
 
     $$
@@ -212,7 +212,7 @@ def cot_power_shifted_quadrature(
     $$
 
     The returned weights correspond to $P_j^{(N',\mathrm{power})}$ evaluated at
-    $t_s = t_\mathrm{start}$.
+    $t_s = t_\mathrm{start}$, and the returned nodes are $t_j + t_\mathrm{start}$.
 
     Parameters
     ----------
@@ -232,7 +232,7 @@ def cot_power_shifted_quadrature(
     Returns
     -------
     Array
-        Nodes $t_j$ of shape (2*n_harmonics - 1,).
+        Nodes $t_j + t_\mathrm{start}$ of shape (2*n_harmonics - 1,).
     Array
         Weights $P_j$ of shape (2*n_harmonics - 1,).
 
@@ -246,7 +246,7 @@ def cot_power_shifted_quadrature(
     m = xp.arange(
         -(n_harmonics - 1), n_harmonics, device=device
     )
-    phase = (-1j) * m[:, None] * (t[None, :] + t_start)
+    phase = (-1j) * m[:, None] * t[None, :]
     weights = xp.asarray(
         xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
         device=device,
@@ -269,7 +269,7 @@ def log_cot_power_shifted_quadrature(
     Shifted finite-part trapezoidal rule for
     $\log(4\sin^2(t/2))\,\cot^{\mathrm{power}}(t/2)$.
 
-    Let $N' := 2 N - 1$ and $t_j := t_\mathrm{start} + 2\pi j / N'$.
+    Let $N' := 2 N - 1$ and $t_j := 2\pi j / N'$.
     For $t_s := t_\mathrm{start}$, the rule matches the Typst statement
 
     $$
@@ -284,7 +284,7 @@ def log_cot_power_shifted_quadrature(
     $$
 
     The returned weights correspond to $Q_j^{(N',\mathrm{power})}$ evaluated at
-    $t_s = t_\mathrm{start}$.
+    $t_s = t_\mathrm{start}$, and the returned nodes are $t_j + t_\mathrm{start}$.
 
     Parameters
     ----------
@@ -304,7 +304,7 @@ def log_cot_power_shifted_quadrature(
     Returns
     -------
     Array
-        Nodes $t_j$ of shape (2*n_harmonics - 1,).
+        Nodes $t_j + t_\mathrm{start}$ of shape (2*n_harmonics - 1,).
     Array
         Weights $Q_j$ of shape (2*n_harmonics - 1,).
 
@@ -318,7 +318,7 @@ def log_cot_power_shifted_quadrature(
     m = xp.arange(
         -(n_harmonics - 1), n_harmonics, device=device
     )
-    phase = (-1j) * m[:, None] * (t[None, :] + t_start)
+    phase = (-1j) * m[:, None] * t[None, :]
     weights = xp.asarray(
         xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
         device=device,

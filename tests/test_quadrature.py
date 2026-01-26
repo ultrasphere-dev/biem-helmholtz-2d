@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import math
 
 import pytest  # type: ignore[import-not-found]
 
@@ -11,12 +12,17 @@ from biem_helmholtz_2d.quadrature import (
 )
 
 
+@pytest.mark.parametrize("t_start_factor", [0, 0.5])
 @pytest.mark.parametrize("f_case", ["one", "exp1", "combo"])
 def test_kussmaul_martensen_kress_quadrature_exactness(
-	xp: Any, device: Any, dtype: Any, f_case: str
+	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
 ) -> None:
 	n = 6
-	t, w = kussmaul_martensen_kress_quadrature(n, xp=xp, device=device, dtype=dtype)
+	h = (2 * math.pi) / (2 * n - 1)
+	t_start = t_start_factor * h
+	t, w = kussmaul_martensen_kress_quadrature(
+		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+	)
 	two_pi = xp.pi * 2
 
 	if f_case == "one":
@@ -35,10 +41,17 @@ def test_kussmaul_martensen_kress_quadrature_exactness(
 	assert xp.abs(approx - expected) < 1e-10
 
 
+@pytest.mark.parametrize("t_start_factor", [0, 0.5])
 @pytest.mark.parametrize("f_case", ["one", "exp1", "combo"])
-def test_garrick_wittich_quadrature_exactness(xp: Any, device: Any, dtype: Any, f_case: str) -> None:
+def test_garrick_wittich_quadrature_exactness(
+	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
+) -> None:
 	n = 6
-	t, w = garrick_wittich_quadrature(n, xp=xp, device=device, dtype=dtype)
+	h = (2 * math.pi) / (2 * n - 1)
+	t_start = t_start_factor * h
+	t, w = garrick_wittich_quadrature(
+		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+	)
 	two_pi = xp.pi * 2
 
 	if f_case == "one":
@@ -57,10 +70,17 @@ def test_garrick_wittich_quadrature_exactness(xp: Any, device: Any, dtype: Any, 
 	assert xp.abs(approx - expected) < 1e-10
 
 
+@pytest.mark.parametrize("t_start_factor", [0, 0.5])
 @pytest.mark.parametrize("f_case", ["one", "exp1", "combo"])
-def test_trapezoidal_quadrature_exactness(xp: Any, device: Any, dtype: Any, f_case: str) -> None:
+def test_trapezoidal_quadrature_exactness(
+	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
+) -> None:
 	n = 6
-	t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+	h = (2 * math.pi) / (2 * n - 1)
+	t_start = t_start_factor * h
+	t, w = trapezoidal_quadrature(
+		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+	)
 	two_pi = xp.pi * 2
 
 	if f_case == "one":
