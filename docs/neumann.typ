@@ -24,7 +24,7 @@
 ]
 #lemma[
   $
-  Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z CC[[z]]
+  Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z^2 CC[[z]]
   $
   $forall n in NN.$
 $
@@ -40,12 +40,12 @@ $
   $forall f in e C[[e]].$
   $
   Y_0 (f(z)) 
-               & = (J_0 (f(z)))/pi log(4 sin^2(z/2))  + underbrace(2/pi (log abs((f'(0))/2)  + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + O(z) \
+               & = (J_0 (f(z)))/pi log(4 sin^2(z/2))  + underbrace(2/pi (log abs((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
                &= Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
                $
   $forall n in NN.$
   $
-  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2)) + underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + O(z) \
+  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2)) + underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + e^2 C[[e]] \
                 &= Y_n^((1,f)) (z) log(4 sin^2(z/2)) + Y_n^((2,f)) (z)
   $
 ]
