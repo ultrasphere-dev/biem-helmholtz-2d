@@ -35,6 +35,7 @@ def neumann_y1_y2(
 	eps: float = 0.0,
 	/,
 	*,
+	t_singularity: float = 0,
 	xp: ArrayNamespaceFull,
 	device: Any,
 	dtype: Any,
@@ -42,17 +43,11 @@ def neumann_y1_y2(
 	r"""
 	Split Neumann functions into log-singular and analytic parts on nodes ``x``.
 
-	For ``order == 0`` the split is
-
-	$$
-	Y_0(f(x)) = Y_0^{(1)}(x)\,\log\left(4\sin^2\frac{x}{2}\right) + Y_0^{(2)}(x).
-	$$
-
-	For ``order > 0`` the split is
+	The split is
 
 	$$
 	f(x)^{\mathrm{order}} Y_{\mathrm{order}}(f(x))
-	= Y_{\mathrm{order}}^{(1)}(x)\,\log\left(4\sin^2\frac{x}{2}\right) + Y_{\mathrm{order}}^{(2)}(x).
+	= Y_{\mathrm{order}}^{(1)}(x)\,\log\left(4\sin^2\frac{x - t_s}{2}\right) + Y_{\mathrm{order}}^{(2)}(x).
 	$$
 
 	Parameters
@@ -63,11 +58,14 @@ def neumann_y1_y2(
 		Order of the Neumann function.
 	f : Callable[[Array], Array]
 		Function evaluated at nodes. It must accept input of shape (N',)
-		and return an array of shape (..., N').
+		and return an array of shape (..., N'). It is assumed to be smooth
+		everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
 	fprime0 : Array | None
-		Value $f'(0)$ of shape (...,) required when ``order == 0``.
+		Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
 	eps : float
-		If ``abs(x) <= eps``, replace $Y^{(2)}$ by its limit value.
+		If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
+	t_singularity : float
+		Singularity location $t_s$ in $[0, 2\pi)$.
 	xp : ArrayNamespaceFull
 		The array namespace.
 	device : Any
@@ -96,14 +94,16 @@ def neumann_y1_y2(
 		x_pow = fx**order
 
 	y1 = x_pow * jv / xp.pi
-	log_kernel = xp.log(4 * xp.sin(x / 2) ** 2)
+	two_pi = 2 * xp.pi
+	delta = xp.remainder(x - t_singularity + xp.pi, two_pi) - xp.pi
+	log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
 	y2 = x_pow * yv - y1 * log_kernel
 
 	if eps < 0:
 		msg = "eps must be non-negative."
 		raise ValueError(msg)
 
-	near0 = xp.abs(x) <= eps
+	near0 = xp.abs(delta) <= eps
 	if order == 0:
 		assert fprime0 is not None
 		y2_lim = (2 / xp.pi) * (
