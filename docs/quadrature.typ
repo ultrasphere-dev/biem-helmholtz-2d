@@ -143,9 +143,9 @@ $
 == Subspace $U_N$
 
 #lemma[
-  $forall N' in NN. t_j := (2 pi j)/N'. forall m in ZZ.$
+  $forall N' in NN. t_j := (2 pi j)/N'. forall m in ZZ. forall t in [0, 2 pi).$
   $
-    (2 pi)/N' sum_(j=0)^(N'-1) e^(i m t_j) = cases(2 pi &(m equiv 0 mod N'), 0 &("otherwise"))
+    (2 pi)/N' sum_(j=0)^(N'-1) e^(i m (t_j - t)) = cases(2 pi &(m equiv 0 mod N'), 0 &("otherwise"))
   $
 ] <fourier-sum>
 #definition[
