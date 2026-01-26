@@ -35,20 +35,20 @@ $
   - $csc^(2 n) t/2, n in 2 NN$: ok
 
 #definition[Cauchy Principle value on a circle][
-  Let $alpha in (0, 1], f in C^(0, alpha) (0, 2 pi)$
+  $forall alpha > 0. forall t in [0, 2 pi). forall f in C^(0, alpha). (0, 2 pi)$
   $
-  integral.dash_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
+  integral.dash_0^(2 pi) f(x) cot((x-t)/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x + t) cot(x/2) dd(x))
   $
 ]
 #definition[Hadamard Finite-Part on a circle][
-  Let $alpha in (0, 1], n in NN without {1}, f in C^(n,alpha) (0, 2 pi)$
+  $forall alpha > 0. forall t in [0, 2 pi). forall n in NN without {1}. forall f in C^(n,alpha) (0, 2 pi).$
   $
-  integral.dash_0^(2 pi) f(x) cot^n (x/2) dd(x)
+  integral.dash_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
   &:= lim_(epsilon -> 0) F_0(epsilon)
   $
   where
   $
-  forall epsilon in (0, pi). integral_(epsilon)^(2 pi - epsilon) f(x) cot^n (x/2) dd(x) = F_0 (epsilon) + F_1 (epsilon) \
+  forall epsilon in (0, pi). integral_(epsilon)^(2 pi - epsilon) f(x + t) cot^n (x/2) dd(x) = F_0 (epsilon) + F_1 (epsilon) \
   lim_(epsilon -> 0) F_0 (epsilon) < infinity \
   lim_(epsilon -> 0) log(4 sin^2 (epsilon/2)) 1/(F_1 (epsilon)) < infinity
   $
@@ -68,8 +68,22 @@ $
   (T_1 f) (t) &:= integral.dash_0^(2 pi) f(x) cot ((x - t)/2) dd(x) \
   (T_0 f) (t)&:= integral_0^(2 pi) f(x) dd(x)
   $
+] <hadamard-recurrence>
+#theorem[
+  $forall n in NN. forall f in C^(n + 1, alpha) (RR\/2 pi).$
+  $
+  dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x) = integral.dash_0^(2 pi) f'(x) cot^n ((x - t)/2) dd(x)
+  $
+] <derivative-of-fp>
+#proof[
+$
+  dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x) 
+  &= dv(,t) integral.dash_0^(2 pi) f(x + t) cot^n (x/2) dd(x) \
+  &= dv(,t) lim_(epsilon -> 0) F(t, epsilon) \
+  &=_? lim_(epsilon -> 0) dv(,t) F(t, epsilon) \
+  &= integral.dash_0^(2 pi) f'(x) cot^n ((x - t)/2) dd(x)
+  $
 ]
-
 #theorem[
   Let
   $
@@ -87,14 +101,14 @@ $
 ]
 #proof[
   - $I_(m, 0), m in ZZ$: @fourier-integral.
-  - $I_(0, 1) = 0$: symmetry of integrand.
+  - $I_(0, 1) = 0$: Due to the symmetry of integrand $cot t/2$.
   - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]). 
     - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$ 
     - $therefore forall m in NN. (e^(i m t) - 1) cot (t/2) = (e^(i t) - 1) (sum_(j = 0)^(m - 1) e^(i j t)) cot (t/2) = i (e^(i t) + 1) sum_(j = 0)^(m - 1) e^(i j t)$.
     - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i because $Integrating both hands and @fourier-integral 
     - $therefore forall m in NN. I_(m,1) = 2 pi i$
     - $forall m in NN, I_(-m,1) = overline(I_(m,1)) = - 2 pi i$
-  - Recurrence relation:
+  - Recurrence relation: Due to @hadamard-recurrence @derivative-of-fp
   ]
 #theorem[
   Let
@@ -111,7 +125,9 @@ $
   J_(0,0) &= 0, &quad J_(0,1) &= 0
   $
 ]
-
+#proof[
+  - $J_(m, 0), m in ZZ without {0}$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
+]
 == Subspace $U_N$
 
 #lemma[
