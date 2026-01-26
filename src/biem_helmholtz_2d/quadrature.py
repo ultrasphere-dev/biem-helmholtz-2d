@@ -168,13 +168,14 @@ def _fourier_nodes(
     n_harmonics: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
 ) -> Array:
     n_quad = 2 * n_harmonics - 1
     j = xp.astype(xp.arange(n_quad, device=device), dtype)
-    return (2 * xp.pi) * j / n_quad
+    return t_start + (2 * xp.pi) * j / n_quad
 
 
 def cot_power_shifted_quadrature(
@@ -182,19 +183,30 @@ def cot_power_shifted_quadrature(
     power: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
-    Shifted finite-part trapezoidal rule for $\cot^{\mathrm{power}}((\tau-t)/2)$.
+    Shifted finite-part trapezoidal rule for $\cot^{\mathrm{power}}(t/2)$.
 
-    Returns nodes $t_j$ and weights $P_{ij}$ such that for $t=t_i=t_i$ on the same grid
+    Let $N' := 2 N - 1$ and $t_j := t_\mathrm{start} + 2\pi j / N'$.
+    For $t_s := t_\mathrm{start}$, the rule matches the Typst statement
 
     $$
-    \int_0^{2\pi}{}^\dash f(\tau)\,\cot^{\mathrm{power}}\!\left(\frac{\tau-t_i}{2}\right)d\tau
-    \approx \sum_{j=0}^{N'-1} P_{ij}\,f(t_j).
+    \int_0^{2\pi}{}^\dash f(t)\,\cot^{\mathrm{power}}(t/2)\,dt
+    = \sum_{j=0}^{N'-1} f(t_j + t_s)\,P_j^{(N',\mathrm{power})},
     $$
+
+    with
+
+    $$
+    P_j^{(N',\mathrm{power})} := \frac{1}{N'} \sum_{|m|<N} I_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
+    $$
+
+    The returned weights correspond to $P_j^{(N',\mathrm{power})}$ evaluated at
+    $t_s = t_\mathrm{start}$.
 
     Parameters
     ----------
@@ -202,6 +214,8 @@ def cot_power_shifted_quadrature(
         Harmonics with order less than ``n_harmonics`` are integrated exactly.
     power : int
         Exponent in $\cot^{\mathrm{power}}$.
+    t_start : float
+        Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
     xp : ArrayNamespaceFull
         The array namespace.
     device : Any
@@ -214,10 +228,10 @@ def cot_power_shifted_quadrature(
     Array
         Nodes $t_j$ of shape (2*n_harmonics - 1,).
     Array
-        Weights $P_{ij}$ of shape (2*n_harmonics - 1, 2*n_harmonics - 1).
+        Weights $P_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t = _fourier_nodes(n_harmonics, xp=xp, device=device, dtype=dtype)
+    t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
     coeff = cot_power_fourier_integral_coefficients(
@@ -226,10 +240,9 @@ def cot_power_shifted_quadrature(
     m = xp.arange(
         -(n_harmonics - 1), n_harmonics, device=device
     )
-    dt = t[None, :] - t[:, None]
-    phase = (-1j) * m[:, None, None] * dt[None, :, :]
+    phase = (-1j) * m[:, None] * (t[None, :] + t_start)
     weights = xp.asarray(
-        xp.real((1 / n_quad) * xp.sum(coeff[:, None, None] * xp.exp(phase), axis=0)),
+        xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
         device=device,
         dtype=dtype,
     )
@@ -241,21 +254,31 @@ def log_cot_power_shifted_quadrature(
     power: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Shifted finite-part trapezoidal rule for
-    $\log(4\sin^2((\tau-t)/2))\,\cot^{\mathrm{power}}((\tau-t)/2)$.
+    $\log(4\sin^2(t/2))\,\cot^{\mathrm{power}}(t/2)$.
 
-    Returns nodes $t_j$ and weights $Q_{ij}$ such that for $t=t_i$ on the same grid
+    Let $N' := 2 N - 1$ and $t_j := t_\mathrm{start} + 2\pi j / N'$.
+    For $t_s := t_\mathrm{start}$, the rule matches the Typst statement
 
     $$
-    \int_0^{2\pi}{}^\dash f(\tau)\,\log\left(4\sin^2\frac{\tau-t_i}{2}\right)
-    \cot^{\mathrm{power}}\!\left(\frac{\tau-t_i}{2}\right)d\tau
-    \approx \sum_{j=0}^{N'-1} Q_{ij}\,f(t_j).
+    \int_0^{2\pi}{}^\dash f(t)\,\log(4\sin^2(t/2))\,\cot^{\mathrm{power}}(t/2)\,dt
+    = \sum_{j=0}^{N'-1} f(t_j + t_s)\,Q_j^{(N',\mathrm{power})},
     $$
+
+    with
+
+    $$
+    Q_j^{(N',\mathrm{power})} := \frac{1}{N'} \sum_{|m|<N} J_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
+    $$
+
+    The returned weights correspond to $Q_j^{(N',\mathrm{power})}$ evaluated at
+    $t_s = t_\mathrm{start}$.
 
     Parameters
     ----------
@@ -263,6 +286,8 @@ def log_cot_power_shifted_quadrature(
         Harmonics with order less than ``n_harmonics`` are integrated exactly.
     power : int
         Exponent in $\cot^{\mathrm{power}}$.
+    t_start : float
+        Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
     xp : ArrayNamespaceFull
         The array namespace.
     device : Any
@@ -275,10 +300,10 @@ def log_cot_power_shifted_quadrature(
     Array
         Nodes $t_j$ of shape (2*n_harmonics - 1,).
     Array
-        Weights $Q_{ij}$ of shape (2*n_harmonics - 1, 2*n_harmonics - 1).
+        Weights $Q_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t = _fourier_nodes(n_harmonics, xp=xp, device=device, dtype=dtype)
+    t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
     coeff = log_cot_power_fourier_integral_coefficients(
@@ -287,10 +312,9 @@ def log_cot_power_shifted_quadrature(
     m = xp.arange(
         -(n_harmonics - 1), n_harmonics, device=device
     )
-    dt = t[None, :] - t[:, None]
-    phase = (-1j) * m[:, None, None] * dt[None, :, :]
+    phase = (-1j) * m[:, None] * (t[None, :] + t_start)
     weights = xp.asarray(
-        xp.real((1 / n_quad) * xp.sum(coeff[:, None, None] * xp.exp(phase), axis=0)),
+        xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
         device=device,
         dtype=dtype,
     )
@@ -301,6 +325,7 @@ def trapezoidal_quadrature(
     n: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -319,6 +344,8 @@ def trapezoidal_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
+    t_start : float
+        Grid shift $t_\mathrm{start}$, with $x_j := t_\mathrm{start} + 2\pi j / (2n-1)$.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -333,7 +360,7 @@ def trapezoidal_quadrature(
         and weights $w_j$ of shape (2n - 1,).
 
     """
-    t = _fourier_nodes(n, xp=xp, device=device, dtype=dtype)
+    t = _fourier_nodes(n, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = t.shape[0]
     w = xp.full((1,), (2 * xp.pi) / n_quad, dtype=dtype, device=device)
     return t, w
@@ -343,6 +370,7 @@ def kussmaul_martensen_kress_quadrature(
     n: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -352,7 +380,7 @@ def kussmaul_martensen_kress_quadrature(
 
     Returns $x_j$ and $R_j$, where
 
-    Let $n' := 2n - 1$ and $x_j := 2\pi j / n'$.
+    Let $n' := 2n - 1$ and $x_j := t_\mathrm{start} + 2\pi j / n'$.
 
     $$
     \int_0^{2\pi} \log \left(4 \sin^2 \frac{t}{2}\right) f(t) dt
@@ -363,6 +391,8 @@ def kussmaul_martensen_kress_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
+    t_start : float
+        Grid shift $t_\mathrm{start}$.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -378,13 +408,16 @@ def kussmaul_martensen_kress_quadrature(
 
     """
     # power == 0 corresponds to the classic Kress log quadrature.
-    return log_cot_power_shifted_quadrature(n, 0, xp=xp, device=device, dtype=dtype)
+    return log_cot_power_shifted_quadrature(
+        n, 0, t_start=t_start, xp=xp, device=device, dtype=dtype
+    )
 
 
 def garrick_wittich_quadrature(
     n: int,
     /,
     *,
+    t_start: float = 0,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -394,7 +427,7 @@ def garrick_wittich_quadrature(
 
     Returns $x_j$ and $T_j$, where
 
-    Let $n' := 2n - 1$ and $x_j := 2\pi j / n'$.
+    Let $n' := 2n - 1$ and $x_j := t_\mathrm{start} + 2\pi j / n'$.
 
     $$
     p.v. \int_0^{2\pi} \cot \frac{t}{2} f'(t) dt
@@ -405,6 +438,8 @@ def garrick_wittich_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
+    t_start : float
+        Grid shift $t_\mathrm{start}$.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -420,4 +455,6 @@ def garrick_wittich_quadrature(
 
     """
     # power == 1 corresponds to the Cauchy principal value cot-kernel.
-    return cot_power_shifted_quadrature(n, 1, xp=xp, device=device, dtype=dtype)
+    return cot_power_shifted_quadrature(
+        n, 1, t_start=t_start, xp=xp, device=device, dtype=dtype
+    )

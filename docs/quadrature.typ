@@ -175,33 +175,33 @@ $
 #lemma[
   $forall N in NN. forall f in U_N. N := 2 N - 1. t_j := (2 pi j)/N'. forall ts in [0, 2 pi).$
   $
-    f(x) = sum_(j = 0)^(N'-1) f(t_j - ts) dot (1/N' sum_(abs(m) < N) e^(- i m (t_j - ts)) e^(i m x))
+    f(x) = sum_(j = 0)^(N'-1) f(t_j + ts) dot (1/N' sum_(abs(m) < N) e^(- i m (t_j + ts)) e^(i m x))
   $
 ] <dft>
 #proof[
   $
     f(x) & = sum_(abs(m) < N) integral_0^(2 pi) f(t) e^(-i m t)/sqrt(2 pi) dd(t) dot e^(i m x)/sqrt(2 pi) \
-         & =_(because #ref(<dft-trapezoidal>)) 1/(2 pi) sum_(abs(m) < N) (2 pi)/N' sum_(j=0)^(N'-1) f(t_j - ts) e^(-i m (t_j - t)) dot e^(i m x) \
-         & = sum_(j = 0)^(N'-1) f(t_j - ts) dot (1/N' sum_(abs(m) < N) e^(- i m (t_j - ts)) e^(i m x))
+         & =_(because #ref(<dft-trapezoidal>)) 1/(2 pi) sum_(abs(m) < N) (2 pi)/N' sum_(j=0)^(N'-1) f(t_j + ts) e^(-i m (t_j + t)) dot e^(i m x) \
+         & = sum_(j = 0)^(N'-1) f(t_j + ts) dot (1/N' sum_(abs(m) < N) e^(- i m (t_j + ts)) e^(i m x))
   $
 ]
 
 #theorem[Generalized Garrick--Wittich quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'. forall ts in [0, 2 pi).$
   $
-    integral.dash_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j - ts) P_j^(N',n)
+    integral.dash_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j + ts) P_j^(N',n)
   $
   $
-  P_j^(N',n) := 1/N' sum_(abs(m) < N) I_(m,n) e^(- i m (t_j - ts))
+  P_j^(N',n) := 1/N' sum_(abs(m) < N) I_(m,n) e^(- i m (t_j + ts))
   $
 ]
 #theorem[Generalized Kussmaul--Martensen (Kress) quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'. forall ts in [0, 2 pi).$
   $
-    integral.dash_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j - ts) Q_j^(N',n)
+    integral.dash_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j + ts) Q_j^(N',n)
   $
   $
-  Q_j^(N',n) := 1/N' sum_(abs(m) < N) J_(m,n) e^(- i m (t_j - ts))
+  Q_j^(N',n) := 1/N' sum_(abs(m) < N) J_(m,n) e^(- i m (t_j + ts))
   $
 ]
 

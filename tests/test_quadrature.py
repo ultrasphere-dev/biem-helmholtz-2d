@@ -21,18 +21,18 @@ def test_kussmaul_martensen_kress_quadrature_exactness(
 
 	if f_case == "one":
 		f = xp.ones_like(t)
-		expected = xp.zeros_like(t)
+		expected = 0
 	elif f_case == "exp1":
 		f = xp.exp(1j * t)
-		expected = -two_pi * xp.exp(1j * t)
+		expected = -two_pi
 		# From docs/quadrature.typ:
-		# ∫ log(4 sin^2((τ-t)/2)) e^{i m τ} dτ = e^{i m t} (-2π/|m|).
+		# ∫ log(4 sin^2(t/2)) e^{i m t} dt = -2π/|m|.
 	else:
 		f = xp.ones_like(t) + xp.exp(1j * 3 * t) + xp.exp(-1j * 4 * t)
-		expected = -(two_pi / 3) * xp.exp(1j * 3 * t) - (two_pi / 4) * xp.exp(-1j * 4 * t)
+		expected = -(two_pi / 3) - (two_pi / 4)
 
-	approx = xp.sum(w * f[None, :], axis=1)
-	assert xp.max(xp.abs(approx - expected)) < 1e-10
+	approx = xp.sum(w * f)
+	assert xp.abs(approx - expected) < 1e-10
 
 
 @pytest.mark.parametrize("f_case", ["one", "exp1", "combo"])
@@ -43,21 +43,18 @@ def test_garrick_wittich_quadrature_exactness(xp: Any, device: Any, dtype: Any, 
 
 	if f_case == "one":
 		f = xp.ones_like(t)
-		expected = xp.zeros_like(t)
+		expected = 0
 	elif f_case == "exp1":
 		f = xp.exp(1j * t)
-		expected = (two_pi * 1j) * xp.exp(1j * t)
+		expected = two_pi * 1j
 		# From docs/quadrature.typ:
-		# p.v.∫ cot((τ-t)/2) e^{i m τ} dτ = e^{i m t} (2π i sgn(m)).
+		# p.v.∫ cot(t/2) e^{i m t} dt = 2π i sgn(m).
 	else:
 		f = xp.ones_like(t) + xp.exp(1j * 3 * t) + xp.exp(-1j * 4 * t)
-		expected = (
-			(two_pi * 1j) * xp.exp(1j * 3 * t)
-			+ (-two_pi * 1j) * xp.exp(-1j * 4 * t)
-		)
+		expected = 0
 
-	approx = xp.sum(w * f[None, :], axis=1)
-	assert xp.max(xp.abs(approx - expected)) < 1e-10
+	approx = xp.sum(w * f)
+	assert xp.abs(approx - expected) < 1e-10
 
 
 @pytest.mark.parametrize("f_case", ["one", "exp1", "combo"])
