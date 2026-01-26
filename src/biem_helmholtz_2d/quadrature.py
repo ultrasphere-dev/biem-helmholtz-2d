@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import math
 import warnings
 from typing import Any
 
@@ -184,12 +185,29 @@ def _fourier_nodes(
     return t_start + (2 * xp.pi) * j / n_quad
 
 
+def _resolve_t_start(
+    n_harmonics: int,
+    /,
+    *,
+    t_start: float = 0,
+    t_start_factor: float | None = None,
+) -> float:
+    if t_start_factor is not None and t_start != 0:
+        msg = "Specify only one of t_start or t_start_factor."
+        raise ValueError(msg)
+    if t_start_factor is None:
+        return t_start
+    h = (2 * math.pi) / (2 * n_harmonics - 1)
+    return t_start_factor * h
+
+
 def cot_power_shifted_quadrature(
     n_harmonics: int,
     power: int,
     /,
     *,
     t_start: float = 0,
+    t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -222,6 +240,9 @@ def cot_power_shifted_quadrature(
         Exponent in $\cot^{\mathrm{power}}$.
     t_start : float
         Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
+        ``t_start``.
     xp : ArrayNamespaceFull
         The array namespace.
     device : Any
@@ -237,6 +258,9 @@ def cot_power_shifted_quadrature(
         Weights $P_j$ of shape (2*n_harmonics - 1,).
 
     """
+    t_start = _resolve_t_start(
+        n_harmonics, t_start=t_start, t_start_factor=t_start_factor
+    )
     t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
@@ -261,6 +285,7 @@ def log_cot_power_shifted_quadrature(
     /,
     *,
     t_start: float = 0,
+    t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -294,6 +319,9 @@ def log_cot_power_shifted_quadrature(
         Exponent in $\cot^{\mathrm{power}}$.
     t_start : float
         Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
+        ``t_start``.
     xp : ArrayNamespaceFull
         The array namespace.
     device : Any
@@ -309,6 +337,9 @@ def log_cot_power_shifted_quadrature(
         Weights $Q_j$ of shape (2*n_harmonics - 1,).
 
     """
+    t_start = _resolve_t_start(
+        n_harmonics, t_start=t_start, t_start_factor=t_start_factor
+    )
     t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
@@ -332,6 +363,7 @@ def trapezoidal_quadrature(
     /,
     *,
     t_start: float = 0,
+    t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -352,6 +384,9 @@ def trapezoidal_quadrature(
         Harmonics which order is less than n are integrated exactly.
     t_start : float
         Grid shift $t_\mathrm{start}$, with $x_j := t_\mathrm{start} + 2\pi j / (2n-1)$.
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
+        ``t_start``.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -366,6 +401,7 @@ def trapezoidal_quadrature(
         and weights $w_j$ of shape (2n - 1,).
 
     """
+    t_start = _resolve_t_start(n, t_start=t_start, t_start_factor=t_start_factor)
     t = _fourier_nodes(n, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = t.shape[0]
     w = xp.full((1,), (2 * xp.pi) / n_quad, dtype=dtype, device=device)
@@ -377,6 +413,7 @@ def kussmaul_martensen_kress_quadrature(
     /,
     *,
     t_start: float = 0,
+    t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -399,6 +436,9 @@ def kussmaul_martensen_kress_quadrature(
         Harmonics which order is less than n are integrated exactly.
     t_start : float
         Grid shift $t_\mathrm{start}$.
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
+        ``t_start``.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -415,7 +455,13 @@ def kussmaul_martensen_kress_quadrature(
     """
     # power == 0 corresponds to the classic Kress log quadrature.
     return log_cot_power_shifted_quadrature(
-        n, 0, t_start=t_start, xp=xp, device=device, dtype=dtype
+        n,
+        0,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
+        device=device,
+        dtype=dtype,
     )
 
 
@@ -424,6 +470,7 @@ def garrick_wittich_quadrature(
     /,
     *,
     t_start: float = 0,
+    t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
@@ -446,6 +493,9 @@ def garrick_wittich_quadrature(
         Harmonics which order is less than n are integrated exactly.
     t_start : float
         Grid shift $t_\mathrm{start}$.
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
+        ``t_start``.
     xp: ArrayNamespaceFull
         The array namespace.
     device: Any
@@ -462,5 +512,11 @@ def garrick_wittich_quadrature(
     """
     # power == 1 corresponds to the Cauchy principal value cot-kernel.
     return cot_power_shifted_quadrature(
-        n, 1, t_start=t_start, xp=xp, device=device, dtype=dtype
+        n,
+        1,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
+        device=device,
+        dtype=dtype,
     )

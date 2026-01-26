@@ -18,10 +18,8 @@ def test_kussmaul_martensen_kress_quadrature_exactness(
 	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
 ) -> None:
 	n = 6
-	h = (2 * math.pi) / (2 * n - 1)
-	t_start = t_start_factor * h
 	t, w = kussmaul_martensen_kress_quadrature(
-		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+		n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
 	)
 	two_pi = xp.pi * 2
 
@@ -47,10 +45,8 @@ def test_garrick_wittich_quadrature_exactness(
 	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
 ) -> None:
 	n = 6
-	h = (2 * math.pi) / (2 * n - 1)
-	t_start = t_start_factor * h
 	t, w = garrick_wittich_quadrature(
-		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+		n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
 	)
 	two_pi = xp.pi * 2
 
@@ -76,10 +72,8 @@ def test_trapezoidal_quadrature_exactness(
 	xp: Any, device: Any, dtype: Any, t_start_factor: float, f_case: str
 ) -> None:
 	n = 6
-	h = (2 * math.pi) / (2 * n - 1)
-	t_start = t_start_factor * h
 	t, w = trapezoidal_quadrature(
-		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+		n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
 	)
 	two_pi = xp.pi * 2
 

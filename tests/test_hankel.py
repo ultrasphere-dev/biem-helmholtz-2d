@@ -41,13 +41,11 @@ def test_neumann_split_quadrature_matches_trapezoidal(
 	xp: Any, device: Any, dtype: Any, order: int, t_start_factor: float
 ) -> None:
 	n = 24
-	h = (2 * math.pi) / (2 * n - 1)
-	t_start = t_start_factor * h
 	x, w = trapezoidal_quadrature(
-		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+		n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
 	)
 	_, r = log_cot_power_shifted_quadrature(
-		n, 0, t_start=t_start, xp=xp, device=device, dtype=dtype
+		n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
 	)
 
 	fprime0 = xp.ones_like(x[0])
