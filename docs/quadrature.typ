@@ -172,7 +172,7 @@ $
 == Quadratures
 
 #lemma[
-  $forall N in NN. forall f in U_N. N := 2 N - 1. t_j := (2 pi j)/N'.$
+  $forall N in NN. forall f in U_N. N := 2 N - 1. t_j := (2 pi j)/N'. forall t in [0, 2 pi).$
   $
     f(x) = sum_(j = 0)^(N'-1) f(t_j - t) dot (1/N' sum_(abs(m) < N) e^(- i m (t_j - t)) e^(i m x))
   $
@@ -186,7 +186,7 @@ $
 ]
 
 #theorem[Generalized Garrick--Wittich quadrature for $U_N$][
-  $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
+  $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'. forall t in [0, 2 pi).$
   $
     integral.dash_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j - t) P_j^(N',n)
   $
@@ -195,7 +195,7 @@ $
   $
 ]
 #theorem[Generalized Kussmaul--Martensen (Kress) quadrature for $U_N$][
-  $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
+  $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'. forall t in [0, 2 pi).$
   $
     integral.dash_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j - t) Q_j^(N',n)
   $
