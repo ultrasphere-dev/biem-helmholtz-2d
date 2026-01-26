@@ -117,3 +117,76 @@ def neumann_y1_y2(
 
 	y2 = xp.where(near0, y2_lim[..., None], y2)
 	return y1, y2
+
+
+def hankel_h1_h2(
+	x: Array,
+	order: int,
+	f: Callable[[Array], Array],
+	fprime0: Array | None = None,
+	eps: float = 0.0,
+	/,
+	*,
+	t_singularity: float = 0,
+	xp: ArrayNamespaceFull,
+	device: Any,
+	dtype: Any,
+) -> tuple[Array, Array]:
+	r"""
+	Split Hankel functions of the first kind into log-singular and analytic parts.
+
+	The split is
+
+	$$
+	f(x)^{\mathrm{order}} H_{\mathrm{order}}^{(1)}(f(x))
+	= H_{\mathrm{order}}^{(1,1)}(x)\,\log\left(4\sin^2\frac{x - t_s}{2}\right)
+	+ H_{\mathrm{order}}^{(1,2)}(x).
+	$$
+
+	Parameters
+	----------
+	x : Array
+		Quadrature nodes of shape (N',).
+	order : int
+		Order of the Hankel function.
+	f : Callable[[Array], Array]
+		Function evaluated at nodes. It must accept input of shape (N',)
+		and return an array of shape (..., N'). It is assumed to be smooth
+		everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+	fprime0 : Array | None
+		Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
+	eps : float
+		If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
+	t_singularity : float
+		Singularity location $t_s$ in $[0, 2\pi)$.
+	xp : ArrayNamespaceFull
+		The array namespace.
+	device : Any
+		The device.
+	dtype : Any
+		The dtype.
+
+	Returns
+	-------
+	Array
+		$H^{(1,1)}$ of shape (..., N').
+	Array
+		$H^{(1,2)}$ of shape (..., N').
+
+	"""
+	y1, y2 = neumann_y1_y2(
+		x,
+		order,
+		f,
+		fprime0,
+		eps,
+		t_singularity=t_singularity,
+		xp=xp,
+		device=device,
+		dtype=dtype,
+	)
+	h1 = 1j * y1
+	h2 = (xp.pi * y1) + (1j * y2)
+	return h1, h2
+
+
