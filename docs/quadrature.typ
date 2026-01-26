@@ -27,18 +27,23 @@ $
   $
 ]
 
-Integral equations coming from common partial differential equations in $RR^2$ often involve singular integrals, derivative of integrals.
+- Integral equations coming from common partial differential equations in $RR^2$ often involve singular integrals, derivative of integrals.
+- To deal with the singularity while maintaining $2 pi$-periodicity, we need a function which only has singularity at $0 (2 pi)$ and is $2 pi$-periodic.
+  - $csc^n t, cot^n t, n in NN$: singularities at $pi$ as well
+  - $csc^n t/2, n in.not 2 NN$: not $2 pi$-periodic
+  - $cot^n t/2, n in NN$: ok
+  - $csc^(2 n) t/2, n in 2 NN$: ok
 
 #definition[Cauchy Principle value on a circle][
   Let $alpha in (0, 1], f in C^(0, alpha) (0, 2 pi)$
   $
-  "p.v." integral_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
+  integral.dash_0^(2 pi) f(x) cot(x/2) dd(x) := lim_(epsilon -> 0) (integral_(epsilon)^(2 pi - epsilon) f(x) cot(x/2) dd(x))
   $
 ]
 #definition[Hadamard Finite-Part on a circle][
   Let $alpha in (0, 1], n in NN without {1}, f in C^(n,alpha) (0, 2 pi)$
   $
-  "p.f." integral_0^(2 pi) f(x) cot^n (x/2) dd(x)
+  integral.dash_0^(2 pi) f(x) cot^n (x/2) dd(x)
   &:= lim_(epsilon -> 0) F_0(epsilon)
   $
   where
@@ -51,7 +56,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[Hadamard Finite-Part on a circle][
   $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi). $Let
   $
-  (T_n f) (t) &:= "p.f." integral_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
+  (T_n f) (t) &:= integral.dash_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
   $
   then
   $
@@ -60,7 +65,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
   $
   where
   $
-  (T_1 f) (t) &:= "p.v." integral_0^(2 pi) f(x) cot ((x - t)/2) dd(x) \
+  (T_1 f) (t) &:= integral.dash_0^(2 pi) f(x) cot ((x - t)/2) dd(x) \
   (T_0 f) (t)&:= integral_0^(2 pi) f(x) dd(x)
   $
 ]
@@ -68,7 +73,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[
   Let
   $
-  I_(m,n) = "p.f." integral_0^(2 pi) e^(i m t) cot^n (t/2) dif t
+  I_(m,n) = integral.dash_0^(2 pi) e^(i m t) cot^n (t/2) dif t
   $
   then following recurrence relation holds:
   $
@@ -83,7 +88,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[
   Let
   $
-  J_(m,n) &= "p.f." integral_0^(2 pi) e^(i m t) log(4 sin^2 (t/2)) cot^n (t/2) dif t
+  J_(m,n) &= integral.dash_0^(2 pi) e^(i m t) log(4 sin^2 (t/2)) cot^n (t/2) dif t
   $
   then following recurrence relation holds:
   $
@@ -144,7 +149,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[Garrick--Wittich quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
   $
-    "p.f." integral_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) P_j^(N',n)
+    integral.dash_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) P_j^(N',n)
   $
   $
   P_j^(N',n) := 1/N' sum_(abs(m) < N) I_(m,n) e^(- i m t_j)
@@ -153,7 +158,7 @@ Integral equations coming from common partial differential equations in $RR^2$ o
 #theorem[Generalized Kussmaul--Martensen (Kress) quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
   $
-    "p.f." integral_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) Q_j^(N',n)
+    integral.dash_0^(2 pi) f(t) log(4 sin^2 (t/2)) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) Q_j^(N',n)
   $
   $
   Q_j^(N',n) := 1/N' sum_(abs(m) < N) J_(m,n) e^(- i m t_j)
