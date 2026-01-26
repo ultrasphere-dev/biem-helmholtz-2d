@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import warnings
 from typing import Any
 
 from array_api._2024_12 import Array, ArrayNamespaceFull
@@ -124,7 +125,10 @@ def log_cot_power_fourier_integral_coefficients(
 
     m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
     abs_m = xp.abs(m)
-    inv_abs_m = 1 / xp.astype(abs_m, dtype)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message="divide by zero encountered in divide")
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in multiply")
+        inv_abs_m = 1 / xp.astype(abs_m, dtype)
 
     # Initial values
     j0 = xp.where(m == 0, 0 + 0.0j, (-two_pi * inv_abs_m) + 0.0j)
@@ -135,11 +139,13 @@ def log_cot_power_fourier_integral_coefficients(
         device=device,
         dtype=dtype,
     )
-    j1 = xp.where(
-        m == 0,
-        0 + 0.0j,
-        two_pi * 1j * xp.sign(m) * (2 * h - inv_abs_m),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in multiply")
+        j1 = xp.where(
+            m == 0,
+            0 + 0.0j,
+            two_pi * 1j * xp.sign(m) * (2 * h - inv_abs_m),
+        )
 
     if power == 0:
         return j0
