@@ -10,6 +10,8 @@
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
 
+= Integrals involving Bessel functions of the second kind
+
 #definition[Euler--Mascheroni Constant][
   $
     C & := lim_(n -> infinity) (sum_(k=1)^n 1/k - log n) \
@@ -67,4 +69,38 @@ For integration of singular functions, one would need to split the function into
   + Compute ${Y_n^((2,f)) (t_j)}_(j = 0)^(N' - 1)$ from step 1, 2  ($Y_n^((2,f)) (t_0 = 0)$ will be temporarily `NaN`).
   + Replace $Y_n^((2,f)) (t_0)$.
   + Compute the sum.
+]
+
+= Layer potentials
+
+Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
+
+#let slp = $cal(S)$
+#let dlp = $cal(D)$
+#definition[
+  $
+  G(x, y) := i/4 H_0^(1) (k abs(x - y))
+  $
+  $
+  slp_Gamma: C(Gamma) -> C(Gamma), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
+  dlp_Gamma: C(Gamma) -> C(Gamma), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
+  $
+]
+#theorem[
+  $
+  grad_y G(x, y) = (i k)/4 (H_1^(1) (k abs(x - y)))/(abs(x - y)) (x - y)
+  $
+]
+#theorem[
+  Since counterclockwise,
+  $
+  n(y) = ((-x'_2(t), x'_1(t))) / abs(x'(t))
+  $
+  $
+  (slp_Gamma phi) (tau) &= integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
+  &= integral_0^(2 pi) i/4 H_0^(1) (k abs(x(tau) - x(t))) phi(t) abs(x'(t)) dd(t) \
+  (dlp_Gamma phi) (tau) &= integral_0^(2 pi) n(x(t)) dot grad_y G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
+  &= integral_0^(2 pi) ((-x'_2(t), x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
+  &= integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((-x'_2(t), x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
+  $
 ]
