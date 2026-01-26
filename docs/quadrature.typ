@@ -17,9 +17,9 @@ The below thorem is used everywhere.
 
 #theorem[Fourier Integral][
   $
-    integral_0^(2 pi) e^(i m x) dd(x) = cases(2 pi &(m = 0), 0 &(m in ZZ without {0})) #<fourier-integral>
+    integral_0^(2 pi) e^(i m x) dd(x) = cases(2 pi &(m = 0), 0 &(m in ZZ without {0}))
 $
-]
+] <fourier-integral>
 #proof[
   $
     integral_0^(2 pi) e^(i m x) dd(x) & = (e^(i m dot 2 pi) - e^(i m dot 0))/(i m)  \
@@ -85,6 +85,16 @@ $
   I_(0,0) &= 2 pi, &quad I_(0,1) &= 0
   $
 ]
+#proof[
+  - $I_(m, 0), m in ZZ$: @fourier-integral.
+  - $I_(0, 1) = 0$: symmetry of integrand.
+  - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]). 
+    - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$ 
+    - $therefore forall m in NN. (e^(i m t) - 1) cot (t/2) = (e^(i t) - 1) (sum_(j = 0)^(m - 1) e^(i j t)) cot (t/2) = i (e^(i t) + 1) sum_(j = 0)^(m - 1) e^(i j t)$.
+    - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i$
+    - $therefore forall m in NN. I_(m,1) = 2 pi i$
+    - $forall m in NN, I_(-m,1) = overline(I_(m,1)) = - 2 pi i$
+  ]
 #theorem[
   Let
   $
@@ -164,3 +174,5 @@ $
   Q_j^(N',n) := 1/N' sum_(abs(m) < N) J_(m,n) e^(- i m t_j)
   $
 ]
+
+#bibliography("quadrature.bib")
