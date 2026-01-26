@@ -54,7 +54,7 @@ $
   $
 ]
 #theorem[Hadamard Finite-Part on a circle][
-  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi). $Let
+  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi) inter L^(1 +) (RR\/2 pi). $Let
   $
   (T_n f) (t) &:= integral.dash_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
   $
@@ -70,7 +70,7 @@ $
   $
 ] <hadamard-recurrence>
 #theorem[
-  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi).$
+  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi) inter L^(1 +) (RR\/2 pi).$
   $
   dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x) = integral.dash_0^(2 pi) f'(x) cot^n ((x - t)/2) dd(x)
   $
@@ -82,6 +82,11 @@ $
   &= dv(,t) lim_(epsilon -> 0) F(t, epsilon) \
   &=_? lim_(epsilon -> 0) dv(,t) F(t, epsilon) \
   &= integral.dash_0^(2 pi) f'(x) cot^n ((x - t)/2) dd(x)
+  $
+]
+#theorem[
+  $
+  integral.dash_0^(2 pi) f'(t) g(t) dd(t) =_? - integral.dash_0^(2 pi) f(t) g'(t) dd(t)
   $
 ]
 #theorem[
@@ -101,14 +106,14 @@ $
 ]
 #proof[
   - $I_(m, 0), m in ZZ$: @fourier-integral.
-  - $I_(0, 1) = 0$: Due to the symmetry of integrand $cot t/2$.
+  - $I_(0, 1) = 0$: Due to the asymmetry of integrand $cot t/2$.
   - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]). 
     - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$ 
     - $therefore forall m in NN. (e^(i m t) - 1) cot (t/2) = (e^(i t) - 1) (sum_(j = 0)^(m - 1) e^(i j t)) cot (t/2) = i (e^(i t) + 1) sum_(j = 0)^(m - 1) e^(i j t)$.
     - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i because $Integrating both hands and @fourier-integral 
     - $therefore forall m in NN. I_(m,1) = 2 pi i$
     - $forall m in NN, I_(-m,1) = overline(I_(m,1)) = - 2 pi i$
-  - Recurrence relation: Due to @hadamard-recurrence @derivative-of-fp
+  - Recurrence relation: Due to @hadamard-recurrence @derivative-of-fp and $(e^(i m t))' = i m e^(i m t)$.
   ]
 #theorem[
   Let
@@ -121,12 +126,19 @@ $
   $
   with initial values:
   $
-  J_(m,0) &= -(2 pi)/abs(m), &quad J_(m,1) &= 2 pi i sgn(m) ( 2 H_(abs(m)) - 1/abs(m) ) quad (m != 0) \
+  J_(m,0) &= -(2 pi)/abs(m), &quad J_(m,1) &= 2 pi i sgn(m) ( 2 H_(abs(m)) - 1/abs(m) ), H_m := sum_(k = 1)^m 1/k quad (m != 0) \
   J_(0,0) &= 0, &quad J_(0,1) &= 0
   $
 ]
 #proof[
-  - $J_(m, 0), m in ZZ without {0}$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
+  - $J_(m, 0), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
+  - $J_(0, 1)$: Due to the asymmetry of integrand $log(4 sin^2 (t/2)) cot (t/2)$.
+  - $J_(m, 1)$: 
+    - $L(t) := log(4 sin^2 (t/2)) = - sum_(k in ZZ without {0}) e^(i k t)/abs(k)$
+    - $forall m in NN. J_(m, 1) = integral.dash_0^(2 pi) e^(i m t) L(t) L'(t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) L^2 (t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) (sum_(k in ZZ without {0}) e^(i k t)/abs(k)) (sum_(l in ZZ without {0}) e^(i l t)/abs(l)) dd(t)
+    = (2 pi) sum_(k, l in ZZ without {0}, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0}, l in ZZ, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0, -m}) 1/(abs(k) abs(m + k))
+    $
+    - $forall m in NN. sum_(k in ZZ without {0, -m}) 1/(abs(k) abs(m + k)) = sum_(k = 1)^(infinity) 1/(k (m + k)) + sum_(k = -m + 1)^(-1) 1/(abs(k) abs(m + k)) + sum_(k = -infinity)^(- m + 1) 1/(abs(k) abs(m + k)) = sum_(k = 1)^(infinity) 1/(k (m + k)) + sum_(k = 1)^(m - 1) 1/(k (m - k)) + sum_(k = 1)^(infinity) 1/(k (m + k)) = 2/m sum_(k = 1)^(infinity) (1/k - 1/(m + k)) + 1/m sum_(k = 1)^(m - 1) (1/k + 1/(m - k)) = 2/m (sum_(k = 1)^m 1/k + sum_(k = 1)^(m - 1) 1/k) = 2/m (2 H_m - 1/m)$
 ]
 == Subspace $U_N$
 
@@ -173,7 +185,7 @@ $
   $
 ]
 
-#theorem[Garrick--Wittich quadrature for $U_N$][
+#theorem[Generalized Garrick--Wittich quadrature for $U_N$][
   $forall n in NN_0. forall N in NN. forall f in U_N. N' := 2 N - 1. t_j := (2 pi j)/N'.$
   $
     integral.dash_0^(2 pi) f(t) cot^n (t/2) dd(t) = sum_(j=0)^(N'-1) f(t_j) P_j^(N',n)
