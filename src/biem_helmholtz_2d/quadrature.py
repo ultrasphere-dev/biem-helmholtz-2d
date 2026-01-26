@@ -189,13 +189,15 @@ def _resolve_t_start(
     n_harmonics: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
 ) -> float:
-    if t_start_factor is not None and t_start != 0:
+    if t_start_factor is not None and t_start is not None:
         msg = "Specify only one of t_start or t_start_factor."
         raise ValueError(msg)
     if t_start_factor is None:
+        if t_start is None:
+            return 0
         return t_start
     h = (2 * math.pi) / (2 * n_harmonics - 1)
     return t_start_factor * h
@@ -206,7 +208,7 @@ def cot_power_shifted_quadrature(
     power: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
@@ -238,7 +240,7 @@ def cot_power_shifted_quadrature(
         Harmonics with order less than ``n_harmonics`` are integrated exactly.
     power : int
         Exponent in $\cot^{\mathrm{power}}$.
-    t_start : float
+    t_start : float | None
         Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
     t_start_factor : float | None
         Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
@@ -284,7 +286,7 @@ def log_cot_power_shifted_quadrature(
     power: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
@@ -317,7 +319,7 @@ def log_cot_power_shifted_quadrature(
         Harmonics with order less than ``n_harmonics`` are integrated exactly.
     power : int
         Exponent in $\cot^{\mathrm{power}}$.
-    t_start : float
+    t_start : float | None
         Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Typst formula).
     t_start_factor : float | None
         Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
@@ -362,7 +364,7 @@ def trapezoidal_quadrature(
     n: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
@@ -382,7 +384,7 @@ def trapezoidal_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
-    t_start : float
+    t_start : float | None
         Grid shift $t_\mathrm{start}$, with $x_j := t_\mathrm{start} + 2\pi j / (2n-1)$.
     t_start_factor : float | None
         Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
@@ -412,7 +414,7 @@ def kussmaul_martensen_kress_quadrature(
     n: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
@@ -434,7 +436,7 @@ def kussmaul_martensen_kress_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
-    t_start : float
+    t_start : float | None
         Grid shift $t_\mathrm{start}$.
     t_start_factor : float | None
         Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
@@ -469,7 +471,7 @@ def garrick_wittich_quadrature(
     n: int,
     /,
     *,
-    t_start: float = 0,
+    t_start: float | None = None,
     t_start_factor: float | None = None,
     xp: ArrayNamespaceFull,
     device: Any,
@@ -491,7 +493,7 @@ def garrick_wittich_quadrature(
     ----------
     n : int
         Harmonics which order is less than n are integrated exactly.
-    t_start : float
+    t_start : float | None
         Grid shift $t_\mathrm{start}$.
     t_start_factor : float | None
         Grid shift as a multiple of $h = 2\pi/(2n-1)$. Mutually exclusive with
