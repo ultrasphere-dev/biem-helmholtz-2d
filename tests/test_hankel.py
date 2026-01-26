@@ -35,14 +35,19 @@ def _g(x, xp):
 	return 1 + (xp.cos(x) / 4)
 
 
+@pytest.mark.parametrize("t_start_factor", [0, 0.5])
 @pytest.mark.parametrize("order", [0, 1, 2])
 def test_neumann_split_quadrature_matches_trapezoidal(
-	xp: Any, device: Any, dtype: Any, order: int
+	xp: Any, device: Any, dtype: Any, order: int, t_start_factor: float
 ) -> None:
 	n = 24
-	x, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+	h = (2 * math.pi) / (2 * n - 1)
+	t_start = t_start_factor * h
+	x, w = trapezoidal_quadrature(
+		n, t_start=t_start, xp=xp, device=device, dtype=dtype
+	)
 	_, r = log_cot_power_shifted_quadrature(
-		n, 0, xp=xp, device=device, dtype=dtype
+		n, 0, t_start=t_start, xp=xp, device=device, dtype=dtype
 	)
 
 	fprime0 = xp.ones_like(x[0])
@@ -86,8 +91,11 @@ def test_neumann_split_quadrature_matches_trapezoidal(
 	integrand = _g(t_ref, xp) * (f_ref**order) * y_ref
 	reference = xp.sum(w_ref * integrand)
 
+	rel_err = xp.abs(approx - reference) / xp.max(
+		xp.asarray([xp.abs(reference), 1], device=device, dtype=dtype)
+	)
 	if order == 0:
 		tol = 5e-3
 	else:
 		tol = 5e-6
-	assert xp.abs(approx - reference) < tol
+	assert rel_err < tol
