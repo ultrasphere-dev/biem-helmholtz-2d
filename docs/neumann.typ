@@ -24,13 +24,13 @@
 ]
 #lemma[
   $
-  Y_0 (z) & = 2/pi (log z/2 + C) J_0 (z) + z CC[[z]]
+  Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z CC[[z]]
   $
   $forall n in NN.$
 $
   Y_n (z)
   = &- ( (1/2 z)^(-n) ) / pi sum_(k = 0)^(n - 1) ((n - k - 1)!)/k! ( (1/4) z^2 )^k \
-  &+ (2 / pi) ln(1/2 z) J_n (z) \
+  &+ (2 / pi) log(z/2) J_n (z) \
   &- ( (1/2 z)^n ) / pi 
   sum_(k = 0)^oo (psi(k + 1) + psi(n + k + 1))
   ((-(1/4) z^2)^k) / (k! (n + k)!)
@@ -40,12 +40,12 @@ $
   $forall f in e C[[e]].$
   $
   Y_0 (f(z)) 
-               & = (J_0 (f(z)))/pi log(4 sin^2 z/2)  + underbrace(2/pi (log (f'(0))/2 + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + O(z) \
+               & = (J_0 (f(z)))/pi log(4 sin^2(z/2))  + underbrace(2/pi (log((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + O(z) \
                &= Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
                $
   $forall n in NN.$
   $
-  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2))  underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + O(z) \
+  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2)) + underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + O(z) \
                 &= Y_n^((1,f)) (z) log(4 sin^2(z/2)) + Y_n^((2,f)) (z)
   $
 ]
@@ -54,7 +54,7 @@ For integration of singular functions, one would need to split the function into
 - The coefficient (analytic function) of the singular part
 - The limit of the remainder (analytic function) evaluated at the singularity
 
-#theorem[Integral of $N'_0$][
+#theorem[Integral of $Y_n$][
   Let $n in NN_0, f in e C[[e]] without e^2 C[[e]], g in e^n C [[e]]$.
   $
     integral_0^(2 pi) g(t) Y_n (f(t)) dd(t) & approx sum_(j = 0)^(N' - 1) g(t_j) (R_j Y_n^((1,f)) (t_j) + w_j Y_n^((2,f)) (t_j)) \
