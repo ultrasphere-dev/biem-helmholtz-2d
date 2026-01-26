@@ -51,7 +51,7 @@ def neumann_y1_y2(
 	For ``order > 0`` the split is
 
 	$$
-	x^{\mathrm{order}} Y_{\mathrm{order}}(f(x))
+	f(x)^{\mathrm{order}} Y_{\mathrm{order}}(f(x))
 	= Y_{\mathrm{order}}^{(1)}(x)\,\log\left(4\sin^2\frac{x}{2}\right) + Y_{\mathrm{order}}^{(2)}(x).
 	$$
 
@@ -93,7 +93,7 @@ def neumann_y1_y2(
 	if order == 0:
 		x_pow = 1
 	else:
-		x_pow = x**order
+		x_pow = fx**order
 
 	y1 = x_pow * jv / xp.pi
 	log_kernel = xp.log(4 * xp.sin(x / 2) ** 2)
@@ -106,7 +106,9 @@ def neumann_y1_y2(
 	near0 = xp.abs(x) <= eps
 	if order == 0:
 		assert fprime0 is not None
-		y2_lim = (2 / xp.pi) * (xp.log(fprime0 / 2) + _EULER_MASCHERONI)
+		y2_lim = (2 / xp.pi) * (
+			xp.log(xp.abs(fprime0) / 2) + _EULER_MASCHERONI
+		)
 	else:
 		limit_scalar = -(
 			(2**order) * math.factorial(order - 1)
