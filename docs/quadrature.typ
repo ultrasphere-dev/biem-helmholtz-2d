@@ -133,7 +133,7 @@ $
 #proof[
   - $J_(m, 0), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
   - $J_(0, 1)$: Due to the asymmetry of integrand $log(4 sin^2 (t/2)) cot (t/2)$.
-  - $J_(m, 1)$: 
+  - $J_(m, 1), m in ZZ without {0}$: 
     - $L(t) := log(4 sin^2 (t/2)) = - sum_(k in ZZ without {0}) e^(i k t)/abs(k)$
     - $forall m in NN. J_(m, 1) = integral.dash_0^(2 pi) e^(i m t) L(t) L'(t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) L^2 (t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) (sum_(k in ZZ without {0}) e^(i k t)/abs(k)) (sum_(l in ZZ without {0}) e^(i l t)/abs(l)) dd(t)
     = (2 pi) sum_(k, l in ZZ without {0}, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0}, l in ZZ, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0, -m}) 1/(abs(k) abs(m + k))
