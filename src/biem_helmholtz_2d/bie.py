@@ -1,30 +1,23 @@
-from typing import Protocol
+from enum import StrEnum
+from typing import Any, Protocol
 
-import attrs
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
 from .quadrature import (
-    garrick_wittich_quadrature,
-    kussmaul_martensen_kress_quadrature,
+    cot_power_shifted_quadrature,
+    log_cot_power_shifted_quadrature,
     trapezoidal_quadrature,
 )
 
 
-class KernelResult(Protocol):
-    analytic: Array
-    singular_log: Array
-    singular_cauchy: Array
+class QuadratureType(StrEnum):
+    NO_SINGULARITY = "no_singularity"
+    LOG_COT_POWER = "log_cot_power"
+    COT_POWER = "cot_power"
 
 
-@attrs.frozen(kw_only=True)
-class KernelResultImpl(KernelResult):
-    analytic: Array
-    singular_log: Array
-    singular_cauchy: Array
-
-
-class Kernel(Protocol):
-    def __call__(self, x: Array, y: Array, /) -> KernelResult:
+class KernelFunction(Protocol):
+    def __call__(self, x: Array, y: Array, /) -> Array:
         """
         Kernel function.
 
@@ -37,53 +30,92 @@ class Kernel(Protocol):
 
         Returns
         -------
-        KernelResult
+        Array
             The kernel function values of shape (..., ...(fixed)).
 
         """
+        ...
+
+
+Kernel = dict[tuple[QuadratureType, int], KernelFunction]
 
 
 def nystrom_lhs(
+    a: KernelFunction,
     kernel: Kernel,
     n: int,
     xp: ArrayNamespaceFull,
+    device: Any,
+    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
 
     $$
-    \phi (x)
-    + \int_0^{2\pi} \left(K(x, y)
-    + K_\text{log} (x, y) \log \left(4 \sin^2 \frac{x - y}{2}\right)
-    + K_\text{cauchy} (x, y) \cot \frac{x - y}{2}\right) \phi (y) dy
+    a(x) \phi (x)
+    + \int_0^{2\pi} \Bigg( K_{\mathrm{reg}}(x, y)
+    + \sum_{n\ge 0} K_{\log,n}(x, y)\,\log\left(4\sin^2\frac{x - y}{2}\right)\cot^n\!\left(\frac{x - y}{2}\right)
+    + \sum_{n\ge 0} K_{\cot,n}(x, y)\,\cot^n\!\left(\frac{x - y}{2}\right) \Bigg)\,\phi (y)\,dy
     = \text{rhs} (x)
     $$
 
     Parameters
     ----------
+    a : KernelFunction
+        Multiplicative term $a(x)$.
     kernel : Kernel
-        Kernel function $K (x, y)$, $K_\text{log} (x, y)$, and $K_\text{cauchy} (x, y)$
+        Kernel functions keyed by ``(QuadratureType, order)``.
     n : int
         Number of discretization points / 2
     xp : ArrayNamespaceFull
         The array namespace.
+    device : Any
+        The device.
+    dtype : Any
+        The dtype.
 
     Returns
     -------
     tuple[Array, Array]
-        The roots $x_j$ of shape (2n,)
-        and the left-hand side matrix $A$ of shape (2n, 2n).
+        The roots $x_j$ of shape (2n - 1,)
+        and the left-hand side matrix $A$ of shape (2n - 1, 2n - 1).
 
     """
-    x, w = trapezoidal_quadrature(n, xp=xp)
+    x, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    n_quad = 2 * n - 1
     y = x[None, :]
-    w = w[None, :]
-    _, w_log = kussmaul_martensen_kress_quadrature(n, xp=xp, x=x)
-    _, w_cauchy = garrick_wittich_quadrature(n, xp=xp, x=x)
+
+    w_scalar = w[0]
+    idx = (
+        xp.arange(n_quad, device=device, dtype=xp.int64)[:, None]
+        + xp.arange(n_quad, device=device, dtype=xp.int64)[None, :]
+    ) % n_quad
+
     x = x[:, None]
-    # x: (2n, 1), y: (1, 2n), w: (1, 2n), w_log: (2n, 2n), w_cauchy: (2n, 2n)
-    k = kernel(x, y)
-    A = xp.eye(2 * n, dtype=x.dtype, device=x.device) + (
-        k.analytic * w + k.singular_log * w_log + k.singular_cauchy * w_cauchy
+    weight_by_key: dict[tuple[QuadratureType, int], Array] = {}
+    for quad_type, order in kernel:
+        if quad_type == QuadratureType.NO_SINGULARITY:
+            weight_by_key[(quad_type, order)] = w_scalar
+        elif quad_type == QuadratureType.LOG_COT_POWER:
+            _, w_log_vec = log_cot_power_shifted_quadrature(
+                n, order, xp=xp, device=device, dtype=dtype
+            )
+            weight_by_key[(quad_type, order)] = xp.take(w_log_vec, idx)
+        elif quad_type == QuadratureType.COT_POWER:
+            _, w_cauchy_vec = cot_power_shifted_quadrature(
+                n, order, xp=xp, device=device, dtype=dtype
+            )
+            weight_by_key[(quad_type, order)] = xp.take(w_cauchy_vec, idx)
+        else:
+            msg = f"Unsupported quadrature type: {quad_type}"
+            raise ValueError(msg)
+
+    terms = [
+        kernel_fn(x, y) * weight_by_key[(quad_type, order)]
+        for (quad_type, order), kernel_fn in kernel.items()
+    ]
+    a_vals = a(x[:, 0], x[:, 0])
+    A = xp.eye(n_quad, dtype=dtype, device=device) * a_vals[:, None] + xp.sum(
+        xp.stack(terms), axis=0
     )
     return x[:, 0], A
