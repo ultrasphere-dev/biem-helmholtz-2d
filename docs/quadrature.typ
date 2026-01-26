@@ -41,7 +41,7 @@ $
   $
 ]
 #definition[Hadamard Finite-Part on a circle][
-  $forall alpha > 0. forall t in [0, 2 pi). forall n in NN without {1}. forall f in C^(n,alpha) (0, 2 pi).$
+  $forall alpha > 0. forall t in [0, 2 pi). forall n in NN without {1}. forall f in C^(n-1,alpha) (0, 2 pi).$
   $
   integral.dash_0^(2 pi) f(x) cot^n ((x-t)/2) dd(x)
   &:= lim_(epsilon -> 0) F_0(epsilon)
@@ -70,7 +70,7 @@ $
   $
 ] <hadamard-recurrence>
 #theorem[
-  $forall n in NN. forall f in C^(n + 1, alpha) (RR\/2 pi).$
+  $forall n in NN. forall f in C^(n, alpha) (RR\/2 pi).$
   $
   dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x) = integral.dash_0^(2 pi) f'(x) cot^n ((x - t)/2) dd(x)
   $
