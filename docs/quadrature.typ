@@ -91,9 +91,10 @@ $
   - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]). 
     - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$ 
     - $therefore forall m in NN. (e^(i m t) - 1) cot (t/2) = (e^(i t) - 1) (sum_(j = 0)^(m - 1) e^(i j t)) cot (t/2) = i (e^(i t) + 1) sum_(j = 0)^(m - 1) e^(i j t)$.
-    - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i$
+    - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i because $Integrating both hands and @fourier-integral 
     - $therefore forall m in NN. I_(m,1) = 2 pi i$
     - $forall m in NN, I_(-m,1) = overline(I_(m,1)) = - 2 pi i$
+  - Recurrence relation:
   ]
 #theorem[
   Let
