@@ -47,6 +47,9 @@ def nystrom_lhs(
     xp: ArrayNamespaceFull,
     device: Any,
     dtype: Any,
+    *,
+    t_start_quadrature: float = 0,
+    t_start: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
@@ -73,6 +76,10 @@ def nystrom_lhs(
         The device.
     dtype : Any
         The dtype.
+    t_start_quadrature : float
+        Quadrature node shift applied in weight construction.
+    t_start : float
+        Shift applied to evaluation points for $a(x)$ and kernel functions.
 
     Returns
     -------
@@ -81,9 +88,12 @@ def nystrom_lhs(
         and the left-hand side matrix $A$ of shape (2n - 1, 2n - 1).
 
     """
-    x, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    x, w = trapezoidal_quadrature(
+        n, t_start=t_start_quadrature, xp=xp, device=device, dtype=dtype
+    )
     n_quad = 2 * n - 1
-    y = x[None, :]
+    x_eval = x + t_start
+    y = x_eval[None, :]
 
     w_scalar = w[0]
     idx = (
@@ -91,21 +101,31 @@ def nystrom_lhs(
         + xp.arange(n_quad, device=device, dtype=xp.int64)[None, :]
     ) % n_quad
 
-    x = x[:, None]
+    x = x_eval[:, None]
     weight_by_key: dict[tuple[QuadratureType, int], Array] = {}
     for quad_type, order in kernel:
         if quad_type == QuadratureType.NO_SINGULARITY:
             weight_by_key[(quad_type, order)] = w_scalar
         elif quad_type == QuadratureType.LOG_COT_POWER:
             _, w_log_vec = log_cot_power_shifted_quadrature(
-                n, order, xp=xp, device=device, dtype=dtype
+                n,
+                order,
+                t_start=t_start_quadrature,
+                xp=xp,
+                device=device,
+                dtype=dtype,
             )
-            weight_by_key[(quad_type, order)] = xp.take(w_log_vec, idx)
+            weight_by_key[(quad_type, order)] = w_log_vec[idx]
         elif quad_type == QuadratureType.COT_POWER:
             _, w_cauchy_vec = cot_power_shifted_quadrature(
-                n, order, xp=xp, device=device, dtype=dtype
+                n,
+                order,
+                t_start=t_start_quadrature,
+                xp=xp,
+                device=device,
+                dtype=dtype,
             )
-            weight_by_key[(quad_type, order)] = xp.take(w_cauchy_vec, idx)
+            weight_by_key[(quad_type, order)] = w_cauchy_vec[idx]
         else:
             msg = f"Unsupported quadrature type: {quad_type}"
             raise ValueError(msg)
