@@ -40,7 +40,7 @@ class KernelFunction(Protocol):
 class ArrayFunction(Protocol):
     def __call__(self, x: Array, /) -> Array:
         """
-        Right-hand side function.
+        Array-valued function.
 
         Parameters
         ----------
@@ -50,7 +50,7 @@ class ArrayFunction(Protocol):
         Returns
         -------
         Array
-            The RHS values of shape (...,).
+            Function values of shape (...,).
 
         """
         ...
@@ -195,7 +195,7 @@ def nystrom_rhs(
 
     Parameters
     ----------
-    rhs : RhsFunction
+    rhs : ArrayFunction
         Right-hand side function $\mathrm{rhs}(x)$.
     n : int
         Number of discretization points / 2.
@@ -287,6 +287,6 @@ def nystrom(
             x_flat = xp.reshape(x_eval, (-1,))
             phase_eval = xp.exp(1j * m[:, None] * x_flat[None, :])
             values = (1 / n_quad) * xp.sum(coeffs[:, None] * phase_eval, axis=0)
-            return xp.reshape(values, (x_flat.size,))
+            return xp.reshape(values, x_flat.shape)
 
     return _Interpolant(sol)
