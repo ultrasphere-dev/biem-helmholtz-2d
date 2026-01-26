@@ -6,7 +6,9 @@
   - If no array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively.
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`. 
   - The docstring should mention the shape of the input / ouput arrays and description should end with `... of shape (..., a, b)`.
-  - Never wrap `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant).
+  - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x. 
+  - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them). Consider if the int array you are trying to convert should be defined as float array from the beginning.
+  - The type can be converted by `xp.astype(x, dtype, /)`.
   - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=device, dtype=dtype)`. (Do not specify dtype in the inner `asarray`).
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
