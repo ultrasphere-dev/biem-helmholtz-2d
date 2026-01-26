@@ -7,7 +7,9 @@
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`. 
   - The docstring should mention the shape of the input / ouput arrays and description should end with `... of shape (..., a, b)`.
   - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x. 
-  - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them). Consider if the int array you are trying to convert should be defined as float array from the beginning.
+  - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them). 
+  - Avoid creating `int` version, `float` version, `complex` version of the same array as much as possible.
+  - Avoid expressing integer as float. `1` instead of `1.0` whenever possible.
   - The type can be converted by `xp.astype(x, dtype, /)`.
   - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=device, dtype=dtype)`. (Do not specify dtype in the inner `asarray`).
 - Tests should be also array API compatible.
