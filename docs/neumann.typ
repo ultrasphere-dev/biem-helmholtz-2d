@@ -45,7 +45,7 @@ $
                $
   $forall n in NN.$
   $
-  z^n Y_n (f(z)) &= z^n (J_n (z))/pi log(4 sin^2(z/2))  underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + O(z) \
+  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2))  underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + O(z) \
                 &= Y_n^((1,f)) (z) log(4 sin^2(z/2)) + Y_n^((2,f)) (z)
   $
 ]
