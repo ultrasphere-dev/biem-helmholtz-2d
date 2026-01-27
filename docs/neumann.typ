@@ -92,20 +92,20 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
 ]
 #theorem[
-  Since counterclockwise,
+  Since counterclockwise, the outward normal is
   $
-  n(y) = ((-x'_2(t), x'_1(t))) / abs(x'(t))
+  n(y) = ((x'_2(t), -x'_1(t))) / abs(x'(t))
   $
   $
   (slp_Gamma phi) (tau) &= integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
   &= integral_0^(2 pi) i/4 H_0^(1) (k abs(x(tau) - x(t))) phi(t) abs(x'(t)) dd(t) \
   (dlp_Gamma phi) (tau) &= integral_0^(2 pi) n(x(t)) dot grad_y G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
-  &= integral_0^(2 pi) ((-x'_2(t), x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
-  &= integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((-x'_2(t), x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
+  &= integral_0^(2 pi) ((x'_2(t), -x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
+  &= integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
   $
   $
-  D_t (t, tau) &:= ((-x'_2(t), x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
-  &->_(tau -> t) (x'_2(t) x''_1(t) - x'_1(t) x''_2(t)) / (2 abs(x'(t))^2) \
+  D_t (t, tau) &:= ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+  &->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
 

@@ -57,13 +57,13 @@ def D_t(
     # non-limit part
     diff = x_tau - x_t
     dist = xp.linalg.vector_norm(diff, axis=-1)
-    outward_unnormalized = xp.stack([-dx_t[..., 1], dx_t[..., 0]], axis=-1)
+    outward_unnormalized = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
     result = xp.sum(outward_unnormalized * diff, axis=-1) / (dist**2)
 
     # limit part
     near0 = is_close(t, tau, eps)
     limit = (dx_t[..., 0] * ddx_t[..., 1] - dx_t[..., 1] * ddx_t[..., 0]) / (
-        2 * xp.linalg.vector_norm(dx_t, axis=-1) ** 2
+        -2 * xp.linalg.vector_norm(dx_t, axis=-1) ** 2
     )
     return xp.where(near0, limit, result)
 

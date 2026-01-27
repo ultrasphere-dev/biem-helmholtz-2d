@@ -30,7 +30,7 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
         eps=0
      )
     assert actual == pytest.approx(actual_numerical, rel=1e-3)
-    assert actual == pytest.approx(0.5, rel=1e-6)
+    assert actual == pytest.approx(-0.5, rel=1e-6)
 
 
 
