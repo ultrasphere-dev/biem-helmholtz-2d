@@ -10,7 +10,7 @@
   - Avoid creating `int` version, `float` version, `complex` version of the same array as much as possible.
   - Avoid expressing integer as float. `1` instead of `1.0` whenever possible.
   - The type can be converted by `xp.astype(x, dtype, /)`.
-  - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=x.device, dtype=x.dtype)`. (Do not specify dtype in the inner `asarray`).
+  - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=x.device, dtype=x.dtype)`. (Do not specify dtype in the inner `asarray`). Note that every array has property `device` (including NumPy >= 2.0), you don't need `getattr`.
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
   - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.
