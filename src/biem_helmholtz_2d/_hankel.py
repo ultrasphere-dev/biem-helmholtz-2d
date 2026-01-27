@@ -57,7 +57,7 @@ def neumann_y1_y2(
         and return an array of shape (...x, ...f). It is assumed to be smooth
         everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-        Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...f) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
     t_singularity : Array
@@ -142,7 +142,7 @@ def hankel_h1_h2(
         and return an array of shape (...x, ...f). It is assumed to be smooth
         everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-        Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...f) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
     t_singularity : Array
