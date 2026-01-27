@@ -80,18 +80,18 @@ def neumann_y1_y2(
     jv, yv = _scipy_jv_yv(order, fx)
 
     if order == 0:
-        x_pow = 1
+        fx_pow = 1
     else:
-        x_pow = fx**order
+        fx_pow = fx**order
 
-    y1 = x_pow * jv / xp.pi
+    y1 = fx_pow * jv / xp.pi
     t_s_arr = xp.asarray(t_singularity, device=x.device, dtype=x.dtype)
     delta = periodic_difference(
         t_s_arr[(None,) * x.ndim + (...,)],
         x[(...,) + (None,) * t_s_arr.ndim],
     )
     log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
-    y2 = x_pow * yv - y1 * log_kernel
+    y2 = fx_pow * yv - y1 * log_kernel
 
     if eps < 0:
         msg = "eps must be non-negative."
