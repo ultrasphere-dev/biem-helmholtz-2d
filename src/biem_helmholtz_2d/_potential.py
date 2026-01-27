@@ -52,20 +52,20 @@ def D_t(
     dx_t = dx(t)
     ddx_t = ddx(t)
 
+    # non-limit part
     diff = x_tau - x_t
-    normal = xp.stack([-dx_t[..., 1], dx_t[..., 0]], axis=-1)
-    numer_ = xp.sum(normal * diff, axis=-1)
-    denom = xp.sum(diff**2, axis=-1)
+    dist = xp.linalg.vector_norm(diff, axis=-1)
+    outward_unnormalized = xp.stack([-dx_t[..., 1], dx_t[..., 0]], axis=-1)
+    result = xp.sum(outward_unnormalized * diff, axis=-1) / (dist**2)
 
+    # limit part
     two_pi = 2 * xp.pi
     delta = xp.remainder(tau - t + xp.pi, two_pi) - xp.pi
     near0 = xp.abs(delta) <= eps
-    denom_safe = xp.where(near0, 1, denom)
-    core = numer_ / denom_safe
     limit = (dx_t[..., 0] * ddx_t[..., 1] - dx_t[..., 1] * ddx_t[..., 0]) / (
-        2 * xp.sum(dx_t**2, axis=-1)
+        2 * xp.linalg.vector_norm(dx_t, axis=-1) ** 2
     )
-    return xp.where(near0, limit, core)
+    return xp.where(near0, limit, result)
 
 
 def slp(

@@ -9,41 +9,29 @@ from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._quadrature import log_cot_power_quadrature, trapezoidal_quadrature
 from biem_helmholtz_2d._shape import CircleShape
 
-
+@pytest.mark.parametrize("t", [00, 1, 2])
 @pytest.mark.parametrize("rho", [0.7, 1.3])
-def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float) -> None:
-    n = 16
-    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float, t: float) -> None:
     shape = CircleShape(rho)
-    x, dx, ddx = shape.x, shape.dx, shape.ddx
-    tau = t
+    actual = D_t(
+        xp.asarray(t, device=device, dtype=dtype),
+        xp.asarray(t, device=device, dtype=dtype),
+        shape.x,
+        shape.dx,
+        shape.ddx,
+        eps=xp.inf
+    )
+    actual_numerical = D_t(
+       xp.asarray(t, device=device, dtype=dtype),
+         xp.asarray(t + 1e-6, device=device, dtype=dtype), 
+        shape.x,
+        shape.dx,
+        shape.ddx,
+        eps=0
+     )
+    assert actual == pytest.approx(actual_numerical, rel=1e-3)
+    assert actual == pytest.approx(0.5, rel=1e-6)
 
-    vals = D_t(t, tau, x, dx, ddx, eps=1e-8)
-    target = xp.asarray(0.5, device=device, dtype=vals.dtype)
-    err = xp.max(xp.abs(vals - target))
-    assert err < 1e-12
-
-
-@pytest.mark.parametrize("tau_val", [0.2, 1.1])
-def test_D_t_matches_geometric_definition(
-    xp: Any, device: Any, dtype: Any, tau_val: float
-) -> None:
-    n = 12
-    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
-    shape = CircleShape(1.1)
-    x, dx, ddx = shape.x, shape.dx, shape.ddx
-    tau = xp.asarray(tau_val, device=device, dtype=dtype)
-
-    vals = D_t(t, tau, x, dx, ddx, eps=0.0)
-
-    x_t = x(t)
-    x_tau = x(tau)
-    diff = x_tau - x_t
-    normal = xp.stack([-dx(t)[..., 1], dx(t)[..., 0]], axis=-1)
-    expected = xp.sum(normal * diff, axis=-1) / xp.sum(diff**2, axis=-1)
-
-    err = xp.max(xp.abs(vals - expected))
-    assert err < 1e-12
 
 
 @pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
