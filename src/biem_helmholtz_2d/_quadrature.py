@@ -23,7 +23,7 @@ class QuadratureRule(Protocol):
         device: Any,
         dtype: Any,
     ) -> tuple[Array, Array]:
-        """
+        r"""
         Quadrature rule returning nodes and weights.
 
         Parameters
@@ -47,6 +47,7 @@ class QuadratureRule(Protocol):
             Nodes of shape (2n - 1,).
         Array
             Weights of shape (2n - 1,).
+
         """
         ...
 
@@ -64,7 +65,7 @@ class PowerQuadratureRule(Protocol):
         device: Any,
         dtype: Any,
     ) -> tuple[Array, Array]:
-        """
+        r"""
         Quadrature rule returning nodes and weights for a fixed power.
 
         Parameters
@@ -90,6 +91,7 @@ class PowerQuadratureRule(Protocol):
             Nodes of shape (2*n_harmonics - 1,).
         Array
             Weights of shape (2*n_harmonics - 1,).
+
         """
         ...
 
@@ -130,9 +132,9 @@ def shift_quadrature_t_singularity(
     quadrature: QuadratureRule | PowerQuadratureRule,
     t_singularity: float,
 ) -> QuadratureRule | PowerQuadratureRule:
-    """
+    r"""
     Return a quadrature wrapper shifted so the singularity is at ``t_singularity``.
-    
+
     Since
     $$
     \int_0^{2\pi} w(t - t_{\mathrm{singularity}}) f(t) dt
@@ -251,6 +253,7 @@ def fourier_coeff_to_quadrature(
         Nodes $t_j + t_\mathrm{start}$ of shape (2*n_harmonics - 1,).
     Array
         Weights derived from ``coeff`` of shape (2*n_harmonics - 1,).
+
     """
     t, _ = trapezoidal_quadrature(
         n_harmonics,

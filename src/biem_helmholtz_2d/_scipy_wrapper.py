@@ -7,7 +7,7 @@ from array_api_compat import array_namespace
 def scipy_jv(order: int, x: Array, n: int = 0, /) -> Array:
     """
     Wrapper around scipy.special.jv that handles derivatives.
-    
+
     Parameters
     ----------
     order : int
@@ -16,13 +16,15 @@ def scipy_jv(order: int, x: Array, n: int = 0, /) -> Array:
         Input array of shape (...,).
     n : int
         Order of derivative (default 0 for function value).
+
     Returns
     -------
     Array
         Bessel function J_order(x) or its n-th derivative of shape (...,).
+
     """
     from scipy.special import jvp
-    
+
     xp = array_namespace(x)
     x_cpu = xp.asarray(x, device="cpu")
     result_cpu = jvp(order, x_cpu, n)
@@ -32,20 +34,22 @@ def scipy_jv(order: int, x: Array, n: int = 0, /) -> Array:
 def scipy_yv(order: int, x: Array, /) -> Array:
     """
     Wrapper around scipy.special.yv that handles dtype conversion.
-    
+
     Parameters
     ----------
     order : int
         Order of the Bessel function.
     x : Array
         Input array of shape (...,).
+
     Returns
     -------
     Array
         Bessel function Y_order(x) of shape (...,).
+
     """
     from scipy.special import yv
-    
+
     xp = array_namespace(x)
     x_cpu = xp.asarray(x, device="cpu")
     result_cpu = yv(order, x_cpu)
@@ -55,23 +59,24 @@ def scipy_yv(order: int, x: Array, /) -> Array:
 def scipy_hankel1(order: int, x: Array, /) -> Array:
     """
     Wrapper around scipy.special.hankel1 that handles complex dtype conversion.
-    
+
     Parameters
     ----------
     order : int
         Order of the Hankel function.
     x : Array
         Input array of shape (...,).
+
     Returns
     -------
     Array
         Hankel function H^(1)_order(x) of shape (...,).
+
     """
     from scipy.special import hankel1
-    
+
     xp = array_namespace(x)
     x_cpu = xp.asarray(x, device="cpu")
     result_cpu = hankel1(order, x_cpu)
     promoted_dtype = xp.promote_types(x.dtype, xp.complex128)
     return xp.asarray(result_cpu, device=x.device, dtype=promoted_dtype)
-

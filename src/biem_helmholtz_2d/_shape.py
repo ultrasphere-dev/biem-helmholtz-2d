@@ -24,15 +24,15 @@ class CircleShape(Shape):
 
     rho: float
 
-    def x(self, t: Array, /) -> Array:  # noqa: D102
+    def x(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack([self.rho * xp.cos(t), self.rho * xp.sin(t)], axis=-1)
 
-    def dx(self, t: Array, /) -> Array:  # noqa: D102
+    def dx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack([-self.rho * xp.sin(t), self.rho * xp.cos(t)], axis=-1)
 
-    def ddx(self, t: Array, /) -> Array:  # noqa: D102
+    def ddx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack([-self.rho * xp.cos(t), -self.rho * xp.sin(t)], axis=-1)
 
@@ -51,21 +51,21 @@ class KressShape(Shape):
 
     """
 
-    def x(self, t: Array, /) -> Array:  # noqa: D102
+    def x(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack(
             [xp.cos(t) + 0.65 * xp.cos(2 * t) - 0.65, 1.5 * xp.sin(t)],
             axis=-1,
         )
 
-    def dx(self, t: Array, /) -> Array:  # noqa: D102
+    def dx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack(
             [-xp.sin(t) - 0.65 * 2 * xp.sin(2 * t), 1.5 * xp.cos(t)],
             axis=-1,
         )
 
-    def ddx(self, t: Array, /) -> Array:  # noqa: D102
+    def ddx(self, t: Array, /) -> Array:
         xp = array_namespace(t)
         return xp.stack(
             [-xp.cos(t) - 0.65 * 2 * 2 * xp.cos(2 * t), -1.5 * xp.sin(t)],

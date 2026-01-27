@@ -7,8 +7,9 @@ import pytest
 
 from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._quadrature import log_cot_power_quadrature, trapezoidal_quadrature
-from biem_helmholtz_2d._shape import CircleShape
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
+from biem_helmholtz_2d._shape import CircleShape
+
 
 @pytest.mark.parametrize("t", [00, 1, 2])
 @pytest.mark.parametrize("rho", [0.7, 1.3])
@@ -20,16 +21,16 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
         shape.x,
         shape.dx,
         shape.ddx,
-        eps=xp.inf
+        eps=xp.inf,
     )
     actual_numerical = D_t(
-       xp.asarray(t, device=device, dtype=dtype),
-         xp.asarray(t + 1e-6, device=device, dtype=dtype), 
+        xp.asarray(t, device=device, dtype=dtype),
+        xp.asarray(t + 1e-6, device=device, dtype=dtype),
         shape.x,
         shape.dx,
         shape.ddx,
-        eps=0
-     )
+        eps=0,
+    )
     assert actual == pytest.approx(actual_numerical, rel=1e-3)
     assert actual == pytest.approx(-0.5, rel=1e-6)
 
@@ -41,16 +42,22 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
 @pytest.mark.parametrize("rho", [1.0])
 @pytest.mark.parametrize("k", [1.0])
 def test_circle_case_matches_theorem(
-    xp: Any, device: Any, dtype: Any, kernel_kind: str, m: int, rho: float, k: float, n: int, tau: float
+    xp: Any,
+    device: Any,
+    dtype: Any,
+    kernel_kind: str,
+    m: int,
+    rho: float,
+    k: float,
+    n: int,
+    tau: float,
 ) -> None:
-    from scipy.special import hankel1, jv, jvp
-
     t, w = trapezoidal_quadrature(n, t_start=tau, xp=xp, device=device, dtype=dtype)
     _, r = log_cot_power_quadrature(n, 0, t_start=tau, xp=xp, device=device, dtype=dtype)
     shape = CircleShape(rho)
 
     # actual
-    t += tau # "fix" quadrature by ∫w(t-tau)f(t) -> ∫w(t)f(t+tau)
+    t += tau  # "fix" quadrature by ∫w(t-tau)f(t) -> ∫w(t)f(t+tau)
     exp_mt = xp.exp(1j * m * t)
     exp_mt_tau = xp.exp(1j * m * xp.asarray(tau, device=device, dtype=dtype))
 

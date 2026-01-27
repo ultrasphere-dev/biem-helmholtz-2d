@@ -23,7 +23,6 @@ def _scipy_jv_yv(
     return j, y
 
 
-
 def _neumann_y1_y2(
     x: Array,
     /,
