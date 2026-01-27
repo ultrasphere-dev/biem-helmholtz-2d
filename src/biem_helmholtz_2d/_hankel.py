@@ -25,6 +25,52 @@ def _scipy_jv_yv(
     return j, y
 
 
+
+def _neumann_y1_y2(
+    x: Array,
+    /,
+    *,
+    order: int,
+    f: Callable[[Array], Array],
+    fprime0: Array | None = None,
+    eps: float = 0.0,
+) -> tuple[Array, Array]:
+    if order == 0 and fprime0 is None:
+        msg = "fprime0 (shape (...,)) is required when order == 0."
+        raise ValueError(msg)
+
+    fx = f(x)
+    xp = array_namespace(x, fx, fprime0)
+    jv, yv = _scipy_jv_yv(order, fx)
+
+    if order == 0:
+        fx_pow = 1
+    else:
+        fx_pow = fx**order
+
+    if eps < 0:
+        msg = "eps must be non-negative."
+        raise ValueError(msg)
+
+    y1 = fx_pow * jv / xp.pi
+    zero = xp.asarray(0, device=x.device, dtype=x.dtype)
+    delta = periodic_difference(zero, x)
+    log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
+    y2 = fx_pow * yv - y1 * log_kernel
+
+    near0 = xp.abs(delta) <= eps
+    if order == 0:
+        assert fprime0 is not None
+        y2_lim = (2 / xp.pi) * (
+            xp.log(xp.abs(fprime0[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
+        )
+    else:
+        y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
+
+    y2 = xp.where(near0, y2_lim, y2)
+    return y1, y2
+
+
 def neumann_y1_y2(
     x: Array,
     /,
@@ -71,43 +117,23 @@ def neumann_y1_y2(
         $Y^{(2)}$ of shape (...x, ...f).
 
     """
-    if order == 0 and fprime0 is None:
-        msg = "fprime0 (shape (...,)) is required when order == 0."
-        raise ValueError(msg)
-
-    fx = f(x)
-    xp = array_namespace(x, fx, fprime0, t_singularity)
-    jv, yv = _scipy_jv_yv(order, fx)
-
-    if order == 0:
-        fx_pow = 1
-    else:
-        fx_pow = fx**order
-
-    y1 = fx_pow * jv / xp.pi
+    xp = array_namespace(x, t_singularity)
     t_s_arr = xp.asarray(t_singularity, device=x.device, dtype=x.dtype)
-    delta = periodic_difference(
-        t_s_arr[(None,) * x.ndim + (...,)],
-        x[(...,) + (None,) * t_s_arr.ndim],
+    t_s_view = t_s_arr[(None,) * x.ndim + (...,)]
+    x_view = x[(...,) + (None,) * t_s_arr.ndim]
+    x_shifted = x_view - t_s_view
+
+    def f_shifted(x_in: Array) -> Array:
+        xp_local = array_namespace(x_in, t_s_arr)
+        return f(x_in + t_s_view)
+
+    return _neumann_y1_y2(
+        x_shifted,
+        order=order,
+        f=f_shifted,
+        fprime0=fprime0,
+        eps=eps,
     )
-    log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
-    y2 = fx_pow * yv - y1 * log_kernel
-
-    if eps < 0:
-        msg = "eps must be non-negative."
-        raise ValueError(msg)
-
-    near0 = xp.abs(delta) <= eps
-    if order == 0:
-        assert fprime0 is not None
-        y2_lim = (2 / xp.pi) * (
-            xp.log(xp.abs(fprime0[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
-        )
-    else:
-        y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
-
-    y2 = xp.where(near0, y2_lim, y2)
-    return y1, y2
 
 
 def hankel_h1_h2(
