@@ -11,6 +11,7 @@ from scipy import integrate
 from biem_helmholtz_2d._hankel import hankel_h1_h2, neumann_y1_y2
 from biem_helmholtz_2d._quadrature import (
     log_cot_power_quadrature,
+    shift_quadrature_singularity,
     trapezoidal_quadrature,
 )
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_yv
@@ -47,14 +48,13 @@ def test_split_quadrature_matches_trapezoidal(
         xp_local = array_namespace(x_in)
         return 4 * xp_local.sin(xp_local.abs(x_in - t_singularity) / 2)
 
-    # approx
+    # actual
     x, w = trapezoidal_quadrature(
         n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
-    x, r = log_cot_power_quadrature(
+    x, r = shift_quadrature_singularity(log_cot_power_quadrature, t_singularity)(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
-    x += t_singularity  # "fix" quadrature by ∫w(t-tau)f(t) -> ∫w(t)f(t+tau)
 
     fprime0 = xp.asarray(2, device=device, dtype=dtype) if order == 0 else None
     y1, y2 = (hankel_h1_h2 if split_type == "hankel" else neumann_y1_y2)(

@@ -6,7 +6,11 @@ from typing import Any
 import pytest
 
 from biem_helmholtz_2d._potential import D_t, dlp, slp
-from biem_helmholtz_2d._quadrature import log_cot_power_quadrature, trapezoidal_quadrature
+from biem_helmholtz_2d._quadrature import (
+    log_cot_power_quadrature,
+    shift_quadrature_singularity,
+    trapezoidal_quadrature,
+)
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
 from biem_helmholtz_2d._shape import CircleShape
 
@@ -35,6 +39,7 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
     assert actual == pytest.approx(-0.5, rel=1e-6)
 
 
+@pytest.mark.parametrize("t_start_factor", [0, 0.5])
 @pytest.mark.parametrize("n", [8, 10, 128])
 @pytest.mark.parametrize("tau", [0, 0.11])
 @pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
@@ -51,13 +56,17 @@ def test_circle_case_matches_theorem(
     k: float,
     n: int,
     tau: float,
+    t_start_factor: float,
 ) -> None:
-    t, w = trapezoidal_quadrature(n, t_start=tau, xp=xp, device=device, dtype=dtype)
-    _, r = log_cot_power_quadrature(n, 0, t_start=tau, xp=xp, device=device, dtype=dtype)
+    t, w = trapezoidal_quadrature(
+        n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
+    )
+    t, r = shift_quadrature_singularity(log_cot_power_quadrature, tau)(
+        n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
+    )
     shape = CircleShape(rho)
 
     # actual
-    t += tau  # "fix" quadrature by ∫w(t-tau)f(t) -> ∫w(t)f(t+tau)
     exp_mt = xp.exp(1j * m * t)
     exp_mt_tau = xp.exp(1j * m * xp.asarray(tau, device=device, dtype=dtype))
 

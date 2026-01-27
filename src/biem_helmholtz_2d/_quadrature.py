@@ -115,20 +115,20 @@ def _resolve_t_start(
 
 
 @overload
-def shift_quadrature_t_singularity(
+def shift_quadrature_singularity(
     quadrature: QuadratureRule,
     t_singularity: float,
 ) -> QuadratureRule: ...
 
 
 @overload
-def shift_quadrature_t_singularity(
+def shift_quadrature_singularity(
     quadrature: PowerQuadratureRule,
     t_singularity: float,
 ) -> PowerQuadratureRule: ...
 
 
-def shift_quadrature_t_singularity(
+def shift_quadrature_singularity(
     quadrature: QuadratureRule | PowerQuadratureRule,
     t_singularity: float,
 ) -> QuadratureRule | PowerQuadratureRule:
@@ -154,12 +154,13 @@ def shift_quadrature_t_singularity(
         resolved_t_start = _resolve_t_start(
             n_harmonics, t_start=t_start, t_start_factor=t_start_factor
         )
-        return quadrature(
+        nodes, weights = quadrature(
             *args,
             t_start=resolved_t_start - t_singularity,
             t_start_factor=None,
             **kwargs,
         )
+        return nodes + t_singularity, weights
 
     return wrapped
 
