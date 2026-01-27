@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from typing import Any
-
+from array_api_compat import array_namespace
 import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
@@ -26,12 +26,14 @@ def _scipy_yv(
     return xp.asarray(yv(order, xp.asarray(x, device="cpu")), device=device, dtype=dtype)
 
 
-def _f(x, xp):
-    return 2 * xp.sin(x / 2)
+def _f(x: Array) -> Array:
+    xp = array_namespace(x)
+    return 4 * xp.sin(x / 2)
 
 
-def _g(x, xp):
-    return 1 + (xp.cos(x) / 4)
+def _g(x: Array) -> Array:
+    xp = array_namespace(x)
+    return 3 + (xp.cos(x) / 4) + xp.cos(4 * x)
 
 
 @pytest.mark.parametrize("t_start_factor", [0, 0.5])
@@ -52,18 +54,18 @@ def test_neumann_split_quadrature_matches_trapezoidal(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
 
-    fprime0 = xp.ones_like(x[0])
+    fprime0 = xp.asarray(2, device=device, dtype=dtype) if order == 0 else None
     t_s = xp.asarray(0, device=device, dtype=dtype)
     y1, y2 = neumann_y1_y2(
         x,
         order=order,
-        f=lambda t: _f(t, xp),
+        f=_f,
         fprime0=fprime0,
         eps=0,
         t_singularity=t_s,
     )
 
-    g_vals = _g(x, xp)
+    g_vals = _g(x)
     approx = xp.sum(g_vals * (r * y1 + w * y2))
 
     # expected
@@ -75,9 +77,9 @@ def test_neumann_split_quadrature_matches_trapezoidal(
         device=device,
         dtype=dtype,
     )
-    f_ref = _f(t_ref, xp)
+    f_ref = _f(t_ref)
     y_ref = _scipy_yv(order, f_ref, xp=xp, device=device, dtype=dtype)
-    integrand = _g(t_ref, xp) * (f_ref**order) * y_ref
+    integrand = _g(t_ref) * (f_ref**order) * y_ref
     reference = xp.sum(w_ref * integrand)
 
     rel_err = xp.abs(approx - reference) / xp.abs(reference)
