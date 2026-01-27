@@ -46,17 +46,18 @@ def test_split_quadrature_matches_trapezoidal(
     x, r = log_cot_power_quadrature(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
+    x += t_singularity # "fix" quadrature by ∫w(t-tau)f(t) -> ∫w(t)f(t+tau)
 
     fprime0 = xp.asarray(2, device=device, dtype=dtype) if order == 0 else None
     y1, y2 = (hankel_h1_h2 if split_type == "hankel" else neumann_y1_y2)(
-            x + t_singularity,
+            x,
             order=order,
             f=_f,
             fprime0=fprime0,
             eps=0.0001,
             t_singularity=t_singularity,
         )
-    g_vals = _g(x + t_singularity)
+    g_vals = _g(x)
     actual = xp.sum(g_vals * (r * y1 + w * y2))
     actual = complex(actual)
 
