@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Protocol, overload
 
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
@@ -9,6 +9,89 @@ from ._fourier_integral import (
     cot_power_fourier_integral_coefficients,
     log_cot_power_fourier_integral_coefficients,
 )
+
+
+class QuadratureRule(Protocol):
+    def __call__(
+        self,
+        n: int,
+        /,
+        *,
+        t_start: float | None = None,
+        t_start_factor: float | None = None,
+        xp: ArrayNamespaceFull,
+        device: Any,
+        dtype: Any,
+    ) -> tuple[Array, Array]:
+        """
+        Quadrature rule returning nodes and weights.
+
+        Parameters
+        ----------
+        n : int
+            Harmonics which order is less than n are integrated exactly.
+        t_start : float | None
+            Grid shift $t_\mathrm{start}$.
+        t_start_factor : float | None
+            Grid shift as a multiple of $h = 2\pi/(2n-1)$.
+        xp : ArrayNamespaceFull
+            The array namespace.
+        device : Any
+            The device.
+        dtype : Any
+            The dtype.
+
+        Returns
+        -------
+        Array
+            Nodes of shape (2n - 1,).
+        Array
+            Weights of shape (2n - 1,).
+        """
+        ...
+
+
+class PowerQuadratureRule(Protocol):
+    def __call__(
+        self,
+        n_harmonics: int,
+        power: int,
+        /,
+        *,
+        t_start: float | None = None,
+        t_start_factor: float | None = None,
+        xp: ArrayNamespaceFull,
+        device: Any,
+        dtype: Any,
+    ) -> tuple[Array, Array]:
+        """
+        Quadrature rule returning nodes and weights for a fixed power.
+
+        Parameters
+        ----------
+        n_harmonics : int
+            Harmonics with order less than ``n_harmonics`` are integrated exactly.
+        power : int
+            Exponent for the kernel.
+        t_start : float | None
+            Grid shift $t_\mathrm{start}$.
+        t_start_factor : float | None
+            Grid shift as a multiple of $h = 2\pi/(2n-1)$.
+        xp : ArrayNamespaceFull
+            The array namespace.
+        device : Any
+            The device.
+        dtype : Any
+            The dtype.
+
+        Returns
+        -------
+        Array
+            Nodes of shape (2*n_harmonics - 1,).
+        Array
+            Weights of shape (2*n_harmonics - 1,).
+        """
+        ...
 
 
 def _resolve_t_start(
@@ -27,6 +110,56 @@ def _resolve_t_start(
         return t_start
     h = (2 * math.pi) / (2 * n_harmonics - 1)
     return t_start_factor * h
+
+
+@overload
+def shift_quadrature_t_singularity(
+    quadrature: QuadratureRule,
+    t_singularity: float,
+) -> QuadratureRule: ...
+
+
+@overload
+def shift_quadrature_t_singularity(
+    quadrature: PowerQuadratureRule,
+    t_singularity: float,
+) -> PowerQuadratureRule: ...
+
+
+def shift_quadrature_t_singularity(
+    quadrature: QuadratureRule | PowerQuadratureRule,
+    t_singularity: float,
+) -> QuadratureRule | PowerQuadratureRule:
+    """
+    Return a quadrature wrapper shifted so the singularity is at ``t_singularity``.
+    
+    Since
+    $$
+    \int_0^{2\pi} w(t - t_{\mathrm{singularity}}) f(t) dt
+    &= \int_0^{2\pi} w(t) f(t + t_{\mathrm{singularity}}) dt,
+    &= \sum_j w_{j,t'_{\mathrm{start}}} f(t_j + t_{\mathrm{singularity}} + t'_{\mathrm{start}}),
+    $$
+
+    By setting $t'_{\mathrm{start}} = t_{\mathrm{start}} - t_{\mathrm{singularity}}$,
+    the returned quadrature rule evaluates ``f`` with nodes
+    starting at $t_{\mathrm{start}}$.
+    """
+
+    def wrapped(*args: Any, **kwargs: Any) -> tuple[Array, Array]:
+        n_harmonics = args[0]
+        t_start = kwargs.pop("t_start", None)
+        t_start_factor = kwargs.pop("t_start_factor", None)
+        resolved_t_start = _resolve_t_start(
+            n_harmonics, t_start=t_start, t_start_factor=t_start_factor
+        )
+        return quadrature(
+            *args,
+            t_start=resolved_t_start - t_singularity,
+            t_start_factor=None,
+            **kwargs,
+        )
+
+    return wrapped
 
 
 def trapezoidal_quadrature(
