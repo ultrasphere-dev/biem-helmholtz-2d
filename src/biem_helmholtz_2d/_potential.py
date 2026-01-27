@@ -7,6 +7,8 @@ from array_api_compat import array_namespace
 
 from biem_helmholtz_2d._hankel import hankel_h1_h2
 
+from ._is_close import is_close
+
 
 def D_t(
     t: Array,
@@ -59,9 +61,7 @@ def D_t(
     result = xp.sum(outward_unnormalized * diff, axis=-1) / (dist**2)
 
     # limit part
-    two_pi = 2 * xp.pi
-    delta = xp.remainder(tau - t + xp.pi, two_pi) - xp.pi
-    near0 = xp.abs(delta) <= eps
+    near0 = is_close(t, tau, eps)
     limit = (dx_t[..., 0] * ddx_t[..., 1] - dx_t[..., 1] * ddx_t[..., 0]) / (
         2 * xp.linalg.vector_norm(dx_t, axis=-1) ** 2
     )

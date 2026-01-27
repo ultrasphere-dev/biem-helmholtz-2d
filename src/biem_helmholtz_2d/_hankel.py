@@ -6,6 +6,8 @@ from collections.abc import Callable
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
 
+from ._is_close import periodic_difference
+
 _EULER_MASCHERONI: float = 0.57721566490153286060651209008240243104215933593992
 
 
@@ -85,12 +87,11 @@ def neumann_y1_y2(
         x_pow = fx**order
 
     y1 = x_pow * jv / xp.pi
-    two_pi = 2 * xp.pi
     t_s_arr = xp.asarray(t_singularity, device=x.device, dtype=x.dtype)
-    delta = xp.remainder(
-        x[(...,) + (None,) * t_s_arr.ndim] - t_s_arr[(None,) * x.ndim + (...,)] + xp.pi,
-        two_pi,
-    ) - xp.pi
+    delta = periodic_difference(
+        t_s_arr[(None,) * x.ndim + (...,)],
+        x[(...,) + (None,) * t_s_arr.ndim],
+    )
     log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
     y2 = x_pow * yv - y1 * log_kernel
 
