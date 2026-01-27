@@ -25,15 +25,6 @@ def _scipy_jv_yv(
     return xp.asarray(j, device=device, dtype=dtype), xp.asarray(y, device=device, dtype=dtype)
 
 
-def _asarray_like(x: Array, value: float | Array, /) -> Array:
-    xp = array_namespace(x)
-    dtype = x.dtype
-    device = getattr(x, "device", None)
-    if device is None:
-        return xp.asarray(value, dtype=dtype)
-    return xp.asarray(value, device=device, dtype=dtype)
-
-
 def neumann_y1_y2(
     x: Array,
     order: int,
@@ -106,7 +97,7 @@ def neumann_y1_y2(
     near0 = xp.abs(delta) <= eps
     if order == 0:
         assert fprime0 is not None
-        fprime0_arr = _asarray_like(x, fprime0)
+        fprime0_arr = xp.asarray(fprime0, device=x.device, dtype=x.dtype)
         y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0_arr) / 2) + _EULER_MASCHERONI)
     else:
         limit_scalar = -((2**order) * math.factorial(order - 1)) / xp.pi

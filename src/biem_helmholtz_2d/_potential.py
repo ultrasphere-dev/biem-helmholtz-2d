@@ -105,7 +105,7 @@ def slp(
 
     """
     xp = array_namespace(t)
-    tau_array = _asarray_like(t, tau)
+    tau_array = xp.asarray(tau, device=t.device, dtype=t.dtype)
     x_tau = x(tau_array)
     dx_tau = dx(tau_array)
     jac_tau = xp.sqrt(xp.sum(dx_tau**2, axis=-1))
@@ -167,7 +167,7 @@ def dlp(
 
     """
     xp = array_namespace(t)
-    tau_array = _asarray_like(t, tau)
+    tau_array = xp.asarray(tau, device=t.device, dtype=t.dtype)
     x_tau = x(tau_array)
 
     def fval(t_in: Array) -> Array:
@@ -192,12 +192,3 @@ def dlp(
         eps=eps,
     )
     return (1j / 4) * h1 * d_t, (1j / 4) * h2 * d_t
-
-
-def _asarray_like(x: Array, value: float | Array, /) -> Array:
-    xp = array_namespace(x)
-    dtype = x.dtype
-    device = getattr(x, "device", None)
-    if device is None:
-        return xp.asarray(value, dtype=dtype)
-    return xp.asarray(value, device=device, dtype=dtype)
