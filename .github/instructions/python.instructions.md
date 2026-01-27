@@ -12,6 +12,7 @@
   - The type can be converted by `xp.astype(x, dtype, /)`.
   - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=x.device, dtype=x.dtype)`. (Do not specify dtype in the inner `asarray`). Note that every array has property `device` (including NumPy >= 2.0), you don't need `getattr`.
   - When expanding dimensions, prefer something like `x[(...,) + (None,) * n + (slice(None),) * m]` or `x[(slice(None),) * m + (None,) * n + (...,)]` over `xp.reshape()`. Avoid creating "expanded version` and "non-expanded version" of the same array, unless both of them are frequently used.
+  - Do not `asarray(x dtype=dtype)` if `x` is complex dtype and `dtype` is float. It will be equivalent to `xp.real(x)` which may cause severe numerical issues. Instead do `xp.asarray(x, dtype=xp.promote_types(x.dtype, xp.promote_types(dtype, complex)))`.
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
   - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.

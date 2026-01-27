@@ -7,6 +7,7 @@ from array_api._2024_12 import Array
 from array_api_compat import array_namespace
 
 from ._is_close import periodic_difference
+from ._scipy_wrapper import scipy_jv, scipy_yv
 
 _EULER_MASCHERONI: float = 0.57721566490153286060651209008240243104215933593992
 
@@ -16,15 +17,12 @@ def _scipy_jv_yv(
     x: Array,
     /,
 ) -> tuple[Array, Array]:
-    from scipy.special import jv, yv
-
     xp = array_namespace(x)
     device = x.device
     dtype = x.dtype
-    x_cpu = xp.asarray(x, device="cpu")
-    j = jv(order, x_cpu)
-    y = yv(order, x_cpu)
-    return xp.asarray(j, device=device, dtype=dtype), xp.asarray(y, device=device, dtype=dtype)
+    j = scipy_jv(order, x, device=device, dtype=dtype)
+    y = scipy_yv(order, x, device=device, dtype=dtype)
+    return j, y
 
 
 def neumann_y1_y2(

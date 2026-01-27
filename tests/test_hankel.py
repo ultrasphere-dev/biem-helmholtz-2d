@@ -21,9 +21,8 @@ def _scipy_yv(
     device: Any,
     dtype: Any,
 ) -> Array:
-    from scipy.special import yv
-
-    return xp.asarray(yv(order, xp.asarray(x, device="cpu")), device=device, dtype=dtype)
+    from biem_helmholtz_2d._scipy_wrapper import scipy_yv
+    return scipy_yv(order, x, device=device, dtype=dtype)
 
 
 def _f(x: Array) -> Array:
