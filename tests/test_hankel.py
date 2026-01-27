@@ -48,21 +48,24 @@ def test_neumann_split_quadrature_matches_trapezoidal(
     )
 
     fprime0 = xp.ones_like(x[0])
+    t_s = xp.asarray(0, device=device, dtype=dtype)
     if order == 0:
         y1, y2 = neumann_y1_y2(
             x,
-            order,
-            lambda t: _f(t, xp),
-            fprime0,
-            0,
+            order=order,
+            f=lambda t: _f(t, xp),
+            fprime0=fprime0,
+            eps=0,
+            t_singularity=t_s,
         )
     else:
         y1, y2 = neumann_y1_y2(
             x,
-            order,
-            lambda t: _f(t, xp),
-            None,
-            0,
+            order=order,
+            f=lambda t: _f(t, xp),
+            fprime0=None,
+            eps=0,
+            t_singularity=t_s,
         )
 
     g_vals = _g(x, xp)
