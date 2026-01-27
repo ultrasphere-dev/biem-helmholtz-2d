@@ -92,13 +92,15 @@ def nystrom_lhs(
     t_start: float = 0,
 ) -> tuple[Array, Array]:
     r"""
-    Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation
+    Returns the left-hand side matrix $A$ of the Nystrom method for the integral equation.
 
     $$
     a(x) \phi (x)
     + \int_0^{2\pi} \Bigg( K_{\mathrm{reg}}(x, y)
-    + \sum_{n\ge 0} K_{\log,n}(x, y)\,\log\left(4\sin^2\frac{x - y}{2}\right)\cot^n\!\left(\frac{x - y}{2}\right)
-    + \sum_{n\ge 0} K_{\cot,n}(x, y)\,\cot^n\!\left(\frac{x - y}{2}\right) \Bigg)\,\phi (y)\,dy
+    + \sum_{n\ge 0} K_{\log,n}(x, y)
+    \log\left(4\sin^2\frac{x - y}{2}\right)\cot^n\!\left(\frac{x - y}{2}\right)
+    + \sum_{n\ge 0} K_{\cot,n}(x, y)
+    \cot^n\!\left(\frac{x - y}{2}\right) \Bigg)\,\phi (y)\,dy
     = \text{rhs} (x)
     $$
 

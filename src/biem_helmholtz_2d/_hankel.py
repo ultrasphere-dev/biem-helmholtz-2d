@@ -12,17 +12,6 @@ from ._scipy_wrapper import scipy_jv, scipy_yv
 _EULER_MASCHERONI: float = 0.57721566490153286060651209008240243104215933593992
 
 
-def _scipy_jv_yv(
-    order: int,
-    x: Array,
-    /,
-) -> tuple[Array, Array]:
-    xp = array_namespace(x)
-    j = scipy_jv(order, x)
-    y = scipy_yv(order, x)
-    return j, y
-
-
 def _neumann_y1_y2(
     x: Array,
     /,
@@ -37,9 +26,9 @@ def _neumann_y1_y2(
         raise ValueError(msg)
 
     fx = f(x)
-    print(x, fx)
     xp = array_namespace(x, fx, fprime0)
-    jv, yv = _scipy_jv_yv(order, fx)
+    jv = scipy_jv(order, fx)
+    yv = scipy_yv(order, fx)
 
     if order == 0:
         fx_pow = 1
@@ -58,7 +47,8 @@ def _neumann_y1_y2(
 
     near0 = xp.abs(delta) <= eps
     if order == 0:
-        assert fprime0 is not None
+        if fprime0 is None:
+            raise AssertionError()
         y2_lim = (2 / xp.pi) * (
             xp.log(xp.abs(fprime0[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
         )
@@ -122,7 +112,6 @@ def neumann_y1_y2(
     x_shifted = x_view - t_s_view
 
     def f_shifted(x_in: Array) -> Array:
-        xp_local = array_namespace(x_in, t_s_arr)
         return f(x_in + t_s_view)
 
     return _neumann_y1_y2(

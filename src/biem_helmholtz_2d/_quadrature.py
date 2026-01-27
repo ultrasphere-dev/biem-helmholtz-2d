@@ -299,7 +299,8 @@ def cot_power_quadrature(
     with
 
     $$
-    P_j^{(N',\mathrm{power})} := \frac{1}{N'} \sum_{|m|<N} I_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
+    P_j^{(N',\mathrm{power})}
+    := \frac{1}{N'} \sum_{|m|<N} I_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
     $$
 
     The returned weights correspond to $P_j^{(N',\mathrm{power})}$ evaluated at
