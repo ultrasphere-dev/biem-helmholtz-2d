@@ -15,5 +15,6 @@
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
   - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.
+  - Parameterize tests using `pytest.mark.parametrize`.
   - Do not try to read the contents of `tests/conftest.py`.
-  - To run python commands, use `uv run python`, `uv run pytest`, etc. Never run `python` directly.
+  - To run python commands, use `uv run python`, `uv run pytest`, etc. Never run `python` directly. You may run `uv run pytest` on your own.

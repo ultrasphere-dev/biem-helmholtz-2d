@@ -19,6 +19,25 @@ def jacobian(shape: Shape, t: Array, /) -> Array:
 
 
 @attrs.define(frozen=True)
+class CircleShape(Shape):
+    """Circle of radius ``rho`` centered at the origin."""
+
+    rho: float
+
+    def x(self, t: Array, /) -> Array:  # noqa: D102
+        xp = array_namespace(t)
+        return xp.stack([self.rho * xp.cos(t), self.rho * xp.sin(t)], axis=-1)
+
+    def dx(self, t: Array, /) -> Array:  # noqa: D102
+        xp = array_namespace(t)
+        return xp.stack([-self.rho * xp.sin(t), self.rho * xp.cos(t)], axis=-1)
+
+    def ddx(self, t: Array, /) -> Array:  # noqa: D102
+        xp = array_namespace(t)
+        return xp.stack([-self.rho * xp.cos(t), -self.rho * xp.sin(t)], axis=-1)
+
+
+@attrs.define(frozen=True)
 class KressShape(Shape):
     """
     Shape of x(t) = (cos(t) + 0.65 cos(2t) - 0.65, 1.5 sin(t)).

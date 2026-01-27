@@ -39,43 +39,38 @@ def _g(x, xp):
 def test_neumann_split_quadrature_matches_trapezoidal(
     xp: Any, device: Any, dtype: Any, order: int, t_start_factor: float
 ) -> None:
+    """
+    Test if $\int_0^{2\pi} g(t) f(t)^{order} Y_{order}(f(t)) dt$ computed by
+    the Neumann split quadrature matches the reference trapezoidal rule.
+    """
+    # approx
     n = 24
     x, w = trapezoidal_quadrature(
         n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
-    _, r = log_cot_power_quadrature(
+    x, r = log_cot_power_quadrature(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
 
     fprime0 = xp.ones_like(x[0])
     t_s = xp.asarray(0, device=device, dtype=dtype)
-    if order == 0:
-        y1, y2 = neumann_y1_y2(
-            x,
-            order=order,
-            f=lambda t: _f(t, xp),
-            fprime0=fprime0,
-            eps=0,
-            t_singularity=t_s,
-        )
-    else:
-        y1, y2 = neumann_y1_y2(
-            x,
-            order=order,
-            f=lambda t: _f(t, xp),
-            fprime0=None,
-            eps=0,
-            t_singularity=t_s,
-        )
+    y1, y2 = neumann_y1_y2(
+        x,
+        order=order,
+        f=lambda t: _f(t, xp),
+        fprime0=fprime0,
+        eps=0,
+        t_singularity=t_s,
+    )
 
     g_vals = _g(x, xp)
     approx = xp.sum(g_vals * (r * y1 + w * y2))
 
-    n_ref = 1024
-    h_ref = (2 * math.pi) / (2 * n_ref - 1)
+    # expected
+    n_ref = 150000 if order == 0 else 1000
     t_ref, w_ref = trapezoidal_quadrature(
         n_ref,
-        t_start=h_ref / 2,
+        t_start_factor=0.5,
         xp=xp,
         device=device,
         dtype=dtype,
@@ -85,11 +80,6 @@ def test_neumann_split_quadrature_matches_trapezoidal(
     integrand = _g(t_ref, xp) * (f_ref**order) * y_ref
     reference = xp.sum(w_ref * integrand)
 
-    rel_err = xp.abs(approx - reference) / xp.max(
-        xp.asarray([xp.abs(reference), 1], device=device, dtype=dtype)
-    )
-    if order == 0:
-        tol = 5e-3
-    else:
-        tol = 5e-6
-    assert rel_err < tol
+    rel_err = xp.abs(approx - reference) / xp.abs(reference)
+    tol = 1e-4 if order == 0 else 1e-6
+    assert rel_err < tol, f"{rel_err=}, {approx=}, {reference=}"

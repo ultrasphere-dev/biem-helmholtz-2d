@@ -62,7 +62,7 @@ def D_t(
     near0 = xp.abs(delta) <= eps
     denom_safe = xp.where(near0, 1, denom)
     core = numer_ / denom_safe
-    limit = (dx_t[..., 1] * ddx_t[..., 0] - dx_t[..., 0] * ddx_t[..., 1]) / (
+    limit = (dx_t[..., 0] * ddx_t[..., 1] - dx_t[..., 1] * ddx_t[..., 0]) / (
         2 * xp.sum(dx_t**2, axis=-1)
     )
     return xp.where(near0, limit, core)
