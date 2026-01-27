@@ -1,7 +1,7 @@
 - This repository is about numerical analysis. You need to make very sure about the math formulation before implementing the code.
 - All methods should be array API compatible.
   - Never import `numpy` directly, unless for constants like `np.pi` for context when `xp` is not available.
-  - If array is passed to function, use `array_api.latest.Array` as the array type hint, and use `array_api_compat.array_namespace()` to get the array API namespace `xp`
+  - If array is passed to function, use `array_api.latest.Array` as the array type hint, and use `array_api_compat.array_namespace()` to get the array API namespace `xp`. `array_namespace()` should be ideally called with all input arrays / evaluated function as arguments IF POSSIBLE, e.g. `xp = array_api_compat.array_namespace(x, y, z)` to validate the input arrays are on the same array API and device. The arguments may also contain None, Python scalars, useful when arguments are optional.
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`.
   - If NO array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively. Do not add these arguments if an array is passed to function.
   - The docstring should mention the shape of the input / output arrays and description should end with `... of shape (..., a, b)`.

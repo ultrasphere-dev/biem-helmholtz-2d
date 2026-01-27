@@ -75,8 +75,8 @@ def neumann_y1_y2(
         msg = "fprime0 (shape (...,)) is required when order == 0."
         raise ValueError(msg)
 
-    xp = array_namespace(x)
     fx = f(x)
+    xp = array_namespace(x, fx, fprime0, t_singularity)
     jv, yv = _scipy_jv_yv(order, fx)
 
     if order == 0:
@@ -101,9 +101,8 @@ def neumann_y1_y2(
     near0 = xp.abs(delta) <= eps
     if order == 0:
         assert fprime0 is not None
-        fprime0_arr = xp.asarray(fprime0, device=x.device, dtype=x.dtype)
         y2_lim = (2 / xp.pi) * (
-            xp.log(xp.abs(fprime0_arr[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
+            xp.log(xp.abs(fprime0[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
         )
     else:
         y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
@@ -158,7 +157,6 @@ def hankel_h1_h2(
         $H^{(1,2)}$ of shape (...x, ...f).
 
     """
-    xp = array_namespace(x)
     y1, y2 = neumann_y1_y2(
         x,
         order=order,
@@ -167,6 +165,7 @@ def hankel_h1_h2(
         eps=eps,
         t_singularity=t_singularity,
     )
+    xp = array_namespace(x, y1, y2)
     h1 = 1j * y1
     h2 = (xp.pi * y1) + (1j * y2)
     return h1, h2
