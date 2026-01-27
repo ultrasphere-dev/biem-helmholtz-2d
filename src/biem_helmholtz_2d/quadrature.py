@@ -11,20 +11,6 @@ from ._integral import (
 )
 
 
-def _fourier_nodes(
-    n_harmonics: int,
-    /,
-    *,
-    t_start: float = 0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
-) -> Array:
-    n_quad = 2 * n_harmonics - 1
-    j = xp.astype(xp.arange(n_quad, device=device), dtype)
-    return t_start + (2 * xp.pi) * j / n_quad
-
-
 def _resolve_t_start(
     n_harmonics: int,
     /,
@@ -87,10 +73,69 @@ def trapezoidal_quadrature(
 
     """
     t_start = _resolve_t_start(n, t_start=t_start, t_start_factor=t_start_factor)
-    t = _fourier_nodes(n, t_start=t_start, xp=xp, device=device, dtype=dtype)
-    n_quad = t.shape[0]
+    n_quad = 2 * n - 1
+    j = xp.astype(xp.arange(n_quad, device=device), dtype)
+    t = t_start + (2 * xp.pi) * j / n_quad
     w = xp.full((1,), (2 * xp.pi) / n_quad, dtype=dtype, device=device)
     return t, w
+
+
+def fourier_coeff_to_quadrature(
+    coeff: Array,
+    n_harmonics: int,
+    /,
+    *,
+    t_start: float | None = None,
+    t_start_factor: float | None = None,
+    xp: ArrayNamespaceFull,
+    device: Any,
+    dtype: Any,
+) -> tuple[Array, Array]:
+    r"""
+    Build quadrature nodes and weights from Fourier integral coefficients.
+
+    Parameters
+    ----------
+    coeff : Array
+        Fourier coefficients $I_m$ of shape (2*n_harmonics - 1,).
+    n_harmonics : int
+        Harmonics with order less than ``n_harmonics`` are integrated exactly.
+    t_start : float | None
+        Grid shift $t_\mathrm{start}$ (sets $t_s$ in the Fourier sum).
+    t_start_factor : float | None
+        Grid shift as a multiple of $h = 2\pi/(2n_harmonics-1)$. Mutually exclusive with
+        ``t_start``.
+    xp : ArrayNamespaceFull
+        The array namespace.
+    device : Any
+        The device.
+    dtype : Any
+        The dtype.
+
+    Returns
+    -------
+    Array
+        Nodes $t_j + t_\mathrm{start}$ of shape (2*n_harmonics - 1,).
+    Array
+        Weights derived from ``coeff`` of shape (2*n_harmonics - 1,).
+    """
+    t, _ = trapezoidal_quadrature(
+        n_harmonics,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
+        device=device,
+        dtype=dtype,
+    )
+    n_quad = t.shape[0]
+    m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
+    phase = (-1j) * m[:, None] * t[None, :]
+    weights = xp.asarray(
+        xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
+        device=device,
+        dtype=dtype,
+    )
+    return t, weights
 
 
 def cot_power_shifted_quadrature(
@@ -150,21 +195,18 @@ def cot_power_shifted_quadrature(
         Weights $P_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t_start = _resolve_t_start(n_harmonics, t_start=t_start, t_start_factor=t_start_factor)
-    t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
-    n_quad = 2 * n_harmonics - 1
-
     coeff = cot_power_fourier_integral_coefficients(
         n_harmonics, power, xp=xp, device=device, dtype=dtype
     )
-    m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
-    phase = (-1j) * m[:, None] * t[None, :]
-    weights = xp.asarray(
-        xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
+    return fourier_coeff_to_quadrature(
+        coeff,
+        n_harmonics,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
         device=device,
         dtype=dtype,
     )
-    return t, weights
 
 
 def log_cot_power_shifted_quadrature(
@@ -226,21 +268,18 @@ def log_cot_power_shifted_quadrature(
         Weights $Q_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t_start = _resolve_t_start(n_harmonics, t_start=t_start, t_start_factor=t_start_factor)
-    t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
-    n_quad = 2 * n_harmonics - 1
-
     coeff = log_cot_power_fourier_integral_coefficients(
         n_harmonics, power, xp=xp, device=device, dtype=dtype
     )
-    m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
-    phase = (-1j) * m[:, None] * t[None, :]
-    weights = xp.asarray(
-        xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
+    return fourier_coeff_to_quadrature(
+        coeff,
+        n_harmonics,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
         device=device,
         dtype=dtype,
     )
-    return t, weights
 
 
 def kussmaul_martensen_kress_quadrature(
