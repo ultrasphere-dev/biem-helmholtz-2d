@@ -1,10 +1,9 @@
 - This repository is about numerical analysis. You need to make very sure about the formulation before implementing the code.
 - All methods should be array API compatible.
   - Never import `numpy` directly, unless for constants like `np.pi` for context when `xp` is not available.
-  - Use `array_api.latest.Array` as the array type hint
-  - Use `array_api_compat.array_namespace()` to get the array API namespace `xp`
-  - If no array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively.
+  - If array is passed to function, use `array_api.latest.Array` as the array type hint, and use `array_api_compat.array_namespace()` to get the array API namespace `xp`
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`.
+  - If NO array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively. Do not add these arguments if an array is passed to function.
   - The docstring should mention the shape of the input / output arrays and description should end with `... of shape (..., a, b)`.
   - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x.
   - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (because it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them).
