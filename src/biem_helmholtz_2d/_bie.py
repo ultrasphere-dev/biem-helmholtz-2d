@@ -241,6 +241,8 @@ def nystrom(
         Multiplicative term $a(x)$.
     kernel : Kernel
         Kernel functions keyed by ``(QuadratureType, order)``.
+    rhs : ArrayFunction
+        Right-hand side function $\mathrm{rhs}(x)$.
     n : int
         Number of discretization points / 2.
     xp : ArrayNamespaceFull
