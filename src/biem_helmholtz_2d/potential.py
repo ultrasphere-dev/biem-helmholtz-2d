@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
 
-from array_api._2024_12 import Array, ArrayNamespaceFull
+from array_api._2024_12 import Array
+from array_api_compat import array_namespace
 
 from biem_helmholtz_2d.hankel import hankel_h1_h2
 
@@ -17,9 +17,6 @@ def D_t(
     /,
     *,
     eps: float = 0.0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> Array:
     r"""
     Kernel factor for the double-layer potential.
@@ -27,34 +24,29 @@ def D_t(
     Parameters
     ----------
     t : Array
-            Source nodes of shape (...,).
+        Source nodes of shape (...,).
     tau : Array
-            Target nodes of shape (...,).
+        Target nodes of shape (...,).
     x : Callable[[Array], Array]
-            Boundary parametrization returning shape (..., 2).
+        Boundary parametrization returning shape (..., 2).
     dx : Callable[[Array], Array]
-            First derivative of the parametrization of shape (..., 2).
+        First derivative of the parametrization of shape (..., 2).
     ddx : Callable[[Array], Array]
-            Second derivative of the parametrization of shape (..., 2).
+        Second derivative of the parametrization of shape (..., 2).
     eps : float
-            If ``abs(tau - t) <= eps``, replace by the diagonal limit value.
-    xp : ArrayNamespaceFull
-            The array namespace.
-    device : Any
-            The device.
-    dtype : Any
-            The dtype.
+        If ``abs(tau - t) <= eps``, replace by the diagonal limit value.
 
     Returns
     -------
     Array
-            Values of $D_t$ of shape (...,).
+        Values of $D_t$ of shape (...,).
 
     """
     if eps < 0:
         msg = "eps must be non-negative."
         raise ValueError(msg)
 
+    xp = array_namespace(t, tau)
     x_t = x(t)
     x_tau = x(tau)
     dx_t = dx(t)
@@ -85,9 +77,6 @@ def slp(
     /,
     *,
     eps: float = 0.0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Split single-layer kernel into log-singular and analytic parts.
@@ -95,33 +84,28 @@ def slp(
     Parameters
     ----------
     t : Array
-            Source nodes of shape (N',).
+        Source nodes of shape (N',).
     tau : float
-            Target node location.
+        Target node location.
     k : float
-            Wave number.
+        Wave number.
     x : Callable[[Array], Array]
-            Boundary parametrization returning shape (..., 2).
+        Boundary parametrization returning shape (..., 2).
     dx : Callable[[Array], Array]
-            First derivative of the parametrization of shape (..., 2).
+        First derivative of the parametrization of shape (..., 2).
     eps : float
-            If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
-    xp : ArrayNamespaceFull
-            The array namespace.
-    device : Any
-            The device.
-    dtype : Any
-            The dtype.
+        If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
 
     Returns
     -------
     Array
-            Log-singular coefficient of shape (N',).
+        Log-singular coefficient of shape (N',).
     Array
-            Analytic remainder of shape (N',).
+        Analytic remainder of shape (N',).
 
     """
-    tau_array = xp.asarray(tau, device=device, dtype=dtype)
+    xp = array_namespace(t)
+    tau_array = _asarray_like(t, tau)
     x_tau = x(tau_array)
     dx_tau = dx(tau_array)
     jac_tau = xp.sqrt(xp.sum(dx_tau**2, axis=-1))
@@ -138,9 +122,6 @@ def slp(
         k * jac_tau,
         eps,
         t_singularity=tau,
-        xp=xp,
-        device=device,
-        dtype=dtype,
     )
     jac_t = xp.sqrt(xp.sum(dx(t) ** 2, axis=-1))
     return (1j / 4) * h1 * jac_t, (1j / 4) * h2 * jac_t
@@ -156,9 +137,6 @@ def dlp(
     /,
     *,
     eps: float = 0.0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Split double-layer kernel into log-singular and analytic parts.
@@ -166,35 +144,30 @@ def dlp(
     Parameters
     ----------
     t : Array
-            Source nodes of shape (N',).
+        Source nodes of shape (N',).
     tau : float
-            Target node location.
+        Target node location.
     k : float
-            Wave number.
+        Wave number.
     x : Callable[[Array], Array]
-            Boundary parametrization returning shape (..., 2).
+        Boundary parametrization returning shape (..., 2).
     dx : Callable[[Array], Array]
-            First derivative of the parametrization of shape (..., 2).
+        First derivative of the parametrization of shape (..., 2).
     ddx : Callable[[Array], Array]
-            Second derivative of the parametrization of shape (..., 2).
+        Second derivative of the parametrization of shape (..., 2).
     eps : float
-            If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
-    xp : ArrayNamespaceFull
-            The array namespace.
-    device : Any
-            The device.
-    dtype : Any
-            The dtype.
+        If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
 
     Returns
     -------
     Array
-            Log-singular coefficient of shape (N',).
+        Log-singular coefficient of shape (N',).
     Array
-            Analytic remainder of shape (N',).
+        Analytic remainder of shape (N',).
 
     """
-    tau_array = xp.asarray(tau, device=device, dtype=dtype)
+    xp = array_namespace(t)
+    tau_array = _asarray_like(t, tau)
     x_tau = x(tau_array)
 
     def fval(t_in: Array) -> Array:
@@ -209,9 +182,6 @@ def dlp(
         None,
         eps,
         t_singularity=tau,
-        xp=xp,
-        device=device,
-        dtype=dtype,
     )
     d_t = D_t(
         t,
@@ -220,8 +190,14 @@ def dlp(
         dx,
         ddx,
         eps=eps,
-        xp=xp,
-        device=device,
-        dtype=dtype,
     )
     return (1j / 4) * h1 * d_t, (1j / 4) * h2 * d_t
+
+
+def _asarray_like(x: Array, value: float | Array, /) -> Array:
+    xp = array_namespace(x)
+    dtype = x.dtype
+    device = getattr(x, "device", None)
+    if device is None:
+        return xp.asarray(value, dtype=dtype)
+    return xp.asarray(value, device=device, dtype=dtype)

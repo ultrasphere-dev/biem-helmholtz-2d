@@ -55,9 +55,6 @@ def test_neumann_split_quadrature_matches_trapezoidal(
             lambda t: _f(t, xp),
             fprime0,
             0,
-            xp=xp,
-            device=device,
-            dtype=dtype,
         )
     else:
         y1, y2 = neumann_y1_y2(
@@ -66,9 +63,6 @@ def test_neumann_split_quadrature_matches_trapezoidal(
             lambda t: _f(t, xp),
             None,
             0,
-            xp=xp,
-            device=device,
-            dtype=dtype,
         )
 
     g_vals = _g(x, xp)

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from typing import Any
 
-from array_api._2024_12 import Array, ArrayNamespaceFull
+from array_api._2024_12 import Array
+from array_api_compat import array_namespace
 
 _EULER_MASCHERONI: float = 0.57721566490153286060651209008240243104215933593992
 
@@ -13,17 +13,31 @@ def _scipy_jv_yv(
     order: int,
     x: Array,
     /,
-    *,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> tuple[Array, Array]:
     from scipy.special import jv, yv
 
-    x_cpu = xp.asarray(x, device="cpu")
+    xp = array_namespace(x)
+    device = getattr(x, "device", None)
+    dtype = x.dtype
+    if device is None:
+        x_cpu = xp.asarray(x)
+    else:
+        x_cpu = xp.asarray(x, device="cpu")
     j = jv(order, x_cpu)
     y = yv(order, x_cpu)
+
+    if device is None:
+        return xp.asarray(j, dtype=dtype), xp.asarray(y, dtype=dtype)
     return xp.asarray(j, device=device, dtype=dtype), xp.asarray(y, device=device, dtype=dtype)
+
+
+def _asarray_like(x: Array, value: float | Array, /) -> Array:
+    xp = array_namespace(x)
+    dtype = x.dtype
+    device = getattr(x, "device", None)
+    if device is None:
+        return xp.asarray(value, dtype=dtype)
+    return xp.asarray(value, device=device, dtype=dtype)
 
 
 def neumann_y1_y2(
@@ -35,9 +49,6 @@ def neumann_y1_y2(
     /,
     *,
     t_singularity: float = 0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Split Neumann functions into log-singular and analytic parts on nodes ``x``.
@@ -53,40 +64,35 @@ def neumann_y1_y2(
     Parameters
     ----------
     x : Array
-            Quadrature nodes of shape (N',).
+        Quadrature nodes of shape (N',).
     order : int
-            Order of the Neumann function.
+        Order of the Neumann function.
     f : Callable[[Array], Array]
-            Function evaluated at nodes. It must accept input of shape (N',)
-            and return an array of shape (..., N'). It is assumed to be smooth
-            everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+        Function evaluated at nodes. It must accept input of shape (N',)
+        and return an array of shape (..., N'). It is assumed to be smooth
+        everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-            Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
     eps : float
-            If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
+        If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
     t_singularity : float
-            Singularity location $t_s$ in $[0, 2\pi)$.
-    xp : ArrayNamespaceFull
-            The array namespace.
-    device : Any
-            The device.
-    dtype : Any
-            The dtype.
+        Singularity location $t_s$ in $[0, 2\pi)$.
 
     Returns
     -------
     Array
-            $Y^{(1)}$ of shape (..., N').
+        $Y^{(1)}$ of shape (..., N').
     Array
-            $Y^{(2)}$ of shape (..., N').
+        $Y^{(2)}$ of shape (..., N').
 
     """
     if order == 0 and fprime0 is None:
         msg = "fprime0 (shape (...,)) is required when order == 0."
         raise ValueError(msg)
 
+    xp = array_namespace(x)
     fx = f(x)
-    jv, yv = _scipy_jv_yv(order, fx, xp=xp, device=device, dtype=dtype)
+    jv, yv = _scipy_jv_yv(order, fx)
 
     if order == 0:
         x_pow = 1
@@ -106,7 +112,8 @@ def neumann_y1_y2(
     near0 = xp.abs(delta) <= eps
     if order == 0:
         assert fprime0 is not None
-        y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0) / 2) + _EULER_MASCHERONI)
+        fprime0_arr = _asarray_like(x, fprime0)
+        y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0_arr) / 2) + _EULER_MASCHERONI)
     else:
         limit_scalar = -((2**order) * math.factorial(order - 1)) / xp.pi
         y2_lim = xp.full_like(y2[..., 0], limit_scalar)
@@ -124,9 +131,6 @@ def hankel_h1_h2(
     /,
     *,
     t_singularity: float = 0,
-    xp: ArrayNamespaceFull,
-    device: Any,
-    dtype: Any,
 ) -> tuple[Array, Array]:
     r"""
     Split Hankel functions of the first kind into log-singular and analytic parts.
@@ -142,34 +146,29 @@ def hankel_h1_h2(
     Parameters
     ----------
     x : Array
-            Quadrature nodes of shape (N',).
+        Quadrature nodes of shape (N',).
     order : int
-            Order of the Hankel function.
+        Order of the Hankel function.
     f : Callable[[Array], Array]
-            Function evaluated at nodes. It must accept input of shape (N',)
-            and return an array of shape (..., N'). It is assumed to be smooth
-            everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+        Function evaluated at nodes. It must accept input of shape (N',)
+        and return an array of shape (..., N'). It is assumed to be smooth
+        everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-            Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
     eps : float
-            If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
+        If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
     t_singularity : float
-            Singularity location $t_s$ in $[0, 2\pi)$.
-    xp : ArrayNamespaceFull
-            The array namespace.
-    device : Any
-            The device.
-    dtype : Any
-            The dtype.
+        Singularity location $t_s$ in $[0, 2\pi)$.
 
     Returns
     -------
     Array
-            $H^{(1,1)}$ of shape (..., N').
+        $H^{(1,1)}$ of shape (..., N').
     Array
-            $H^{(1,2)}$ of shape (..., N').
+        $H^{(1,2)}$ of shape (..., N').
 
     """
+    xp = array_namespace(x)
     y1, y2 = neumann_y1_y2(
         x,
         order,
@@ -177,9 +176,6 @@ def hankel_h1_h2(
         fprime0,
         eps,
         t_singularity=t_singularity,
-        xp=xp,
-        device=device,
-        dtype=dtype,
     )
     h1 = 1j * y1
     h2 = (xp.pi * y1) + (1j * y2)
