@@ -33,7 +33,7 @@ def neumann_y1_y2(
     eps: float = 0.0,
     /,
     *,
-    t_singularity: float = 0,
+    t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""
     Split Neumann functions into log-singular and analytic parts on nodes ``x``.
@@ -49,26 +49,26 @@ def neumann_y1_y2(
     Parameters
     ----------
     x : Array
-        Quadrature nodes of shape (N',).
+        Quadrature nodes of shape (...x).
     order : int
         Order of the Neumann function.
     f : Callable[[Array], Array]
-        Function evaluated at nodes. It must accept input of shape (N',)
-        and return an array of shape (..., N'). It is assumed to be smooth
+        Function evaluated at nodes. It must accept input of shape (...x)
+        and return an array of shape (...x, ...f). It is assumed to be smooth
         everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
         Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
-    t_singularity : float
-        Singularity location $t_s$ in $[0, 2\pi)$.
+    t_singularity : Array
+        Singularity locations $t_s$ of shape (...f).
 
     Returns
     -------
     Array
-        $Y^{(1)}$ of shape (..., N').
+        $Y^{(1)}$ of shape (...x, ...f).
     Array
-        $Y^{(2)}$ of shape (..., N').
+        $Y^{(2)}$ of shape (...x, ...f).
 
     """
     if order == 0 and fprime0 is None:
@@ -86,7 +86,11 @@ def neumann_y1_y2(
 
     y1 = x_pow * jv / xp.pi
     two_pi = 2 * xp.pi
-    delta = xp.remainder(x - t_singularity + xp.pi, two_pi) - xp.pi
+    t_s_arr = xp.asarray(t_singularity, device=x.device, dtype=x.dtype)
+    delta = xp.remainder(
+        x[(...,) + (None,) * t_s_arr.ndim] - t_s_arr[(None,) * x.ndim + (...,)] + xp.pi,
+        two_pi,
+    ) - xp.pi
     log_kernel = xp.log(4 * xp.sin(delta / 2) ** 2)
     y2 = x_pow * yv - y1 * log_kernel
 
@@ -98,12 +102,14 @@ def neumann_y1_y2(
     if order == 0:
         assert fprime0 is not None
         fprime0_arr = xp.asarray(fprime0, device=x.device, dtype=x.dtype)
-        y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0_arr) / 2) + _EULER_MASCHERONI)
+        y2_lim = (2 / xp.pi) * (
+            xp.log(xp.abs(fprime0_arr[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
+        )
     else:
         limit_scalar = -((2**order) * math.factorial(order - 1)) / xp.pi
-        y2_lim = xp.full_like(y2[..., 0], limit_scalar)
+        y2_lim = xp.full_like(y2, limit_scalar)
 
-    y2 = xp.where(near0, y2_lim[..., None], y2)
+    y2 = xp.where(near0, y2_lim, y2)
     return y1, y2
 
 
@@ -115,7 +121,7 @@ def hankel_h1_h2(
     eps: float = 0.0,
     /,
     *,
-    t_singularity: float = 0,
+    t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""
     Split Hankel functions of the first kind into log-singular and analytic parts.
@@ -131,26 +137,26 @@ def hankel_h1_h2(
     Parameters
     ----------
     x : Array
-        Quadrature nodes of shape (N',).
+        Quadrature nodes of shape (...x).
     order : int
         Order of the Hankel function.
     f : Callable[[Array], Array]
-        Function evaluated at nodes. It must accept input of shape (N',)
-        and return an array of shape (..., N'). It is assumed to be smooth
+        Function evaluated at nodes. It must accept input of shape (...x)
+        and return an array of shape (...x, ...f). It is assumed to be smooth
         everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
         Value $f'(t_s)$ of shape (...,) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
-    t_singularity : float
-        Singularity location $t_s$ in $[0, 2\pi)$.
+    t_singularity : Array
+        Singularity locations $t_s$ of shape (...f).
 
     Returns
     -------
     Array
-        $H^{(1,1)}$ of shape (..., N').
+        $H^{(1,1)}$ of shape (...x, ...f).
     Array
-        $H^{(1,2)}$ of shape (..., N').
+        $H^{(1,2)}$ of shape (...x, ...f).
 
     """
     xp = array_namespace(x)
