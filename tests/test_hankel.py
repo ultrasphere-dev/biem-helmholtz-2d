@@ -6,8 +6,8 @@ from typing import Any
 import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
-from biem_helmholtz_2d.hankel import neumann_y1_y2
-from biem_helmholtz_2d.quadrature import (
+from biem_helmholtz_2d._hankel import neumann_y1_y2
+from biem_helmholtz_2d._quadrature import (
     log_cot_power_quadrature,
     trapezoidal_quadrature,
 )

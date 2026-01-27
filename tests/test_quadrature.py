@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from biem_helmholtz_2d.quadrature import (
+from biem_helmholtz_2d._quadrature import (
     garrick_wittich_quadrature,
     kussmaul_martensen_kress_quadrature,
     trapezoidal_quadrature,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from biem_helmholtz_2d.bie import (
+from biem_helmholtz_2d._bie import (
     ArrayFunction,
     KernelFunction,
     QuadratureType,
@@ -10,7 +10,7 @@ from biem_helmholtz_2d.bie import (
     nystrom_lhs,
     nystrom_rhs,
 )
-from biem_helmholtz_2d.quadrature import (
+from biem_helmholtz_2d._quadrature import (
     cot_power_quadrature,
     log_cot_power_quadrature,
     trapezoidal_quadrature,

@@ -3,7 +3,7 @@ from typing import Any, Protocol
 
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
-from .quadrature import (
+from ._quadrature import (
     cot_power_quadrature,
     log_cot_power_quadrature,
     trapezoidal_quadrature,

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
 
-from biem_helmholtz_2d.hankel import hankel_h1_h2
+from biem_helmholtz_2d._hankel import hankel_h1_h2
 
 
 def D_t(
