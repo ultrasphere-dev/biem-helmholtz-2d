@@ -27,12 +27,12 @@ def _scipy_jv_yv(
 
 def neumann_y1_y2(
     x: Array,
+    /,
+    *,
     order: int,
     f: Callable[[Array], Array],
     fprime0: Array | None = None,
     eps: float = 0.0,
-    /,
-    *,
     t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""
@@ -49,7 +49,7 @@ def neumann_y1_y2(
     Parameters
     ----------
     x : Array
-        Quadrature nodes of shape (...x).
+        Points to evaluate of shape (...x).
     order : int
         Order of the Neumann function.
     f : Callable[[Array], Array]
@@ -115,12 +115,12 @@ def neumann_y1_y2(
 
 def hankel_h1_h2(
     x: Array,
+    /,
+    *,
     order: int,
     f: Callable[[Array], Array],
     fprime0: Array | None = None,
     eps: float = 0.0,
-    /,
-    *,
     t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""
@@ -137,7 +137,7 @@ def hankel_h1_h2(
     Parameters
     ----------
     x : Array
-        Quadrature nodes of shape (...x).
+        Points to evaluate of shape (...x).
     order : int
         Order of the Hankel function.
     f : Callable[[Array], Array]
@@ -162,10 +162,10 @@ def hankel_h1_h2(
     xp = array_namespace(x)
     y1, y2 = neumann_y1_y2(
         x,
-        order,
-        f,
-        fprime0,
-        eps,
+        order=order,
+        f=f,
+        fprime0=fprime0,
+        eps=eps,
         t_singularity=t_singularity,
     )
     h1 = 1j * y1

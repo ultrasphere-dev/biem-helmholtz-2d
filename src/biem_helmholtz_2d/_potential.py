@@ -117,11 +117,11 @@ def slp(
 
     h1, h2 = hankel_h1_h2(
         t,
-        0,
-        fval,
-        k * jac_tau,
-        eps,
-        t_singularity=tau,
+        order=0,
+        f=fval,
+        fprime0=k * jac_tau,
+        eps=eps,
+        t_singularity=tau_array,
     )
     jac_t = xp.sqrt(xp.sum(dx(t) ** 2, axis=-1))
     return (1j / 4) * h1 * jac_t, (1j / 4) * h2 * jac_t
@@ -177,11 +177,11 @@ def dlp(
 
     h1, h2 = hankel_h1_h2(
         t,
-        1,
-        fval,
-        None,
-        eps,
-        t_singularity=tau,
+        order=1,
+        f=fval,
+        fprime0=None,
+        eps=eps,
+        t_singularity=tau_array,
     )
     d_t = D_t(
         t,
