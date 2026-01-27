@@ -82,6 +82,5 @@ def test_neumann_split_quadrature_matches_trapezoidal(
     integrand = _g(t_ref) * (f_ref**order) * y_ref
     reference = xp.sum(w_ref * integrand)
 
-    rel_err = xp.abs(approx - reference) / xp.abs(reference)
-    tol = 1e-4 if order == 0 else 1e-6
-    assert rel_err < tol, f"{rel_err=}, {approx=}, {reference=}"
+    # compare
+    assert approx == pytest.approx(reference, rel=1e-4 if order == 0 else 1e-6)
