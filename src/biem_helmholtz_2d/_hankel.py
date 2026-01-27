@@ -17,17 +17,11 @@ def _scipy_jv_yv(
     from scipy.special import jv, yv
 
     xp = array_namespace(x)
-    device = getattr(x, "device", None)
+    device = x.device
     dtype = x.dtype
-    if device is None:
-        x_cpu = xp.asarray(x)
-    else:
-        x_cpu = xp.asarray(x, device="cpu")
+    x_cpu = xp.asarray(x, device="cpu")
     j = jv(order, x_cpu)
     y = yv(order, x_cpu)
-
-    if device is None:
-        return xp.asarray(j, dtype=dtype), xp.asarray(y, dtype=dtype)
     return xp.asarray(j, device=device, dtype=dtype), xp.asarray(y, device=device, dtype=dtype)
 
 
