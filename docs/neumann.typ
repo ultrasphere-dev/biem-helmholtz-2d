@@ -116,3 +116,24 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
   $
 ]
+
+#theorem[Shape Derivative of potentials][
+  Let $n^* (t)$ unnormalized outward normal
+  $
+  n^* (t) := (x'_2(t), -x'_1(t))
+  $
+  Then
+  $
+  (dlp'_x [h]phi) (tau) &= lim_(epsilon -> 0) ((dlp_(x + epsilon h) phi) (tau) - (dlp_x phi) (tau)) / epsilon \
+  &= integral_0^(2 pi) (grad_y G(x(tau), x(t)))'[h] dot n^*(t) + grad_y G(x(tau), x(t)) dot (n^*(t))'[h] phi(t) dd(t) \
+  $
+  Here
+  $
+  (x(tau) - x(t))'[h] & = h(tau) - h(t) \
+  (abs(x(tau) - x(t)))'[h] & = ((x(tau) - x(t)) dot (h(tau) - h(t))) / (abs(x(tau) - x(t))) \
+  (grad_y G(x(tau) - x(t)))'[h] & = (i k)/4 ((k H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) - (H_0^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t)))^2) \
+  & times ((x(tau) - x(t)) dot (h(tau) - h(t))) (x(tau) - x(t)) / (abs(x(tau) - x(t))) \
+  & - (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (h(tau) - h(t)) \
+  (n^*(t))'[h] & = (h'_2(t), -h'_1(t)) \
+  $
+]
