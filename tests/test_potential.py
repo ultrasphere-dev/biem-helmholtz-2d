@@ -34,12 +34,12 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
     assert actual == pytest.approx(-0.5, rel=1e-6)
 
 
-@pytest.mark.parametrize("n", [4, 6, 8, 10, 24])
-@pytest.mark.parametrize("tau", [0.37])
+@pytest.mark.parametrize("n", [4, 6, 8, 10, 128])
+@pytest.mark.parametrize("tau", [0, 0.11])
 @pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
 @pytest.mark.parametrize("m", [0, 1, 2])
 @pytest.mark.parametrize("rho", [1.0])
-@pytest.mark.parametrize("k", [2.0])
+@pytest.mark.parametrize("k", [1.0])
 def test_circle_case_matches_theorem(
     xp: Any, device: Any, dtype: Any, kernel_kind: str, m: int, rho: float, k: float, n: int, tau: float
 ) -> None:
