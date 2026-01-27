@@ -64,9 +64,9 @@ def test_circle_case_matches_theorem(
     kr = k * rho
     abs_m = abs(m)
     kr_array = xp.asarray(kr, device=device, dtype=dtype)
-    h_abs = scipy_hankel1(abs_m, kr_array, device=device, dtype=dtype)
-    j_abs = scipy_jv(abs_m, kr_array, 0, device=device, dtype=dtype)
-    jprime_abs = scipy_jv(abs_m, kr_array, 1, device=device, dtype=dtype)
+    h_abs = scipy_hankel1(abs_m, kr_array)
+    j_abs = scipy_jv(abs_m, kr_array, 0)
+    jprime_abs = scipy_jv(abs_m, kr_array, 1)
 
     if kernel_kind == "slp":
         expected = (1j * math.pi * rho / 2) * h_abs * j_abs * exp_mt_tau

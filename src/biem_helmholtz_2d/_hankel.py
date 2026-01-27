@@ -18,10 +18,8 @@ def _scipy_jv_yv(
     /,
 ) -> tuple[Array, Array]:
     xp = array_namespace(x)
-    device = x.device
-    dtype = x.dtype
-    j = scipy_jv(order, x, device=device, dtype=dtype)
-    y = scipy_yv(order, x, device=device, dtype=dtype)
+    j = scipy_jv(order, x)
+    y = scipy_yv(order, x)
     return j, y
 
 
@@ -40,6 +38,7 @@ def _neumann_y1_y2(
         raise ValueError(msg)
 
     fx = f(x)
+    print(x, fx)
     xp = array_namespace(x, fx, fprime0)
     jv, yv = _scipy_jv_yv(order, fx)
 
