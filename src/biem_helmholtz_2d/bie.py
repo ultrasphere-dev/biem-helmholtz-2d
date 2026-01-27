@@ -4,8 +4,8 @@ from typing import Any, Protocol
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
 from .quadrature import (
-    cot_power_shifted_quadrature,
-    log_cot_power_shifted_quadrature,
+    cot_power_quadrature,
+    log_cot_power_quadrature,
     trapezoidal_quadrature,
 )
 
@@ -145,7 +145,7 @@ def nystrom_lhs(
         if quad_type == QuadratureType.NO_SINGULARITY:
             weight_by_key[(quad_type, order)] = w_scalar
         elif quad_type == QuadratureType.LOG_COT_POWER:
-            _, w_log_vec = log_cot_power_shifted_quadrature(
+            _, w_log_vec = log_cot_power_quadrature(
                 n,
                 order,
                 t_start=t_start_quadrature,
@@ -155,7 +155,7 @@ def nystrom_lhs(
             )
             weight_by_key[(quad_type, order)] = w_log_vec[idx]
         elif quad_type == QuadratureType.COT_POWER:
-            _, w_cauchy_vec = cot_power_shifted_quadrature(
+            _, w_cauchy_vec = cot_power_quadrature(
                 n,
                 order,
                 t_start=t_start_quadrature,

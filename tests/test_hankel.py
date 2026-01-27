@@ -8,7 +8,7 @@ from array_api._2024_12 import Array, ArrayNamespaceFull
 
 from biem_helmholtz_2d.hankel import neumann_y1_y2
 from biem_helmholtz_2d.quadrature import (
-    log_cot_power_shifted_quadrature,
+    log_cot_power_quadrature,
     trapezoidal_quadrature,
 )
 
@@ -43,7 +43,7 @@ def test_neumann_split_quadrature_matches_trapezoidal(
     x, w = trapezoidal_quadrature(
         n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
-    _, r = log_cot_power_shifted_quadrature(
+    _, r = log_cot_power_quadrature(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
 

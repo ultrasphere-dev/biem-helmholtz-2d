@@ -138,7 +138,7 @@ def fourier_coeff_to_quadrature(
     return t, weights
 
 
-def cot_power_shifted_quadrature(
+def cot_power_quadrature(
     n_harmonics: int,
     power: int,
     /,
@@ -209,7 +209,7 @@ def cot_power_shifted_quadrature(
     )
 
 
-def log_cot_power_shifted_quadrature(
+def log_cot_power_quadrature(
     n_harmonics: int,
     power: int,
     /,
@@ -328,7 +328,7 @@ def kussmaul_martensen_kress_quadrature(
 
     """
     # power == 0 corresponds to the classic Kress log quadrature.
-    return log_cot_power_shifted_quadrature(
+    return log_cot_power_quadrature(
         n,
         0,
         t_start=t_start,
@@ -385,7 +385,7 @@ def garrick_wittich_quadrature(
 
     """
     # power == 1 corresponds to the Cauchy principal value cot-kernel.
-    return cot_power_shifted_quadrature(
+    return cot_power_quadrature(
         n,
         1,
         t_start=t_start,

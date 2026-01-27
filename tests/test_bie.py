@@ -11,8 +11,8 @@ from biem_helmholtz_2d.bie import (
     nystrom_rhs,
 )
 from biem_helmholtz_2d.quadrature import (
-    cot_power_shifted_quadrature,
-    log_cot_power_shifted_quadrature,
+    cot_power_quadrature,
+    log_cot_power_quadrature,
     trapezoidal_quadrature,
 )
 
@@ -72,10 +72,10 @@ def test_nystrom_lhs_combined_kernels(xp: Any, device: Any, dtype: Any) -> None:
         + xp.arange(n_quad, device=device, dtype=xp.int64)[None, :]
     ) % n_quad
 
-    _, w_log0 = log_cot_power_shifted_quadrature(n, 0, xp=xp, device=device, dtype=dtype)
-    _, w_log1 = log_cot_power_shifted_quadrature(n, 1, xp=xp, device=device, dtype=dtype)
-    _, w_cot1 = cot_power_shifted_quadrature(n, 1, xp=xp, device=device, dtype=dtype)
-    _, w_cot2 = cot_power_shifted_quadrature(n, 2, xp=xp, device=device, dtype=dtype)
+    _, w_log0 = log_cot_power_quadrature(n, 0, xp=xp, device=device, dtype=dtype)
+    _, w_log1 = log_cot_power_quadrature(n, 1, xp=xp, device=device, dtype=dtype)
+    _, w_cot1 = cot_power_quadrature(n, 1, xp=xp, device=device, dtype=dtype)
+    _, w_cot2 = cot_power_quadrature(n, 2, xp=xp, device=device, dtype=dtype)
 
     w_log0_mat = w_log0[idx]
     w_log1_mat = w_log1[idx]
