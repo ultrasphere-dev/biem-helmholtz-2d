@@ -78,7 +78,7 @@ $
 ] <derivative-of-fp>
 #proof[
 $
-  dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x) 
+  dv(,t) integral.dash_0^(2 pi) f(x) cot^n ((x - t)/2) dd(x)
   &= dv(,t) integral.dash_0^(2 pi) f(x + t) cot^n (x/2) dd(x) \
   &= dv(,t) lim_(epsilon -> 0) F(t, epsilon) \
   &=_? lim_(epsilon -> 0) dv(,t) F(t, epsilon) \
@@ -108,10 +108,10 @@ $
 #proof[
   - $I_(m, 0), m in ZZ$: @fourier-integral.
   - $I_(0, 1) = 0$: Due to the asymmetry of integrand $cot t/2$.
-  - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]). 
-    - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$ 
+  - $I_(m, 1), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
+    - $cot t/2 = (cos t/2)/(sin t/2) = i (e^((i t)/2) + e^(- (i t)/2))/(e^((i t)/2) - e^(- (i t)/2)) = i (e^(i t) + 1)/(e^(i t) - 1)$
     - $therefore forall m in NN. (e^(i m t) - 1) cot (t/2) = (e^(i t) - 1) (sum_(j = 0)^(m - 1) e^(i j t)) cot (t/2) = i (e^(i t) + 1) sum_(j = 0)^(m - 1) e^(i j t)$.
-    - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i because $Integrating both hands and @fourier-integral 
+    - $therefore forall m in NN. I_(m,1) - I_(0, 1) = 2 pi i because $Integrating both hands and @fourier-integral
     - $therefore forall m in NN. I_(m,1) = 2 pi i$
     - $forall m in NN, I_(-m,1) = overline(I_(m,1)) = - 2 pi i$
   - Recurrence relation: Due to @hadamard-recurrence @derivative-of-fp and $(e^(i m t))' = i m e^(i m t)$.
@@ -134,7 +134,7 @@ $
 #proof[
   - $J_(m, 0), m in ZZ$: Follows #cite(<kress_linear_2014>, supplement: [Lemma 8.23.]).
   - $J_(0, 1)$: Due to the asymmetry of integrand $log(4 sin^2 (t/2)) cot (t/2)$.
-  - $J_(m, 1), m in ZZ without {0}$: 
+  - $J_(m, 1), m in ZZ without {0}$:
     - $L(t) := log(4 sin^2 (t/2)) = - sum_(k in ZZ without {0}) e^(i k t)/abs(k)$
     - $forall m in NN. J_(m, 1) = integral.dash_0^(2 pi) e^(i m t) L(t) L'(t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) L^2 (t) dd(t) = - (i m)/2 integral_0^(2 pi) e^(i m t) (sum_(k in ZZ without {0}) e^(i k t)/abs(k)) (sum_(l in ZZ without {0}) e^(i l t)/abs(l)) dd(t)
     = (2 pi) sum_(k, l in ZZ without {0}, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0}, l in ZZ, k + l + m = 0) 1/(abs(k) abs(l)) = (2 pi) sum_(k in ZZ without {0, -m}) 1/(abs(k) abs(m + k))

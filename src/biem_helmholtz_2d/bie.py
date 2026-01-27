@@ -128,9 +128,7 @@ def nystrom_lhs(
         and the left-hand side matrix $A$ of shape (2n - 1, 2n - 1).
 
     """
-    x, w = trapezoidal_quadrature(
-        n, t_start=t_start_quadrature, xp=xp, device=device, dtype=dtype
-    )
+    x, w = trapezoidal_quadrature(n, t_start=t_start_quadrature, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n - 1
     x_eval = x + t_start
     y = x_eval[None, :]
@@ -167,7 +165,7 @@ def nystrom_lhs(
             )
             weight_by_key[(quad_type, order)] = w_cauchy_vec[idx]
         else:
-            msg = f"Unsupported quadrature type: {quad_type}"
+            msg = f"Unsupported quadrature type: {quad_type}"  # type: ignore[unreachable]
             raise ValueError(msg)
 
     terms = [

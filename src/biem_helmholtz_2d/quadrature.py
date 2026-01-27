@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from functools import lru_cache
 import math
 import warnings
+from functools import cache
 from typing import Any
 
 from array_api._2024_12 import Array, ArrayNamespaceFull
 
 
-@lru_cache(maxsize=None)
+@cache
 def harmonic_number(n: int, /) -> float:
     r"""Return the harmonic number $H_n = \sum_{k=1}^n 1/k$."""
     if n < 0:
@@ -127,8 +127,16 @@ def log_cot_power_fourier_integral_coefficients(
     m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
     abs_m = xp.abs(m)
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message="divide by zero encountered in divide")
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in multiply")
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="divide by zero encountered in divide",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="invalid value encountered in multiply",
+        )
         inv_abs_m = 1 / xp.astype(abs_m, dtype)
 
     # Initial values
@@ -141,7 +149,11 @@ def log_cot_power_fourier_integral_coefficients(
         dtype=dtype,
     )
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in multiply")
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="invalid value encountered in multiply",
+        )
         j1 = xp.where(
             m == 0,
             0 + 0.0j,
@@ -260,18 +272,14 @@ def cot_power_shifted_quadrature(
         Weights $P_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t_start = _resolve_t_start(
-        n_harmonics, t_start=t_start, t_start_factor=t_start_factor
-    )
+    t_start = _resolve_t_start(n_harmonics, t_start=t_start, t_start_factor=t_start_factor)
     t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
     coeff = cot_power_fourier_integral_coefficients(
         n_harmonics, power, xp=xp, device=device, dtype=dtype
     )
-    m = xp.arange(
-        -(n_harmonics - 1), n_harmonics, device=device
-    )
+    m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
     phase = (-1j) * m[:, None] * t[None, :]
     weights = xp.asarray(
         xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),
@@ -307,7 +315,8 @@ def log_cot_power_shifted_quadrature(
     with
 
     $$
-    Q_j^{(N',\mathrm{power})} := \frac{1}{N'} \sum_{|m|<N} J_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
+    Q_j^{(N',\mathrm{power})}
+    := \frac{1}{N'} \sum_{|m|<N} J_{m,\mathrm{power}} e^{-i m (t_j + t_s)}.
     $$
 
     The returned weights correspond to $Q_j^{(N',\mathrm{power})}$ evaluated at
@@ -339,18 +348,14 @@ def log_cot_power_shifted_quadrature(
         Weights $Q_j$ of shape (2*n_harmonics - 1,).
 
     """
-    t_start = _resolve_t_start(
-        n_harmonics, t_start=t_start, t_start_factor=t_start_factor
-    )
+    t_start = _resolve_t_start(n_harmonics, t_start=t_start, t_start_factor=t_start_factor)
     t = _fourier_nodes(n_harmonics, t_start=t_start, xp=xp, device=device, dtype=dtype)
     n_quad = 2 * n_harmonics - 1
 
     coeff = log_cot_power_fourier_integral_coefficients(
         n_harmonics, power, xp=xp, device=device, dtype=dtype
     )
-    m = xp.arange(
-        -(n_harmonics - 1), n_harmonics, device=device
-    )
+    m = xp.arange(-(n_harmonics - 1), n_harmonics, device=device)
     phase = (-1j) * m[:, None] * t[None, :]
     weights = xp.asarray(
         xp.real((1 / n_quad) * xp.sum(coeff[:, None] * xp.exp(phase), axis=0)),

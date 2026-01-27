@@ -4,10 +4,10 @@
   - Use `array_api.latest.Array` as the array type hint
   - Use `array_api_compat.array_namespace()` to get the array API namespace `xp`
   - If no array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively.
-  - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`. 
-  - The docstring should mention the shape of the input / ouput arrays and description should end with `... of shape (..., a, b)`.
-  - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x. 
-  - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (becuase it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them). 
+  - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`.
+  - The docstring should mention the shape of the input / output arrays and description should end with `... of shape (..., a, b)`.
+  - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x.
+  - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (because it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them).
   - Avoid creating `int` version, `float` version, `complex` version of the same array as much as possible.
   - Avoid expressing integer as float. `1` instead of `1.0` whenever possible.
   - The type can be converted by `xp.astype(x, dtype, /)`.

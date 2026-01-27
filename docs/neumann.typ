@@ -33,7 +33,7 @@ $
   Y_n (z)
   = &- ( (1/2 z)^(-n) ) / pi sum_(k = 0)^(n - 1) ((n - k - 1)!)/k! ( (1/4) z^2 )^k \
   &+ (2 / pi) log(z/2) J_n (z) \
-  &- ( (1/2 z)^n ) / pi 
+  &- ( (1/2 z)^n ) / pi
   sum_(k = 0)^oo (psi(k + 1) + psi(n + k + 1))
   ((-(1/4) z^2)^k) / (k! (n + k)!)
 $
@@ -41,7 +41,7 @@ $
 #lemma[
   $forall f in e C[[e]].$
   $
-  Y_0 (f(z)) 
+  Y_0 (f(z))
                & = (J_0 (f(z)))/pi log(4 sin^2(z/2))  + underbrace(2/pi (log abs((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
                &= Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
                $
