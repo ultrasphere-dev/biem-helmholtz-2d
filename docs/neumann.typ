@@ -108,3 +108,11 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   &->_(tau -> t) (x'_2(t) x''_1(t) - x'_1(t) x''_2(t)) / (2 abs(x'(t))^2) \
   $
 ]
+
+#theorem[Circle case][
+  $forall m in ZZ.$
+  $
+  (slp_(rho SS^1) e^(i m t)) (tau) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m tau) \
+  ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
+  $
+]
