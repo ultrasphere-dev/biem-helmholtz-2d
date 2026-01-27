@@ -1,16 +1,16 @@
-- This repository is about numerical analysis. You need to make very sure about the formulation before implementing the code.
+- This repository is about numerical analysis. You need to make very sure about the math formulation before implementing the code.
 - All methods should be array API compatible.
   - Never import `numpy` directly, unless for constants like `np.pi` for context when `xp` is not available.
   - If array is passed to function, use `array_api.latest.Array` as the array type hint, and use `array_api_compat.array_namespace()` to get the array API namespace `xp`
   - If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`.
   - If NO array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively. Do not add these arguments if an array is passed to function.
   - The docstring should mention the shape of the input / output arrays and description should end with `... of shape (..., a, b)`.
-  - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating dtype x, x + (int type) -> x.
+  - Understand Type promotion rules, i.e. float64 + complex64 -> complex128. Mixed integer and floating-point type promotion rules are not specified, but we assume that for every floating (including complex) dtype x, x + (int type) -> x.
   - Avoid wrapping `int` arrays, Python scalars with `xp.asarray()` but use them directly (because it is redundant). The exception is when you need to divide int by int (in this case you only need to wrap one of them).
   - Avoid creating `int` version, `float` version, `complex` version of the same array as much as possible.
   - Avoid expressing integer as float. `1` instead of `1.0` whenever possible.
   - The type can be converted by `xp.astype(x, dtype, /)`.
-  - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=device, dtype=dtype)`. (Do not specify dtype in the inner `asarray`).
+  - As an exception, if Scipy functions are needed (e.g. `scipy.special.yv`), do `xp.asarray(yv(xp.asarray(x, device="cpu")), device=x.device, dtype=x.dtype)`. (Do not specify dtype in the inner `asarray`).
 - Tests should be also array API compatible.
   - In `tests/conftest.py`, there are fixtures named `xp: ArrayNamespace`, `device: Any`, `dtype: Any`. Any test function must use these fixtures as arguments, and create arrays (i.e. `zeros()`) within the test function.
   - If there is an array passed as fixture / parameter to the test function. wrap it with `xp.asarray(..., device=device, dtype=dtype)` at the beginning of the test function. If it is a scalar, never wrap it but use it directly.
