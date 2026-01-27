@@ -106,8 +106,7 @@ def neumann_y1_y2(
             xp.log(xp.abs(fprime0_arr[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
         )
     else:
-        limit_scalar = -((2**order) * math.factorial(order - 1)) / xp.pi
-        y2_lim = xp.full_like(y2, limit_scalar)
+        y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
 
     y2 = xp.where(near0, y2_lim, y2)
     return y1, y2
