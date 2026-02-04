@@ -94,7 +94,8 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[
   Since counterclockwise, the outward normal is
   $
-  n(y) = ((x'_2(t), -x'_1(t))) / abs(x'(t))
+  n(t) = n^*(t) / abs(x'(t)) \
+  n^*(t) := (x'_2(t), -x'_1(t))
   $
   $
   (slp_Gamma phi) (tau) &= integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
@@ -166,19 +167,10 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #proof[
   Let $L := integral_0^(2 pi) log(4 sin^2((t - tau)/2)) phi(t) dd(t)$, then $norm(E phi)_infinity <= (norm(A)_infinity + L norm(B)_infinity) norm(phi)_(C([0, 2 pi))) <= L norm(K)_csing norm(phi)_infinity$
 ]
-#theorem[Shape Derivative of $dlp$][
-  Let $n^* (t)$ unnormalized outward normal
-  $
-  n^* (t) := (x'_2(t), -x'_1(t))
-  $
-  Then
-  $
-  (dlp'_x [h]phi) (tau) &= lim_(epsilon -> 0) ((dlp_(x + epsilon h) phi) (tau) - (dlp_x phi) (tau)) / epsilon \
-  &= integral_0^(2 pi) (grad_y G(x(tau), x(t)))'[h] dot n^*(t) + grad_y G(x(tau), x(t)) dot (n^*(t))'[h] phi(t) dd(t) \
-  $
+#let dx = $x_d$
+#let dh = $h_d$
+#theorem[
   Let
-  #let dx = $x_d$
-  #let dh = $h_d$
   $
   dx(tau, t) &:= x(tau) - x(t) \
   abs(dx)(tau, t) &:= abs(dx(tau, t)) \
@@ -189,17 +181,42 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   dx'[h] &= (x(tau) - x(t))'[h]  = dh \
   abs(dx)'[h] &= (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t)) \
   $
-  Since
+]
+#theorem[
   $
-  grad_y G(x(tau), x(t)) & = (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/abs(dx)(tau, t) dx(tau, t) \
+  dv(,x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
   $
-  , we have
+]
+#theorem[Shape Derivative of $slp$][
+  Let $S$ kernel of $slp_Gamma$.
   $
-  (grad_y G(x(tau), x(t)))'[h] & = (i k)/4 ((H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)))'[h] dx(tau, t) \
-  & + (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) dx'[h] \
-  &= (i k)/4 ((- k H_2^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t))) \
-  & times ((dx(tau, t) dot dh(tau, t)) dx(tau, t))/(abs(dx)(tau, t)) \
-  & + (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) dh(tau, t) \
-  (n^*(t))'[h] & = (h'_2(t), -h'_1(t)) \
+  S (tau, t) &= i/4 S_1 (tau, t) \
+  S_1 (tau, t) &:= H_0^((1)) (k abs(x_d (tau, t))) abs(x'(t)) \
+  $
+  Then
+  $
+  (S_1)'[h](tau, t) & = pdv(S_1, abs(x_d)) abs(x_d)'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
+  & = - k (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) abs(x_d)'[h](tau, t) abs(x'(t)) \
+  & + H_0^((1)) (k abs(x_d (tau, t))) (x'(t) dot h'(t)) / (abs(x'(t))) \
+  S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
+  $
+]
+#theorem[Shape Derivative of $dlp$][
+  Let $D$ kernel of $dlp_Gamma$.
+  $
+  D (tau, t) &:= (i k^2)/4 D_1 (tau, t) \
+  D_1 (tau, t) &:= D_2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+  D_2 (tau, t) &:= (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t)))
+  $
+  Then
+  $
+  (n^*)'[h](t) & = (h'_2(t), -h'_1(t)) \
+  $
+  $
+  (D_2)'[h](tau, t) & = abs(x_d)' [h] pdv(D_2, abs(x_d)) \
+  &= - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
+  (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
+  &+ D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
+  D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
 ]
