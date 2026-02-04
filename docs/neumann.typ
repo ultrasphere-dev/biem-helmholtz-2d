@@ -105,7 +105,9 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   &= integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
   $
   $
-  D_t (t, tau) &:= ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+  D_t (t, tau)
+  &:= (n^*(t) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+  &:= ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
   &->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
@@ -182,6 +184,13 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   abs(dx)'[h] &= (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t)) \
   $
 ]
+#let xhdx2 = $op("XHDX2")$
+#theorem[
+  $
+  xhdx2 (tau, t) := (dx'[h])/(abs(dx)) = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t))^2
+  ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
+  $
+]
 #theorem[
   $
   dv(,x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
@@ -217,6 +226,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   &= - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
   (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
   &+ D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
+  &= - k
   D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
 ]
