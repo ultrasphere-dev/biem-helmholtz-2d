@@ -226,7 +226,10 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   &= - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
   (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
   &+ D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
-  &= - k
+  &= - (k abs(x_d (tau, t)))^2 H_2^((1)) (k abs(x_d (tau, t))) xhdx2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+  &+ (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) (dh (tau,
+
+  \
   D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
 ]
