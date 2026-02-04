@@ -108,7 +108,6 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   &->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
-
 #theorem[Circle case][
   $forall m in ZZ.$
   $
@@ -143,6 +142,26 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
   (f(x_1(t), x_2(t), x'_1(t), x'_2(t)))'[h] = pdv(f, x_1) h_1(t) + pdv(f, x_2) h_2(t) + pdv(f, x'_1) h'_1(t) + pdv(f, x'_2) h'_2(t)
   $
+]
+#let csing = $C_"sing"$
+#definition[
+  $
+    csing := {A(t, tau) log(4 sin^2((t - tau)/2)) + B(t, tau) | A, B in C([0, 2 pi) times [0, 2 pi))}
+  $
+  Then the decomposition is unique because $log(4 sin^2((t - tau)/2)) in.not C([0, 2 pi) times [0, 2 pi))$.
+  $
+    norm(K)_csing := norm(A)_(infinity) + norm(B)_(infinity)
+  $
+  is a norm in $csing$.
+]
+#theorem[
+  $forall phi in C([0, 2 pi)).$
+  $
+  E: csing -> C([0, 2 pi)), K |-> (tau |-> integral_0^(2 pi) K(t, tau) phi(t) dd(t)) in B(csing, C([0, 2 pi)))
+  $
+]
+#proof[
+  Let $L := integral_0^(2 pi) log(4 sin^2((t - tau)/2)) phi(t) dd(t)$, then $norm(E phi)_infinity <= (norm(A)_infinity + L norm(B)_infinity) norm(phi)_(C([0, 2 pi))) <= L norm(K)_csing norm(phi)_infinity$
 ]
 #theorem[Shape Derivative of $dlp$][
   Let $n^* (t)$ unnormalized outward normal
