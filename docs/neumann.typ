@@ -155,6 +155,9 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   is a norm in $csing$.
 ]
 #theorem[
+  $X, Y$: $KK$-norm spaces, $forall T in B(X, Y). T'[h](x) = T(h)$
+]
+#theorem[
   $forall phi in C([0, 2 pi)).$
   $
   E: csing -> C([0, 2 pi)), K |-> (tau |-> integral_0^(2 pi) K(t, tau) phi(t) dd(t)) in B(csing, C([0, 2 pi)))
