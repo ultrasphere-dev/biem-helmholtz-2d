@@ -196,7 +196,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   Then
   $
   (S_1)'[h](tau, t) & = pdv(S_1, abs(x_d)) abs(x_d)'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-  & = - k (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) abs(x_d)'[h](tau, t) abs(x'(t)) \
+  & = - k H_1^((1)) (k abs(x_d (tau, t))) abs(x_d)'[h](tau, t) abs(x'(t)) \
   & + H_0^((1)) (k abs(x_d (tau, t))) (x'(t) dot h'(t)) / (abs(x'(t))) \
   S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
   $
