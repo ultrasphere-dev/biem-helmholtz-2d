@@ -116,7 +116,35 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
   $
 ]
-#theorem[Shape Derivative of potentials][
+
+== Frechet Derivative
+#let define = $<==>_"define"$
+#let frd = $op("FRD")$
+#definition[
+  $X, Y$: $KK$-norm spaces, $forall O in cal(O)(X). forall F: O -> Y. F in frd(X) define exists A_x in B(X, Y). lim_(h -> 0) (norm(F(x + h) - F(x) - A_x [h])_Y) / (norm(h)_X) = 0$
+]
+#theorem[
+  $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(y_0)$
+]
+// #proof[
+//   $norm(H(x_0 + h) - H(x_0) - H'(x_0) (h))_Z
+//    &= norm(G(F(x_0 + h)) - G(F(x_0)) - G'(y_0) (F'(x_0) (h)))_Z \
+//   &<= norm(G(F(x_0 + h)) - G(F(x_0)) - G'(y_0) (F(x_0 + h) - F(x_0)))_Z \
+//   & + norm(G'(y_0) (F(x_0 + h) - F(x_0) - F'(x_0) (h)))_Z \
+//   &<= epsilon_(G,F(x_0 + h) - F(x_0)) norm(F(x_0 + h) - F(x_0))_Y \
+//   &+ norm(G'(y_0))_(B(Y, Z)) norm(F(x_0 + h) - F(x_0) - F'(x_0) (h))_Y \
+//   &<= epsilon_(G,F(x_0 + h) - F(x_0)) (norm(F'(x_0))_(B(X, Y)) + epsilon_(F,h)) norm(h)_X \
+//   &+ norm(G'(y_0))_(B(Y, Z)) epsilon_(F,h) norm(h)_X \
+//   &< epsilon
+//   $
+// ]
+#theorem[
+  Let $f: KK^4 -> KK$ independent of $x$.
+  $
+  (f(x_1(t), x_2(t), x'_1(t), x'_2(t)))'[h] = pdv(f, x_1) h_1(t) + pdv(f, x_2) h_2(t) + pdv(f, x'_1) h'_1(t) + pdv(f, x'_2) h'_2(t)
+  $
+]
+#theorem[Shape Derivative of $dlp$][
   Let $n^* (t)$ unnormalized outward normal
   $
   n^* (t) := (x'_2(t), -x'_1(t))
@@ -147,9 +175,9 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
   (grad_y G(x(tau), x(t)))'[h] & = (i k)/4 ((H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)))'[h] dx(tau, t) \
   & + (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) dx'[h] \
-  &= (i k)/4 ((k H'_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) - (H_0^(1) (k abs(dx)(tau, t)))/((abs(dx)(tau, t))^2)) \
+  &= (i k)/4 ((- k H_2^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t))) \
   & times ((dx(tau, t) dot dh(tau, t)) dx(tau, t))/(abs(dx)(tau, t)) \
-  & - (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) dh \
+  & + (i k)/4 (H_1^(1) (k abs(dx)(tau, t)))/(abs(dx)(tau, t)) dh(tau, t) \
   (n^*(t))'[h] & = (h'_2(t), -h'_1(t)) \
   $
 ]
