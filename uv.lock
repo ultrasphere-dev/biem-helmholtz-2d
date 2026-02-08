@@ -136,7 +136,7 @@ requires-dist = [
     { name = "sympy", specifier = ">=1.14.0" },
     { name = "typer", specifier = ">=0.15,<1" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.19.2" },
-    { name = "types-array-api", specifier = ">=1.1.4" },
+    { name = "types-array-api", specifier = ">=1.2.0" },
 ]
 provides-extras = ["cli"]
 
@@ -1190,14 +1190,14 @@ wheels = [
 
 [[package]]
 name = "types-array-api"
-version = "1.1.5"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d7/4c/fbe49eeac5a788b8cbd99e345c3f1af0be9c315d5ce27995d56571f694ef/types_array_api-1.1.5.tar.gz", hash = "sha256:cb3f8aff3068070e33d00506dcae15b5fd39aa91d89de64cdd5f4896bf9e1e60", size = 371466, upload-time = "2025-08-20T02:17:55.81Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/7d/70ea27edb442de8ee65a44f3732e92a8ba2de7c01aa83d74b51e5bed07eb/types_array_api-1.2.0.tar.gz", hash = "sha256:804752410da92672f7e28cd80aed291bf2a2b05d7acbb99bec8f4ac23621b70a", size = 371493, upload-time = "2025-12-11T09:45:08.199Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/28/fd379b60408257a703ede09e576de8e97d994d04e8af08b7242aa834a0e5/types_array_api-1.1.5-py3-none-any.whl", hash = "sha256:08cff80a5e5acd57e0a24321d933e640ae7be78bf7c31d803d0eb3329d9a90c1", size = 374479, upload-time = "2025-08-20T02:17:53.403Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/ab/f8d707bb2bc9bca6d44a07a3215399d9e2aa163c5f84d21da2890759c857/types_array_api-1.2.0-py3-none-any.whl", hash = "sha256:8c2500bf823ea010f78d3cf83874e8047604c61da99a7c274853394230549ca7", size = 374661, upload-time = "2025-12-11T09:45:06.618Z" },
 ]
 
 [[package]]

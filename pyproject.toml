@@ -31,7 +31,7 @@ dependencies = [
   "strenum>=0.4.15",
   "sympy>=1.14.0",
   "typer>=0.15,<1",
-  "types-array-api>=1.1.4",
+  "types-array-api>=1.2.0",
 ]
 urls."Bug Tracker" = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/issues"
 urls.Changelog = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/blob/main/CHANGELOG.md"
