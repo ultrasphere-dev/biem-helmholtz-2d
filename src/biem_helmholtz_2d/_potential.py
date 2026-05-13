@@ -70,8 +70,8 @@ def D_t(
 
 def slp(
     t: Array,
-    tau: float,
-    k: float,
+    tau: Array,
+    k: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     /,
@@ -84,11 +84,11 @@ def slp(
     Parameters
     ----------
     t : Array
-        Source nodes of shape (N',).
+        Source nodes of shape (...,).
     tau : float
-        Target node location.
+        Target node of shape (...,).
     k : float
-        Wave number.
+        Wave number of shape (...,).
     x : Callable[[Array], Array]
         Boundary parametrization returning shape (..., 2).
     dx : Callable[[Array], Array]
@@ -129,8 +129,8 @@ def slp(
 
 def dlp(
     t: Array,
-    tau: float,
-    k: float,
+    tau: Array,
+    k: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
@@ -144,11 +144,11 @@ def dlp(
     Parameters
     ----------
     t : Array
-        Source nodes of shape (N',).
+        Source nodes of shape (...,).
     tau : float
-        Target node location.
+        Target nodes of shape (...,).
     k : float
-        Wave number.
+        Wave number of shape (...,).
     x : Callable[[Array], Array]
         Boundary parametrization returning shape (..., 2).
     dx : Callable[[Array], Array]

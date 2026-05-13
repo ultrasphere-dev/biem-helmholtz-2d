@@ -26,29 +26,28 @@
 ]
 #lemma[
   $
-  Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z^2 CC[[z]]
+    Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z^2 CC[[z]]
   $
   $forall n in NN.$
-$
-  Y_n (z)
-  = &- ( (1/2 z)^(-n) ) / pi sum_(k = 0)^(n - 1) ((n - k - 1)!)/k! ( (1/4) z^2 )^k \
-  &+ (2 / pi) log(z/2) J_n (z) \
-  &- ( (1/2 z)^n ) / pi
-  sum_(k = 0)^oo (psi(k + 1) + psi(n + k + 1))
-  ((-(1/4) z^2)^k) / (k! (n + k)!)
-$
+  $
+    Y_n (z)
+    = & - ( (1/2 z)^(-n) ) / pi sum_(k = 0)^(n - 1) ((n - k - 1)!)/k! ( (1/4) z^2 )^k \
+      & + (2 / pi) log(z/2) J_n (z) \
+      & - ( (1/2 z)^n ) / pi
+        sum_(k = 0)^oo (psi(k + 1) + psi(n + k + 1))
+        ((-(1/4) z^2)^k) / (k! (n + k)!)
+  $
 ]
 #lemma[
   $forall f in e C[[e]].$
   $
-  Y_0 (f(z))
-               & = (J_0 (f(z)))/pi log(4 sin^2(z/2))  + underbrace(2/pi (log abs((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
-               &= Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
-               $
+    Y_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + underbrace(2/pi (log abs((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
+               & = Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
+  $
   $forall n in NN.$
   $
-  f(z)^n Y_n (f(z)) &= f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2)) + underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + e^2 C[[e]] \
-                &= Y_n^((1,f)) (z) log(4 sin^2(z/2)) + Y_n^((2,f)) (z)
+    f(z)^n Y_n (f(z)) & = f(z)^n (J_n (f(z)))/pi log(4 sin^2(z/2)) + underbrace(- ( 2^n ) / pi (n - 1)!, = Y_n^((2,f)) (0)) + e^2 C[[e]] \
+                      & = Y_n^((1,f)) (z) log(4 sin^2(z/2)) + Y_n^((2,f)) (z)
   $
 ]
 
@@ -79,43 +78,42 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #let dlp = $cal(D)$
 #definition[
   $
-  G(x, y) := i/4 H_0^(1) (k abs(x - y))
+    G(x, y) := i/4 H_0^(1) (k abs(x - y))
   $
   $
-  slp_Gamma: C(Gamma) -> C(Gamma), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
-  dlp_Gamma: C(Gamma) -> C(Gamma), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
+    slp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
+    dlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
   $
 ]
 #theorem[
   $
-  grad_y G(x, y) = (i k)/4 (H_1^(1) (k abs(x - y)))/(abs(x - y)) (x - y)
+    grad_y G(x, y) = (i k)/4 (H_1^(1) (k abs(x - y)))/(abs(x - y)) (x - y)
   $
 ]
 #theorem[
   Since counterclockwise, the outward normal is
   $
-  n(t) = n^*(t) / abs(x'(t)) \
-  n^*(t) := (x'_2(t), -x'_1(t))
+    n(t) = n^*(t) / abs(x'(t)) \
+    n^*(t) := (x'_2(t), -x'_1(t))
   $
   $
-  (slp_Gamma phi) (tau) &= integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
-  &= integral_0^(2 pi) i/4 H_0^(1) (k abs(x(tau) - x(t))) phi(t) abs(x'(t)) dd(t) \
-  (dlp_Gamma phi) (tau) &= integral_0^(2 pi) n(x(t)) dot grad_y G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
-  &= integral_0^(2 pi) ((x'_2(t), -x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
-  &= integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
+    (slp_Gamma phi) (tau) & = integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
+                          & = integral_0^(2 pi) i/4 H_0^(1) (k abs(x(tau) - x(t))) phi(t) abs(x'(t)) dd(t) \
+    (dlp_Gamma phi) (tau) & = integral_0^(2 pi) n(x(t)) dot grad_y G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
+                          & = integral_0^(2 pi) ((x'_2(t), -x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
+                          & = integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
   $
   $
-  D_t (t, tau)
-  &:= (n^*(t) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
-  &:= ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
-  &->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
+    D_t (t, tau) & := (n^*(t) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+                 & := ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+                 & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
 #theorem[Circle case][
   $forall m in ZZ.$
   $
-  (slp_(rho SS^1) e^(i m t)) (tau) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m tau) \
-  ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
+                       (slp_(rho SS^1) e^(i m t)) (tau) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m tau) \
+    ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
   $
 ]
 
@@ -143,7 +141,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[
   Let $f: KK^4 -> KK$ independent of $x$.
   $
-  (f(x_1(t), x_2(t), x'_1(t), x'_2(t)))'[h] = pdv(f, x_1) h_1(t) + pdv(f, x_2) h_2(t) + pdv(f, x'_1) h'_1(t) + pdv(f, x'_2) h'_2(t)
+    (f(x_1(t), x_2(t), x'_1(t), x'_2(t)))'[h] = pdv(f, x_1) h_1(t) + pdv(f, x_2) h_2(t) + pdv(f, x'_1) h'_1(t) + pdv(f, x'_2) h'_2(t)
   $
 ]
 #let csing = $C_"sing"$
@@ -163,7 +161,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[
   $forall phi in C([0, 2 pi)).$
   $
-  E: csing -> C([0, 2 pi)), K |-> (tau |-> integral_0^(2 pi) K(t, tau) phi(t) dd(t)) in B(csing, C([0, 2 pi)))
+    E: csing -> C([0, 2 pi)), K |-> (tau |-> integral_0^(2 pi) K(t, tau) phi(t) dd(t)) in B(csing, C([0, 2 pi)))
   $
 ]
 #proof[
@@ -174,62 +172,60 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[
   Let
   $
-  dx(tau, t) &:= x(tau) - x(t) \
-  abs(dx)(tau, t) &:= abs(dx(tau, t)) \
-  dh(tau, t) &:= h(tau) - h(t)
+         dx(tau, t) & := x(tau) - x(t) \
+    abs(dx)(tau, t) & := abs(dx(tau, t)) \
+         dh(tau, t) & := h(tau) - h(t)
   $
   Then
   $
-  dx'[h] &= (x(tau) - x(t))'[h]  = dh \
-  abs(dx)'[h] &= (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t)) \
+         dx'[h] & = (x(tau) - x(t))'[h] = dh \
+    abs(dx)'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t)) \
   $
 ]
 #let xhdx2 = $op("XHDX2")$
 #theorem[
   $
-  xhdx2 (tau, t) := (dx'[h])/(abs(dx)) = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t))^2
-  ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
+    xhdx2 (tau, t) := (dx'[h])/(abs(dx)) = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t))^2
+    ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
   $
 ]
 #theorem[
   $
-  dv(,x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
+    dv(, x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
   $
 ]
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
   $
-  S (tau, t) &= i/4 S_1 (tau, t) \
-  S_1 (tau, t) &:= H_0^((1)) (k abs(x_d (tau, t))) abs(x'(t)) \
+      S (tau, t) & = i/4 S_1 (tau, t) \
+    S_1 (tau, t) & := H_0^((1)) (k abs(x_d (tau, t))) abs(x'(t)) \
   $
   Then
   $
-  (S_1)'[h](tau, t) & = pdv(S_1, abs(x_d)) abs(x_d)'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-  & = - k H_1^((1)) (k abs(x_d (tau, t))) abs(x_d)'[h](tau, t) abs(x'(t)) \
-  & + H_0^((1)) (k abs(x_d (tau, t))) (x'(t) dot h'(t)) / (abs(x'(t))) \
-  S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
+    (S_1)'[h](tau, t) & = pdv(S_1, abs(x_d)) abs(x_d)'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
+                      & = - k H_1^((1)) (k abs(x_d (tau, t))) abs(x_d)'[h](tau, t) abs(x'(t)) \
+                      & + H_0^((1)) (k abs(x_d (tau, t))) (x'(t) dot h'(t)) / (abs(x'(t))) \
+        S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
   $
 ]
 #theorem[Shape Derivative of $dlp$][
   Let $D$ kernel of $dlp_Gamma$.
   $
-  D (tau, t) &:= (i k^2)/4 D_1 (tau, t) \
-  D_1 (tau, t) &:= D_2 (tau, t) (x_d (tau, t) dot n^*(t)) \
-  D_2 (tau, t) &:= (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t)))
+      D (tau, t) & := (i k^2)/4 D_1 (tau, t) \
+    D_1 (tau, t) & := D_2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+    D_2 (tau, t) & := (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t)))
   $
   Then
   $
-  (n^*)'[h](t) & = (h'_2(t), -h'_1(t)) \
+    (n^*)'[h](t) & = (h'_2(t), -h'_1(t)) \
   $
   $
-  (D_2)'[h](tau, t) & = abs(x_d)' [h] pdv(D_2, abs(x_d)) \
-  &= - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
-  (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
-  &+ D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
-  &= - (k abs(x_d (tau, t)))^2 H_2^((1)) (k abs(x_d (tau, t))) xhdx2 (tau, t) (x_d (tau, t) dot n^*(t)) \
-  &+ (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) (dh (tau,
-
-  \
-  D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
+    (D_2)'[h](tau, t) & = abs(x_d)' [h] pdv(D_2, abs(x_d)) \
+                      & = - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
+    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
+                      & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
+                      & = - (k abs(x_d (tau, t)))^2 H_2^((1)) (k abs(x_d (tau, t))) xhdx2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+                      & + (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) (dh (tau, \
+        D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
 ]

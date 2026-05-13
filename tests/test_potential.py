@@ -4,13 +4,13 @@ import math
 from typing import Any
 
 import pytest
-
-from biem_helmholtz_2d._potential import D_t, dlp, slp
-from biem_helmholtz_2d._quadrature import (
+from ie_circle import (
     log_cot_power_quadrature,
     shift_quadrature_singularity,
     trapezoidal_quadrature,
 )
+
+from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
 from biem_helmholtz_2d._shape import CircleShape
 
