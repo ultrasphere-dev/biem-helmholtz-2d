@@ -3,12 +3,16 @@ from __future__ import annotations
 import math
 from typing import Any
 
+import array_api_extra as xpx
 import pytest
+from array_api.latest import Array
 from ie_circle import (
     log_cot_power_quadrature,
+    nystrom,
     shift_quadrature_singularity,
     trapezoidal_quadrature,
 )
+from ie_circle._bie import QuadratureType
 
 from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
@@ -79,18 +83,85 @@ def test_circle_case_matches_theorem(
     actual = xp.sum(exp_mt * (r * log_coeff + w * analytic))
 
     # expected
-    kr = k * rho
     abs_m = abs(m)
-    kr_array = xp.asarray(kr, device=device, dtype=dtype)
-    h_abs = scipy_hankel1(abs_m, kr_array)
-    j_abs = scipy_jv(abs_m, kr_array, 0)
-    jprime_abs = scipy_jv(abs_m, kr_array, 1)
+    kr = xp.asarray(k * rho, device=device, dtype=dtype)
+    h_abs_kr = scipy_hankel1(abs_m, kr)
+    j_abs_kr = scipy_jv(abs_m, kr, 0)
+    jprime_abs_kr = scipy_jv(abs_m, kr, 1)
 
     if kernel_kind == "slp":
-        expected = (1j * math.pi * rho / 2) * h_abs * j_abs * exp_mt_tau
+        expected = (1j * math.pi * rho / 2) * h_abs_kr * j_abs_kr * exp_mt_tau
     else:
-        expected = (1j * math.pi * k * rho / 2) * h_abs * jprime_abs * exp_mt_tau
+        expected = (1j * math.pi * k * rho / 2) * h_abs_kr * jprime_abs_kr * exp_mt_tau
         expected -= 0.5 * exp_mt_tau
 
     actual, expected = complex(actual), complex(expected)
     assert actual == pytest.approx(expected, rel=5e-6)
+
+
+@pytest.mark.parametrize("n", [8, 10, 128])
+@pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
+@pytest.mark.parametrize("m", [0, 1, 2])
+@pytest.mark.parametrize("rho", [1.0])
+@pytest.mark.parametrize("k", [1.0])
+def test_circle_sol_matches_theorem(
+    xp: Any,
+    device: Any,
+    dtype: Any,
+    kernel_kind: str,
+    m: int,
+    rho: float,
+    k: float,
+    n: int,
+) -> None:
+    shape = CircleShape(rho)
+    abs_m = abs(m)
+    k = xp.asarray(k, device=device, dtype=dtype)
+    kr = k * rho
+    h_abs_kr = scipy_hankel1(abs_m, kr)
+    j_abs_kr = scipy_jv(abs_m, kr, 0)
+    jprime_abs_kr = scipy_jv(abs_m, kr, 1)
+    if kernel_kind == "slp":
+
+        def a(t: Array) -> Array:
+            return xp.zeros_like(t)[..., None]
+
+        def rhs(t: Array) -> Array:
+            return xp.asarray((1j * math.pi * rho) / 2 * h_abs_kr * j_abs_kr * xp.exp(1j * m * t))[
+                ..., None
+            ]
+
+        def k_log(t: Array, tau: Array) -> Array:
+            log_coeff, _ = slp(t, tau, k, shape.x, shape.dx, eps=0.0)
+            return log_coeff[..., None, None]
+
+        def k_cont(t: Array, tau: Array) -> Array:
+            _, analytic = slp(t, tau, k, shape.x, shape.dx, eps=0.0)
+            return analytic[..., None, None]
+    else:
+
+        def a(t: Array) -> Array:
+            return xp.ones_like(t)[..., None] / 2
+
+        def rhs(t: Array) -> Array:
+            return xp.asarray(
+                (1j * math.pi * k * rho) / 2 * h_abs_kr * jprime_abs_kr * xp.exp(1j * m * t)
+            )[..., None]
+
+        def k_log(t: Array, tau: Array) -> Array:
+            log_coeff, _ = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
+            return log_coeff[..., None, None]
+
+        def k_cont(t: Array, tau: Array) -> Array:
+            _, analytic = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
+            return analytic[..., None, None]
+
+    kernels = {
+        (QuadratureType.NO_SINGULARITY, 0): k_cont,
+        (QuadratureType.LOG_COT_POWER, 0): k_log,
+    }
+    density = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
+    eval_points = xp.random.random_uniform(shape=(3,), device=device, dtype=dtype) * 2 * math.pi
+    actual = density(eval_points)
+    expected = xp.exp(1j * m * eval_points)
+    assert xp.all(xpx.isclose(actual, expected, rtol=5e-6))

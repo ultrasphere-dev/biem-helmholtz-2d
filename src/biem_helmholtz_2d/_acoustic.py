@@ -52,7 +52,8 @@ def scattering_dirichlet(
         dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * slp_log - 1j * eta * dlp_log
         res = res[..., None, None]
-        print(res.shape, t.shape, tau.shape, dlp_log.shape, slp_log.shape)
+        print(f"slp_log: {slp_log}")
+        # print(f"dlp_log: {dlp_log}")
         return res
 
     def k_cont(t: Array, tau: Array) -> Array:
@@ -60,7 +61,8 @@ def scattering_dirichlet(
         _, dlp_rem = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * slp_rem - 1j * eta * dlp_rem
         res = res[..., None, None]
-        print(res.shape, t.shape, tau.shape, dlp_rem.shape, slp_rem.shape)
+        # print(f"slp_rem: {slp_rem}")
+        # print(f"dlp_rem: {dlp_rem}")
         return res
 
     def a(t: Array) -> Array:

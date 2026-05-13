@@ -9,6 +9,8 @@ from ._shape import KressShape
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
     k = xp.asarray(1.0, device=device, dtype=dtype)
+    eta = k
+    alpha = xp.asarray(0)
 
     def incident_field(x: Array) -> Array:
         xp = array_namespace(x)
@@ -18,8 +20,8 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         k=xp.asarray(1.0),
         shape=KressShape(),
         incident_field=incident_field,
-        alpha=xp.asarray(1.0),
-        eta=k,
+        eta=eta,
+        alpha=alpha,
         n=n,
     )
     return far_field(
@@ -28,8 +30,8 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         k=xp.asarray(1.0),
         shape=KressShape(),
         n=n,
-        alpha=xp.asarray(1.0),
-        eta=k,
+        alpha=alpha,
+        eta=eta,
     )
 
 
