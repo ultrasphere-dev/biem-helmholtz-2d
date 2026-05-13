@@ -105,9 +105,8 @@ def slp(
 
     """
     xp = array_namespace(t)
-    tau_array = xp.asarray(tau, device=t.device, dtype=t.dtype)
-    x_tau = x(tau_array)
-    dx_tau = dx(tau_array)
+    x_tau = x(tau)
+    dx_tau = dx(tau)
     jac_tau = xp.sqrt(xp.sum(dx_tau**2, axis=-1))
 
     def fval(t_in: Array) -> Array:
@@ -121,7 +120,7 @@ def slp(
         f=fval,
         fprime0=k * jac_tau,
         eps=eps,
-        t_singularity=tau_array,
+        t_singularity=tau,
     )
     jac_t = xp.sqrt(xp.sum(dx(t) ** 2, axis=-1))
     return (1j / 4) * h1 * jac_t, (1j / 4) * h2 * jac_t

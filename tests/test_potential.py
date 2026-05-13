@@ -64,6 +64,7 @@ def test_circle_case_matches_theorem(
     t, r = shift_quadrature_singularity(log_cot_power_quadrature, tau)(
         n, 0, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )
+    tau = xp.asarray(tau, device=device, dtype=dtype)
     shape = CircleShape(rho)
 
     # actual

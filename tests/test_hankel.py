@@ -6,14 +6,14 @@ from typing import Any
 import pytest
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from scipy import integrate
-
-from biem_helmholtz_2d._hankel import hankel_h1_h2, neumann_y1_y2
-from biem_helmholtz_2d._quadrature import (
+from ie_circle import (
     log_cot_power_quadrature,
     shift_quadrature_singularity,
     trapezoidal_quadrature,
 )
+from scipy import integrate
+
+from biem_helmholtz_2d._hankel import hankel_h1_h2, neumann_y1_y2
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_yv
 
 

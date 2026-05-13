@@ -49,9 +49,7 @@ def _neumann_y1_y2(
     if order == 0:
         if fprime0 is None:
             raise AssertionError()
-        y2_lim = (2 / xp.pi) * (
-            xp.log(xp.abs(fprime0[(None,) * x.ndim + (...,)]) / 2) + _EULER_MASCHERONI
-        )
+        y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0) / 2) + _EULER_MASCHERONI)
     else:
         y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
 
@@ -83,39 +81,35 @@ def neumann_y1_y2(
     Parameters
     ----------
     x : Array
-        Points to evaluate of shape (...x).
+        Points to evaluate of shape (...).
     order : int
         Order of the Neumann function.
     f : Callable[[Array], Array]
-        Function evaluated at nodes. It must accept input of shape (...x)
-        and return an array of shape (...x, ...f). It is assumed to be smooth
+        Function evaluated at nodes of (...) -> (...).
+
+        It is assumed to be smooth
         everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-        Value $f'(t_s)$ of shape (...f) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $Y^{(2)}$ by its limit value.
     t_singularity : Array
-        Singularity locations $t_s$ of shape (...f).
+        Singularity locations $t_s$ of shape (...).
 
     Returns
     -------
     Array
-        $Y^{(1)}$ of shape (...x, ...f).
+        $Y^{(1)}$ of shape (...).
     Array
-        $Y^{(2)}$ of shape (...x, ...f).
+        $Y^{(2)}$ of shape (...).
 
     """
-    xp = array_namespace(x, t_singularity)
-    t_s_arr = xp.asarray(t_singularity, device=x.device, dtype=x.dtype)
-    t_s_view = t_s_arr[(None,) * x.ndim + (...,)]
-    x_view = x[(...,) + (None,) * t_s_arr.ndim]
-    x_shifted = x_view - t_s_view
 
     def f_shifted(x_in: Array) -> Array:
-        return f(x_in + t_s_view)
+        return f(x_in + t_singularity)
 
     return _neumann_y1_y2(
-        x_shifted,
+        x - t_singularity,
         order=order,
         f=f_shifted,
         fprime0=fprime0,
@@ -147,26 +141,25 @@ def hankel_h1_h2(
     Parameters
     ----------
     x : Array
-        Points to evaluate of shape (...x).
+        Points to evaluate of shape (...).
     order : int
         Order of the Hankel function.
     f : Callable[[Array], Array]
-        Function evaluated at nodes. It must accept input of shape (...x)
-        and return an array of shape (...x, ...f). It is assumed to be smooth
-        everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+        Function evaluated at nodes of (...) -> (...).
+        It is assumed to be smooth everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
-        Value $f'(t_s)$ of shape (...f) required when ``order == 0``.
+        Value $f'(t_s)$ of shape (...) required when ``order == 0``.
     eps : float
         If ``abs(x - t_s) <= eps``, replace $H^{(1,2)}$ by its limit value.
     t_singularity : Array
-        Singularity locations $t_s$ of shape (...f).
+        Singularity locations $t_s$ of shape (...).
 
     Returns
     -------
     Array
-        $H^{(1,1)}$ of shape (...x, ...f).
+        $H^{(1,1)}$ of shape (...).
     Array
-        $H^{(1,2)}$ of shape (...x, ...f).
+        $H^{(1,2)}$ of shape (...).
 
     """
     y1, y2 = neumann_y1_y2(

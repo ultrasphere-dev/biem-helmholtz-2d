@@ -44,24 +44,28 @@ def scattering_dirichlet(
 
     """
     xp = array_namespace(k, alpha, eta)
-    dtype = xp.result_type(k, alpha, eta, 1j)
+    dtype = xp.result_type(k, alpha, eta)
     device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
         slp_log, _ = slp(t, tau, k[..., None, None], shape.x, shape.dx)
         dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * slp_log - 1j * eta * dlp_log
-        return res[..., None, None]
+        res = res[..., None, None]
+        print(res.shape, t.shape, tau.shape, dlp_log.shape, slp_log.shape)
+        return res
 
     def k_cont(t: Array, tau: Array) -> Array:
         _, slp_rem = slp(t, tau, k[..., None, None], shape.x, shape.dx)
         _, dlp_rem = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * slp_rem - 1j * eta * dlp_rem
-        return res[..., None, None]
+        res = res[..., None, None]
+        print(res.shape, t.shape, tau.shape, dlp_rem.shape, slp_rem.shape)
+        return res
 
     def a(t: Array) -> Array:
         xp = array_namespace(t)
-        return xp.ones_like(t)[..., None, None] * (alpha / 2)
+        return xp.ones_like(t)[..., None] * (alpha / 2)
 
     def rhs(t: Array) -> Array:
         return incident_field(shape.x(t))[..., None]
@@ -110,7 +114,7 @@ def far_field(
 
     """
     xp = array_namespace(direction, k)
-    dtype = xp.result_type(direction, k, 1j)
+    dtype = xp.result_type(direction, k)
     device = direction.device
     t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     # (...)
