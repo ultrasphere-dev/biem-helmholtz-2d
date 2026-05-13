@@ -11,11 +11,11 @@ from ._shape import Shape
 
 def scattering_dirichlet(
     *,
-    k: complex,
+    k: Array,
     shape: Shape,
     incident_field: Callable[[Array], Array],
-    alpha: complex,
-    eta: complex,
+    alpha: Array,
+    eta: Array,
     n: int,
 ) -> Array:
     """
@@ -23,15 +23,15 @@ def scattering_dirichlet(
 
     Parameters
     ----------
-    k : complex
+    k : Array
         The wave number.
     shape : Shape
         The shape of the scatterer.
     incident_field : Callable[[Array], Array]
         The incident field of (...,) -> (..., 2).
-    alpha : complex
+    alpha : Array
         The coupling parameter for the double-layer potential.
-    eta : complex
+    eta : Array
         The coupling parameter for the single-layer potential.
     n : int
         The maximum order - 1.
@@ -42,6 +42,9 @@ def scattering_dirichlet(
         _description_
 
     """
+    xp = array_namespace(k, alpha, eta)
+    dtype = xp.result_type(k, alpha, eta, 1j)
+    device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
         slp_log, _ = slp(t, tau, k, shape.x, shape.dx)
@@ -66,4 +69,5 @@ def scattering_dirichlet(
         (QuadratureType.NO_SINGULARITY, 0): k_cont,
         (QuadratureType.LOG_COT_POWER, 0): k_log,
     }
-    return nystrom(a, kernels, rhs, n=n)
+
+    return nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
