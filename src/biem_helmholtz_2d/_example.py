@@ -1,0 +1,37 @@
+from typing import Any
+
+from array_api.latest import Array, ArrayNamespace
+from array_api_compat import array_namespace
+
+from ._acoustic import far_field, scattering_dirichlet
+from ._shape import KressShape
+
+
+def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
+    k = xp.asarray(1.0, device=device, dtype=dtype)
+
+    def incident_field(x: Array) -> Array:
+        xp = array_namespace(x)
+        return xp.exp(1j * k * x[..., 0])
+
+    density = scattering_dirichlet(
+        k=xp.asarray(1.0),
+        shape=KressShape(),
+        incident_field=incident_field,
+        alpha=xp.asarray(1.0),
+        eta=k,
+        n=n,
+    )
+    return far_field(
+        density=density,
+        direction=xp.asarray((1.0, 0)),
+        k=xp.asarray(1.0),
+        shape=KressShape(),
+        n=n,
+        alpha=xp.asarray(1.0),
+        eta=k,
+    )
+
+
+def example_3_1_answer() -> complex:
+    return -1.62745750 + 0.60222591j

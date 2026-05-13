@@ -4,7 +4,7 @@ from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
 from ie_circle import nystrom, trapezoidal_quadrature
-from ie_circle._bie import QuadratureType
+from ie_circle._bie import NystromInterpolant, QuadratureType
 
 from ._potential import dlp, slp
 from ._shape import Shape
@@ -18,7 +18,7 @@ def scattering_dirichlet(
     alpha: Array,
     eta: Array,
     n: int,
-) -> Array:
+) -> NystromInterpolant:
     """
     Compute scattering field.
 
@@ -39,8 +39,8 @@ def scattering_dirichlet(
 
     Returns
     -------
-    Array
-        _description_
+    NystromInterpolant
+        The density of the integral equation of shape (...,) -> (..., 1, 1).
 
     """
     xp = array_namespace(k, alpha, eta)
