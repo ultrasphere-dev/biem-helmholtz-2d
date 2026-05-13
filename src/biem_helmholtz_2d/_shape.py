@@ -8,11 +8,56 @@ from array_api_compat import array_namespace
 
 
 class Shape(Protocol):
-    def x(self, t: Array, /) -> Array: ...
+    def x(self, t: Array, /) -> Array:
+        """
+        The shape mapping.
 
-    def dx(self, t: Array, /) -> Array: ...
+        Parameters
+        ----------
+        t : Array
+            Parameter of shape (...,).
 
-    def ddx(self, t: Array, /) -> Array: ...
+        Returns
+        -------
+        Array
+            Position of shape (..., C, 2).
+
+        """
+        ...
+
+    def dx(self, t: Array, /) -> Array:
+        """
+        Derivative of the shape mapping.
+
+        Parameters
+        ----------
+        t : Array
+            Parameter of shape (...,).
+
+        Returns
+        -------
+        Array
+            Derivative of position of shape (..., C, 2).
+
+        """
+        ...
+
+    def ddx(self, t: Array, /) -> Array:
+        """
+        Second derivative of the shape mapping.
+
+        Parameters
+        ----------
+        t : Array
+            Parameter of shape (...,).
+
+        Returns
+        -------
+        Array
+            Second derivative of position of shape (..., C, 2).
+
+        """
+        ...
 
 
 def jacobian(shape: Shape, t: Array, /) -> Array:

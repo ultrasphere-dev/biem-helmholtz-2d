@@ -2,7 +2,8 @@ from collections.abc import Callable
 
 from array_api.latest import Array
 from array_api_compat import array_namespace
-from ie_circle import nystrom
+from array_api_shape_check import check_shapes
+from ie_circle import nystrom, trapezoidal_quadrature
 from ie_circle._bie import QuadratureType
 
 from ._potential import dlp, slp
@@ -24,15 +25,15 @@ def scattering_dirichlet(
     Parameters
     ----------
     k : Array
-        The wave number.
+        The wave number of shape (...,).
     shape : Shape
-        The shape of the scatterer.
+        The shape of the scatterer of (...,) -> (..., 2).
     incident_field : Callable[[Array], Array]
         The incident field of (...,) -> (..., 2).
     alpha : Array
-        The coupling parameter for the double-layer potential.
+        The coupling parameter for the double-layer potential of shape (...,).
     eta : Array
-        The coupling parameter for the single-layer potential.
+        The coupling parameter for the single-layer potential of shape (...,).
     n : int
         The maximum order - 1.
 
@@ -47,15 +48,15 @@ def scattering_dirichlet(
     device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
-        slp_log, _ = slp(t, tau, k, shape.x, shape.dx)
-        dlp_log, _ = dlp(t, tau, k, shape.x, shape.dx, shape.ddx)
-        res = alpha * slp_log + eta * dlp_log
+        slp_log, _ = slp(t, tau, k[..., None, None], shape.x, shape.dx)
+        dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        res = alpha * slp_log - 1j * eta * dlp_log
         return res[..., None, None]
 
     def k_cont(t: Array, tau: Array) -> Array:
-        _, slp_rem = slp(t, tau, k, shape.x, shape.dx)
-        _, dlp_rem = dlp(t, tau, k, shape.x, shape.dx, shape.ddx)
-        res = alpha * slp_rem + eta * dlp_rem
+        _, slp_rem = slp(t, tau, k[..., None, None], shape.x, shape.dx)
+        _, dlp_rem = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        res = alpha * slp_rem - 1j * eta * dlp_rem
         return res[..., None, None]
 
     def a(t: Array) -> Array:
@@ -71,3 +72,72 @@ def scattering_dirichlet(
     }
 
     return nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
+
+
+def far_field(
+    density: Callable[[Array], Array],
+    direction: Array,
+    n: int,
+    shape: Shape,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> Array:
+    """
+    Compute far-field pattern.
+
+    Parameters
+    ----------
+    density : Callable[[Array], Array]
+        The density function of shape (...) -> (..., ...(B), 1, 1).
+    direction : Array
+        The direction of the far-field pattern of shape (..., 2).
+    n : int
+        The maximum order - 1.
+    shape : Shape
+        The shape of the scatterer of (...,) -> (..., 2).
+    k : Array
+        The wave number of shape (...(B),).
+    alpha : Array
+        The coupling parameter for the double-layer potential of shape (...(B),).
+    eta : Array
+        The coupling parameter for the single-layer potential of shape (...(B),).
+
+    Returns
+    -------
+    Array
+        _description_
+
+    """
+    xp = array_namespace(direction, k)
+    dtype = xp.result_type(direction, k, 1j)
+    device = direction.device
+    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    # (...)
+    coef = xp.exp(-1j * xp.pi / 4) / xp.sqrt(8 * xp.pi * k)
+    x_t = shape.x(t)
+    dx_t = shape.dx(t)
+    outward_unnormalized = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
+    jacobian = xp.sqrt(xp.sum(dx_t**2, axis=-1))
+    # (..., Q)
+    integrand_without_density = (
+        (
+            alpha[..., None, None]
+            * k[..., None, None]
+            * xp.sum(outward_unnormalized * direction, axis=-1)
+            + eta[..., None, None]
+        )
+        * xp.exp(-1j * k[..., None, None] * xp.sum(x_t * direction, axis=-1))
+        * jacobian
+    )
+    # (..., *B, Q)
+    density_t = density(t)
+    info = check_shapes("*bQ,*b*BQ", density_t, integrand_without_density)
+    B_ndim = len(info.unique["b"].shape_broadcasted)
+    integrand = (
+        integrand_without_density[(...,) + (None,) * B_ndim + (slice(None), slice(None))]
+        * density_t
+    )
+    integral = xp.sum(integrand, axis=-1)
+    result = coef[..., None] * integral
+    return result
