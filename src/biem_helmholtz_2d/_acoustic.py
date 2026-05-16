@@ -51,8 +51,6 @@ def scattering_dirichlet(
         dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * dlp_log - 1j * eta * slp_log
         res = res[..., None, None]
-        # print(f"slp_log: {slp_log}")
-        print(f"dlp_log: {dlp_log}")
         return res
 
     def k_cont(t: Array, tau: Array) -> Array:
@@ -60,8 +58,6 @@ def scattering_dirichlet(
         _, dlp_cont = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * dlp_cont - 1j * eta * slp_cont
         res = res[..., None, None]
-        # print(f"slp_cont: {slp_cont}")
-        print(f"dlp_cont: {dlp_cont}")
         return res
 
     def a(t: Array) -> Array:
@@ -77,7 +73,6 @@ def scattering_dirichlet(
     }
 
     result = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
-    print(result.sol)
     return result
 
 
@@ -113,7 +108,7 @@ def far_field(
     Returns
     -------
     Array
-        _description_
+        The far-field pattern of shape (..., ...(*B)).
 
     """
     xp = array_namespace(direction, k)
@@ -147,7 +142,6 @@ def far_field(
         integrand_without_density[(...,) + (None,) * B_ndim + (slice(None), slice(None))]
         * density_t
     )
-    print(f"{coef=}, {integrand=}")
     integral = xp.sum(integrand * w, axis=-1)
     result = coef[..., None] * integral
     return result
