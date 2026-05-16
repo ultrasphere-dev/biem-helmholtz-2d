@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Literal
 
 import array_api_extra as xpx
+import numpy as np
 import pytest
 from array_api.latest import Array
 from ie_circle import (
     CircleShape,
+    KressShape,
     log_cot_power_quadrature,
     nystrom,
     shift_quadrature_singularity,
@@ -17,6 +19,35 @@ from ie_circle._bie import QuadratureType
 
 from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
+
+
+@pytest.mark.parametrize("type", ["slp", "dlp"])
+@pytest.mark.parametrize("singularity", ["log", "cont"])
+def test_potential_match_known_values_kress_shape(
+    xp: Any,
+    device: Any,
+    dtype: Any,
+    type: Literal["slp", "dlp"],
+    singularity: Literal["log", "cont"],
+) -> None:
+    shape = KressShape()
+    t = trapezoidal_quadrature(3, xp=xp, device=device, dtype=dtype)[0]
+    k = xp.asarray(1.0, device=device, dtype=dtype)
+    t, tau = t[:, None], t[None, :]
+    if type == "slp":
+        actual = slp(t, tau, k, shape.x, shape.dx, eps=0.0)[0 if singularity == "log" else 1]
+    else:
+        actual = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)[
+            0 if singularity == "log" else 1
+        ]
+    expected = xp.asarray(
+        np.loadtxt(
+            f"tests/kress_shape/{type}_{singularity}.csv", delimiter=",", dtype=np.complex128
+        ),
+        device=device,
+        dtype=xp.result_type(dtype, 1j),
+    )
+    assert xp.all(xpx.isclose(actual, expected, rtol=1e-6))
 
 
 @pytest.mark.parametrize("t", [00, 1, 2])
