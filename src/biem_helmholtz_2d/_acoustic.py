@@ -49,7 +49,7 @@ def scattering_dirichlet(
     def k_log(t: Array, tau: Array) -> Array:
         slp_log, _ = slp(t, tau, k[..., None, None], shape.x, shape.dx)
         dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
-        res = alpha * slp_log - 1j * eta * dlp_log
+        res = alpha * dlp_log - 1j * eta * slp_log
         res = res[..., None, None]
         # print(f"slp_log: {slp_log}")
         print(f"dlp_log: {dlp_log}")
@@ -58,7 +58,7 @@ def scattering_dirichlet(
     def k_cont(t: Array, tau: Array) -> Array:
         _, slp_cont = slp(t, tau, k[..., None, None], shape.x, shape.dx)
         _, dlp_cont = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
-        res = alpha * slp_cont - 1j * eta * dlp_cont
+        res = alpha * dlp_cont - 1j * eta * slp_cont
         res = res[..., None, None]
         # print(f"slp_cont: {slp_cont}")
         print(f"dlp_cont: {dlp_cont}")
@@ -69,7 +69,7 @@ def scattering_dirichlet(
         return xp.ones_like(t)[..., None] * (alpha / 2)
 
     def rhs(t: Array) -> Array:
-        return incident_field(shape.x(t))[..., None]
+        return -incident_field(shape.x(t))[..., None]
 
     kernels = {
         (QuadratureType.NO_SINGULARITY, 0): k_cont,
@@ -119,19 +119,21 @@ def far_field(
     xp = array_namespace(direction, k)
     dtype = xp.result_type(direction, k)
     device = direction.device
-    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     # (...)
     coef = xp.exp(-1j * xp.pi / 4) / xp.sqrt(8 * xp.pi * k)
     x_t = shape.x(t)
     dx_t = shape.dx(t)
-    outward_unnormalized = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
+    ny_t_unnormalized = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
+    ny_t = ny_t_unnormalized / xp.linalg.vector_norm(ny_t_unnormalized, axis=-1, keepdims=True)
     jacobian = xp.sqrt(xp.sum(dx_t**2, axis=-1))
+    direction_normalized = direction / xp.linalg.vector_norm(direction, axis=-1, keepdims=True)
     # (..., Q)
     integrand_without_density = (
         (
             alpha[..., None, None]
             * k[..., None, None]
-            * xp.sum(outward_unnormalized * direction, axis=-1)
+            * xp.sum(ny_t * direction_normalized, axis=-1)
             + eta[..., None, None]
         )
         * xp.exp(-1j * k[..., None, None] * xp.sum(x_t * direction, axis=-1))
@@ -145,6 +147,7 @@ def far_field(
         integrand_without_density[(...,) + (None,) * B_ndim + (slice(None), slice(None))]
         * density_t
     )
-    integral = xp.sum(integrand, axis=-1)
+    print(f"{coef=}, {integrand=}")
+    integral = xp.sum(integrand * w, axis=-1)
     result = coef[..., None] * integral
     return result

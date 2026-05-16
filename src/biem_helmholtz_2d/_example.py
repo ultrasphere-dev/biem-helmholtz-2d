@@ -9,8 +9,8 @@ from ._acoustic import far_field, scattering_dirichlet
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
     k = xp.asarray(1.0, device=device, dtype=dtype)
-    eta = k
-    alpha = xp.asarray(0)
+    eta = xp.asarray(0.0, device=device, dtype=dtype)
+    alpha = xp.asarray(1.0)
 
     def incident_field(x: Array) -> Array:
         xp = array_namespace(x)
