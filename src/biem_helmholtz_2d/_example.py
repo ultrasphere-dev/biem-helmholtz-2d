@@ -2,9 +2,9 @@ from typing import Any
 
 from array_api.latest import Array, ArrayNamespace
 from array_api_compat import array_namespace
+from ie_circle import KressShape
 
 from ._acoustic import far_field, scattering_dirichlet
-from ._shape import KressShape
 
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:

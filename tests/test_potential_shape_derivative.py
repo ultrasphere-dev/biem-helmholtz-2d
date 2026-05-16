@@ -6,9 +6,9 @@ from typing import Any
 import pytest
 import sympy
 from array_api.latest import ArrayNamespace
+from ie_circle import SympyShape
 
 from biem_helmholtz_2d import _potential, _potential_shape_derivative
-from biem_helmholtz_2d._shape import SympyShape
 
 
 def circle_shape(t: sympy.Symbol) -> tuple[sympy.Expr, sympy.Expr]:

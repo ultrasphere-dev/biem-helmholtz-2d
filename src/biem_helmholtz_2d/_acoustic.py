@@ -3,11 +3,10 @@ from collections.abc import Callable
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
-from ie_circle import nystrom, trapezoidal_quadrature
+from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
 
 from ._potential import dlp, slp
-from ._shape import Shape
 
 
 def scattering_dirichlet(

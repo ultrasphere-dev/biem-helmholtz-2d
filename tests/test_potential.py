@@ -7,6 +7,7 @@ import array_api_extra as xpx
 import pytest
 from array_api.latest import Array
 from ie_circle import (
+    CircleShape,
     log_cot_power_quadrature,
     nystrom,
     shift_quadrature_singularity,
@@ -16,7 +17,6 @@ from ie_circle._bie import QuadratureType
 
 from biem_helmholtz_2d._potential import D_t, dlp, slp
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
-from biem_helmholtz_2d._shape import CircleShape
 
 
 @pytest.mark.parametrize("t", [00, 1, 2])
