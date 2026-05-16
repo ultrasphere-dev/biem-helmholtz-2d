@@ -17,7 +17,7 @@ from ie_circle import (
 )
 from ie_circle._bie import QuadratureType
 
-from biem_helmholtz_2d._potential import D_t, dlp, slp
+from biem_helmholtz_2d._potential import D_t, dlp_kernel_split, slp_kernel_split
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
 
 
@@ -35,9 +35,11 @@ def test_potential_match_known_values_kress_shape(
     k = xp.asarray(1.0, device=device, dtype=dtype)
     t, tau = t[:, None], t[None, :]
     if type == "slp":
-        actual = slp(t, tau, k, shape.x, shape.dx, eps=0.0)[0 if singularity == "log" else 1]
+        actual = slp_kernel_split(t, tau, k, shape.x, shape.dx, eps=0.0)[
+            0 if singularity == "log" else 1
+        ]
     else:
-        actual = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)[
+        actual = dlp_kernel_split(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)[
             0 if singularity == "log" else 1
         ]
     expected = xp.asarray(
@@ -107,9 +109,9 @@ def test_circle_case_matches_theorem(
     exp_mt_tau = xp.exp(1j * m * xp.asarray(tau, device=device, dtype=dtype))
 
     if kernel_kind == "slp":
-        log_coeff, analytic = slp(t, tau, k, shape.x, shape.dx, eps=0.0)
+        log_coeff, analytic = slp_kernel_split(t, tau, k, shape.x, shape.dx, eps=0.0)
     else:
-        log_coeff, analytic = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
+        log_coeff, analytic = dlp_kernel_split(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
 
     actual = xp.sum(exp_mt * (r * log_coeff + w * analytic))
 
@@ -163,11 +165,11 @@ def test_circle_sol_matches_theorem(
             ]
 
         def k_log(t: Array, tau: Array) -> Array:
-            log_coeff, _ = slp(t, tau, k, shape.x, shape.dx, eps=0.0)
+            log_coeff, _ = slp_kernel_split(t, tau, k, shape.x, shape.dx, eps=0.0)
             return log_coeff[..., None, None]
 
         def k_cont(t: Array, tau: Array) -> Array:
-            _, analytic = slp(t, tau, k, shape.x, shape.dx, eps=0.0)
+            _, analytic = slp_kernel_split(t, tau, k, shape.x, shape.dx, eps=0.0)
             return analytic[..., None, None]
     else:
 
@@ -180,11 +182,11 @@ def test_circle_sol_matches_theorem(
             )[..., None]
 
         def k_log(t: Array, tau: Array) -> Array:
-            log_coeff, _ = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
+            log_coeff, _ = dlp_kernel_split(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
             return log_coeff[..., None, None]
 
         def k_cont(t: Array, tau: Array) -> Array:
-            _, analytic = dlp(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
+            _, analytic = dlp_kernel_split(t, tau, k, shape.x, shape.dx, shape.ddx, eps=0.0)
             return analytic[..., None, None]
 
     kernels = {

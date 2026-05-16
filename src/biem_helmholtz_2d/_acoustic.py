@@ -6,7 +6,7 @@ from array_api_shape_check import check_shapes
 from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
 
-from ._potential import dlp, slp
+from ._potential import dlp_kernel_split, slp_kernel_split
 
 
 def scattering_dirichlet(
@@ -47,15 +47,15 @@ def scattering_dirichlet(
     device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
-        slp_log, _ = slp(t, tau, k[..., None, None], shape.x, shape.dx)
-        dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        slp_log, _ = slp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx)
+        dlp_log, _ = dlp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * dlp_log - 1j * eta * slp_log
         res = res[..., None, None]
         return res
 
     def k_cont(t: Array, tau: Array) -> Array:
-        _, slp_cont = slp(t, tau, k[..., None, None], shape.x, shape.dx)
-        _, dlp_cont = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        _, slp_cont = slp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx)
+        _, dlp_cont = dlp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * dlp_cont - 1j * eta * slp_cont
         res = res[..., None, None]
         return res

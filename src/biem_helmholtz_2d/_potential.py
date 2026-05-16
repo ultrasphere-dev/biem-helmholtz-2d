@@ -68,7 +68,7 @@ def D_t(
     return xp.where(near0, limit, result)
 
 
-def slp(
+def slp_kernel_split(
     t: Array,
     tau: Array,
     k: Array,
@@ -126,7 +126,7 @@ def slp(
     return (1j / 4) * h1 * jac_tau, (1j / 4) * h2 * jac_tau
 
 
-def dlp(
+def dlp_kernel_split(
     t: Array,
     tau: Array,
     k: Array,
