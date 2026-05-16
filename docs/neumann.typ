@@ -97,15 +97,15 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
     n^*(t) := (x'_2(t), -x'_1(t))
   $
   $
-    (slp_Gamma phi) (tau) & = integral_0^(2 pi) G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
-                          & = integral_0^(2 pi) i/4 H_0^(1) (k abs(x(tau) - x(t))) phi(t) abs(x'(t)) dd(t) \
-    (dlp_Gamma phi) (tau) & = integral_0^(2 pi) n(x(t)) dot grad_y G(x(tau), x(t)) phi(t) abs(x'(t)) dd(t) \
-                          & = integral_0^(2 pi) ((x'_2(t), -x'_1(t)))/(abs(x'(t))) dot (i k)/4 (H_1^(1) (k abs(x(tau) - x(t))))/(abs(x(tau) - x(t))) (x(tau) - x(t)) phi(t) abs(x'(t)) dd(t) \
-                          & = integral_0^(2 pi) i/4 (k abs(x(tau) - x(t))H_1^(1) (k abs(x(tau) - x(t)))) ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) phi(t) dd(t) \
+    (slp_Gamma phi) (t) & = integral_0^(2 pi) G(x(t), x(tau)) phi(tau) abs(x'(tau)) dd(tau) \
+                        & = integral_0^(2 pi) i/4 H_0^(1) (k abs(x(t) - x(tau))) phi(tau) abs(x'(tau)) dd(tau) \
+    (dlp_Gamma phi) (t) & = integral_0^(2 pi) n(tau) dot grad_y G(x(t), x(tau)) phi(tau) abs(x'(tau)) dd(tau) \
+                        & = integral_0^(2 pi) ((x'_2(tau), -x'_1(tau)))/(abs(x'(tau))) dot (i k)/4 (H_1^(1) (k abs(x(t) - x(tau))))/(abs(x(t) - x(tau))) (x(t) - x(tau)) phi(t) abs(x'(tau)) dd(tau) \
+                        & = integral_0^(2 pi) i/4 (k abs(x(t) - x(tau))H_1^(1) (k abs(x(t) - x(tau)))) ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) phi(t) dd(t) \
   $
   $
-    D_t (t, tau) & := (n^*(t) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
-                 & := ((x'_2(t), -x'_1(t)) dot (x(tau) - x(t)))/(abs(x(tau) - x(t))^2) \
+    D_t (t, tau) & := (n^*(tau) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
+                 & := ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
                  & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
