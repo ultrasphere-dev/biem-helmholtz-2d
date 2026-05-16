@@ -52,17 +52,17 @@ def scattering_dirichlet(
         dlp_log, _ = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
         res = alpha * slp_log - 1j * eta * dlp_log
         res = res[..., None, None]
-        print(f"slp_log: {slp_log}")
-        # print(f"dlp_log: {dlp_log}")
+        # print(f"slp_log: {slp_log}")
+        print(f"dlp_log: {dlp_log}")
         return res
 
     def k_cont(t: Array, tau: Array) -> Array:
-        _, slp_rem = slp(t, tau, k[..., None, None], shape.x, shape.dx)
-        _, dlp_rem = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
-        res = alpha * slp_rem - 1j * eta * dlp_rem
+        _, slp_cont = slp(t, tau, k[..., None, None], shape.x, shape.dx)
+        _, dlp_cont = dlp(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        res = alpha * slp_cont - 1j * eta * dlp_cont
         res = res[..., None, None]
-        # print(f"slp_rem: {slp_rem}")
-        # print(f"dlp_rem: {dlp_rem}")
+        # print(f"slp_cont: {slp_cont}")
+        print(f"dlp_cont: {dlp_cont}")
         return res
 
     def a(t: Array) -> Array:
@@ -77,7 +77,9 @@ def scattering_dirichlet(
         (QuadratureType.LOG_COT_POWER, 0): k_log,
     }
 
-    return nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
+    result = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
+    print(result.sol)
+    return result
 
 
 def far_field(

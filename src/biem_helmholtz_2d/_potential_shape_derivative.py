@@ -54,6 +54,7 @@ def slp_shape_derivative(
     xp = array_namespace(t)
     tau_array = xp.asarray(tau, device=t.device, dtype=t.dtype)
 
+    t, tau = tau, t
     x_t = x(t)
     h_t = h(t)
     dx_t = dx(t)
@@ -204,6 +205,7 @@ def dlp_shape_derivative(
     xp = array_namespace(t)
     tau_array = xp.asarray(tau, device=t.device, dtype=t.dtype)
 
+    t, tau = tau, t
     x_t = x(t)
     h_t = h(t)
     dx_t = dx(t)

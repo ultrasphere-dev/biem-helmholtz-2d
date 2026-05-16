@@ -160,7 +160,7 @@ requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
     { name = "attrs", specifier = ">=25.3.0" },
-    { name = "ie-circle", specifier = ">=0.1.0" },
+    { name = "ie-circle", specifier = ">=0.2.2" },
     { name = "rich", specifier = ">=10" },
     { name = "rich", marker = "extra == 'cli'", specifier = ">=14.1.0" },
     { name = "scipy", specifier = ">=1.13.1" },
@@ -404,7 +404,7 @@ wheels = [
 
 [[package]]
 name = "ie-circle"
-version = "0.1.0"
+version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "array-api-compat" },
@@ -415,9 +415,9 @@ dependencies = [
     { name = "sympy" },
     { name = "types-array-api" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/87/085133c5aa14d47c230bf7005f677aa9bb6b14c8aeed6dd6f979f9c5864b/ie_circle-0.1.0.tar.gz", hash = "sha256:95b00441b3832c6594c27a886ebef68441ba02fcf67a0b5c3f6a132c7ea5199c", size = 15194, upload-time = "2026-05-13T07:37:53.734Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/0e/6cb5491c12991129c9f273ec392d426465a526115bbfbdd6f9a4a9aca687/ie_circle-0.2.2.tar.gz", hash = "sha256:7928abe3a8e21724accca4ed8a3026c3d5d9b82d4ad838a347ab509f958422cc", size = 16204, upload-time = "2026-05-16T07:37:13.297Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/f2/a454ad489142ecc61b0a20dee9e13e069fc33d080446e7ce199d7eaee80f/ie_circle-0.1.0-py3-none-any.whl", hash = "sha256:d7e51b700aa0066886376627cd74018f22da57ee9c6806991a805f3ab43208d0", size = 13621, upload-time = "2026-05-13T07:37:52.609Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/1e/d84fd9de51c5dabb7179ca71d35122f86ffeeb9841011e80bb48f9057c33/ie_circle-0.2.2-py3-none-any.whl", hash = "sha256:610378c9254a14fcb3c17e6bed1fd6ed8608ca3f3b4a8765fcc100472d588da5", size = 14983, upload-time = "2026-05-16T07:37:11.917Z" },
 ]
 
 [[package]]
