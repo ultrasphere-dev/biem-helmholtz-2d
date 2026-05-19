@@ -24,7 +24,9 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
         xp = array_namespace(x)
         return xp.exp(1j * k * x[..., 0])
 
-    def objective(parameters: Array, /, *, ax_re: Axes | None = None) -> Array:
+    def objective(
+        parameters: Array, /, *, ax_re: Axes | None = None, ax_abs: Axes | None = None
+    ) -> Array:
         shape = ParameterShape(parameters)
         density = scattering_dirichlet(
             k=k,
@@ -45,7 +47,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
             eta=eta,
         )
         u = u_in + u_scat
-        if ax_re is not None:
+        if ax_re is not None or ax_abs is not None:
             plot_ner_field(
                 density,
                 incident_field,
@@ -57,6 +59,8 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
                 alpha=alpha_,
                 eta=eta,
                 ax_re=ax_re,
+                ax_im=None,
+                ax_abs=ax_abs,
             )
         return xp.sum(xp.abs(u) ** 2)
 
