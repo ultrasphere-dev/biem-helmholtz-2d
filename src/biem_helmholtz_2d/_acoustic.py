@@ -89,6 +89,7 @@ def plot_ner_field(
     k: Array,
     alpha: Array,
     eta: Array,
+    ax: plt.axes.Axes | None = None,
 ) -> None:
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
@@ -98,11 +99,14 @@ def plot_ner_field(
     x, y = xp.broadcast_arrays(x[:, None], y[None, :])
     xy = xp.stack([x, y], axis=-1)
     u = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
-    im = plt.imshow(xp.abs(u).T, extent=(xlim[0], xlim[1], ylim[0], ylim[1]), origin="lower")
-    plt.colorbar(im)
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title("Near Field (Absolute Value)")
+    ax = ax or plt.gca()
+    im = ax.imshow(
+        xp.abs(u).T, extent=(xlim[0], xlim[1], ylim[0], ylim[1]), origin="lower", cmap="inferno"
+    )
+    plt.colorbar(im, ax=ax)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_title("Near field amplitude")
 
 
 def near_field(

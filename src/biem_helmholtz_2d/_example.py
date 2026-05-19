@@ -3,6 +3,7 @@ from typing import Any
 from array_api.latest import Array, ArrayNamespace
 from array_api_compat import array_namespace
 from ie_circle import KressShape
+from matplotlib import pyplot as plt
 
 from ._acoustic import far_field, plot_ner_field, scattering_dirichlet
 
@@ -25,6 +26,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         alpha=alpha,
         n=n,
     )
+    fig, ax = plt.subplots()
     plot_ner_field(
         density,
         xlim=(-2.0, 2.0),
@@ -34,7 +36,9 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         n=n,
         alpha=alpha,
         eta=eta,
+        ax=ax,
     )
+    fig.savefig("example_3_1.png")
     direction = xp.asarray((1.0, 0), device=device, dtype=dtype)
     return far_field(
         density,
