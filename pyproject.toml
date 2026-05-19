@@ -27,6 +27,7 @@ dependencies = [
   "array-api-extra>=0.1.1",
   "attrs>=25.3.0",
   "ie-circle>=0.2.2",
+  "matplotlib>=3.10.9",
   "rich>=10",
   "scipy>=1.13.1",
   "strenum>=0.4.15",

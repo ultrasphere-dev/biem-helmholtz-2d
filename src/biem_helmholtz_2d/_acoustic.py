@@ -5,6 +5,7 @@ from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
 from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
+from matplotlib import pyplot as plt
 
 from ._potential import dlp_kernel_split, slp_kernel_split
 
@@ -76,9 +77,87 @@ def scattering_dirichlet(
     return result
 
 
+from ._potential_inner import dlp, slp
+
+
+def plot_ner_field(
+    density: Callable[[Array], Array],
+    /,
+    *,
+    xlim: tuple[float, float],
+    ylim: tuple[float, float],
+    n: int,
+    shape: Shape,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> None:
+    xp = array_namespace(k, alpha, eta)
+    dtype = xp.result_type(k, alpha, eta)
+    device = k.device
+    x = xp.linspace(xlim[0], xlim[1], 100, device=device, dtype=dtype)
+    y = xp.linspace(ylim[0], ylim[1], 100, device=device, dtype=dtype)
+    x, y = xp.broadcast_arrays(x[:, None], y[None, :])
+    xy = xp.stack([x, y], axis=-1)
+    u = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
+    im = plt.imshow(xp.abs(u).T, extent=(xlim[0], xlim[1], ylim[0], ylim[1]), origin="lower")
+    plt.colorbar(im)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Near Field (Absolute Value)")
+
+
+def near_field(
+    density: Callable[[Array], Array],
+    x: Array,
+    /,
+    *,
+    n: int,
+    shape: Shape,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> Array:
+    r"""
+    Compute near field.
+
+    $$
+    u = (\alpha D - i \eta S) \phi
+    $$
+
+    Parameters
+    ----------
+    density : Callable[[Array], Array]
+        The density function of shape (...) -> (..., ...(B), 1, 1).
+    x : Array
+        The position of the scttered field of shape (..., 2).
+    n : int
+        The maximum order - 1.
+    shape : Shape
+        The shape of the scatterer of (...,) -> (..., 2).
+    k : Array
+        The wave number of shape (...(B),).
+    alpha : Array
+        The coupling parameter for the double-layer potential of shape (...(B),).
+    eta : Array
+        The coupling parameter for the single-layer potential of shape (...(B),).
+
+    Returns
+    -------
+    Array
+        The near field of shape (..., ...(*B)).
+
+    """
+    dlp_ = dlp(x, density, shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
+    slp_ = slp(x, density, shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
+    return alpha * dlp_ - 1j * eta * slp_
+
+
 def far_field(
     density: Callable[[Array], Array],
     direction: Array,
+    /,
+    *,
     n: int,
     shape: Shape,
     k: Array,
