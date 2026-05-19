@@ -45,7 +45,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
             point_to_minimize,
             k=k,
             shape=shape,
-            n=n,
+            n=n + 20,
             alpha=alpha_,
             eta=eta,
         )
