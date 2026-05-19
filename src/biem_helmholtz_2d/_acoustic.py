@@ -6,6 +6,7 @@ from array_api_shape_check import check_shapes
 from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 from ._potential import dlp_kernel_split, slp_kernel_split
 from ._potential_inner import dlp, slp
@@ -80,6 +81,7 @@ def scattering_dirichlet(
 
 def plot_ner_field(
     density: Callable[[Array], Array],
+    incident_field: Callable[[Array], Array],
     /,
     *,
     xlim: tuple[float, float],
@@ -89,7 +91,9 @@ def plot_ner_field(
     k: Array,
     alpha: Array,
     eta: Array,
-    ax: plt.axes.Axes | None = None,
+    ax_re: Axes | None = None,
+    ax_im: Axes | None = None,
+    ax_abs: Axes | None = None,
 ) -> None:
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
@@ -98,15 +102,37 @@ def plot_ner_field(
     y = xp.linspace(ylim[0], ylim[1], 100, device=device, dtype=dtype)
     x, y = xp.broadcast_arrays(x[:, None], y[None, :])
     xy = xp.stack([x, y], axis=-1)
-    u = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
-    ax = ax or plt.gca()
-    im = ax.imshow(
-        xp.abs(u).T, extent=(xlim[0], xlim[1], ylim[0], ylim[1]), origin="lower", cmap="inferno"
-    )
-    plt.colorbar(im, ax=ax)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_title("Near field amplitude")
+    uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
+    uin = incident_field(xy)
+    u = uscat + uin
+    if ax_re is None and ax_im is None and ax_abs is None:
+        ax_re = plt.gca()
+    for ax, data, title in zip(
+        (ax_re, ax_im, ax_abs),
+        (u.real, u.imag, xp.abs(u)),
+        ("Near field real part", "Near field imaginary part", "Near field amplitude"),
+        strict=True,
+    ):
+        if ax is None:
+            continue
+
+        vmax = xp.max(xp.abs(data))
+        if title != "Near field amplitude":
+            vmin = -vmax
+        else:
+            vmin = 0
+        im = ax.imshow(
+            data.T,
+            extent=(xlim[0], xlim[1], ylim[0], ylim[1]),
+            origin="lower",
+            cmap="inferno" if title == "Near field amplitude" else "seismic",
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plt.colorbar(im, ax=ax)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_title(title)
 
 
 def near_field(

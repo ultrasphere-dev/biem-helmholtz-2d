@@ -26,17 +26,20 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         alpha=alpha,
         n=n,
     )
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
     plot_ner_field(
         density,
-        xlim=(-2.0, 2.0),
-        ylim=(-2.0, 2.0),
+        incident_field,
+        xlim=(-6.0, 6.0),
+        ylim=(-6.0, 6.0),
         k=k,
         shape=shape,
         n=n,
         alpha=alpha,
         eta=eta,
-        ax=ax,
+        ax_re=ax[0],
+        ax_im=ax[1],
+        ax_abs=ax[2],
     )
     fig.savefig("example_3_1.png")
     direction = xp.asarray((1.0, 0), device=device, dtype=dtype)
