@@ -1,3 +1,4 @@
+import pathlib
 from typing import Any
 
 from array_api.latest import Array, ArrayNamespace
@@ -80,12 +81,29 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     alpha = 0.1
     beta = 0.1
     val_hist = []
-    fig, ax = plt.subplots()
-    for _ in range(25):
-        val = objective(parameters)
+
+    pathlib.Path("optimization").mkdir(exist_ok=True)
+
+    for i in range(25):
+        fig_opt, (ax_re, ax_abs) = plt.subplots(1, 2, figsize=(10, 5))
+        val = objective(parameters, ax_re=ax_re, ax_abs=ax_abs)
+        fig_opt.suptitle(f"Iteration {i}")
+        fig_opt.savefig(f"optimization/frame_{i:03d}.png")
+        plt.close(fig_opt)
+
         grad = objective_num_diff(parameters)
         # reguralization
-        grad /= 1 + alpha * xp.concat((xp.arange(n), xp.arange(1, n))) ** 3
+        grad /= (
+            1
+            + alpha
+            * xp.concat(
+                [
+                    xp.arange(n, dtype=dtype, device=device),
+                    xp.arange(1, n, dtype=dtype, device=device),
+                ]
+            )
+            ** 3
+        )
         # descent step
         parameters -= beta * grad
         # parameters[0] = 1
