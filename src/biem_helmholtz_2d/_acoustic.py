@@ -8,6 +8,7 @@ from ie_circle._bie import NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
 
 from ._potential import dlp_kernel_split, slp_kernel_split
+from ._potential_inner import dlp, slp
 
 
 def scattering_dirichlet(
@@ -75,9 +76,6 @@ def scattering_dirichlet(
 
     result = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
     return result
-
-
-from ._potential_inner import dlp, slp
 
 
 def plot_ner_field(
