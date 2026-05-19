@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable
 
 from array_api.latest import Array
@@ -79,6 +80,20 @@ def scattering_dirichlet(
     return result
 
 
+def isin_shape(x: Array, shape: Shape, /) -> Array:
+    xp = array_namespace(x)
+    t, w = trapezoidal_quadrature(100, xp=xp, device=x.device, dtype=x.dtype)
+    x_t = shape.x(t)
+    nx_t_unnormalized = xp.stack([shape.dx(t)[..., 1], -shape.dx(t)[..., 0]], axis=-1)
+    diff = x_t - x[..., None, :]
+    lower = xp.sum(diff**2, axis=-1)
+    upper = xp.sum(nx_t_unnormalized * diff, axis=-1)
+    integrand = upper / lower
+    integral = xp.sum(integrand * w, axis=-1)
+    winding_number = integral / (2 * math.pi)
+    return xp.abs(winding_number) > 0.5
+
+
 def plot_ner_field(
     density: Callable[[Array], Array],
     incident_field: Callable[[Array], Array],
@@ -105,6 +120,7 @@ def plot_ner_field(
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
     uin = incident_field(xy)
     u = uscat + uin
+    u[isin_shape(xy, shape)] = xp.nan
     if ax_re is None and ax_im is None and ax_abs is None:
         ax_re = plt.gca()
     for ax, data, title in zip(
@@ -116,7 +132,7 @@ def plot_ner_field(
         if ax is None:
             continue
 
-        vmax = xp.max(xp.abs(data))
+        vmax = xp.max(xp.abs(data[~xp.isnan(data)]))
         if title != "Near field amplitude":
             vmin = -vmax
         else:
