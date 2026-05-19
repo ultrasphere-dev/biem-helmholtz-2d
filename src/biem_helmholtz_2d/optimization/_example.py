@@ -123,8 +123,8 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
                     xp.arange(1, n, dtype=dtype, device=device),
                 ]
             )
-            ** 3
-        )
+        ) ** 3
+
         # descent step
         parameters -= beta * grad
         # parameters[0] = 1
