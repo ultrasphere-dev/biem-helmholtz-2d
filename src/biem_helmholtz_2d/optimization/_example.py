@@ -1,10 +1,12 @@
 import pathlib
+from datetime import datetime
 from typing import Any
 
 from array_api.latest import Array, ArrayNamespace
 from array_api_compat import array_namespace
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from tqdm import trange
 
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
@@ -19,7 +21,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     k = xp.asarray(1.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha_ = xp.asarray(1.0, device=device, dtype=dtype)
-    point_to_minimize = xp.asarray([[3, 2]], dtype=dtype, device=device)
+    point_to_minimize = xp.asarray([[3, 3]], dtype=dtype, device=device)
 
     def incident_field(x: Array) -> Array:
         xp = array_namespace(x)
@@ -82,14 +84,21 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     beta = 0.1
     val_hist = []
 
-    pathlib.Path("optimization").mkdir(exist_ok=True)
-
-    for i in range(25):
-        fig_opt, (ax_re, ax_abs) = plt.subplots(1, 2, figsize=(10, 5))
-        val = objective(parameters, ax_re=ax_re, ax_abs=ax_abs)
-        fig_opt.suptitle(f"Iteration {i}")
-        fig_opt.savefig(f"optimization/frame_{i:03d}.png")
-        plt.close(fig_opt)
+    path = pathlib.Path(
+        f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}_k{k}_a{alpha}_b{beta}_n{n}"
+    )
+    path.mkdir(parents=True, exist_ok=True)
+    pbar = trange(25)
+    for i in pbar:
+        if i % 5 == 0:
+            fig_opt, (ax_re, ax_abs) = plt.subplots(1, 2, figsize=(10, 5))
+            val = objective(parameters, ax_re=ax_re, ax_abs=ax_abs)
+            fig_opt.suptitle(f"Iteration {i}")
+            fig_opt.savefig(path / f"{i:03d}.png")
+            plt.close(fig_opt)
+        else:
+            val = objective(parameters)
+        pbar.set_postfix({"objective": val})
 
         grad = objective_num_diff(parameters)
         # reguralization
@@ -118,4 +127,4 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Objective value")
     ax.set_title(f"Optimization history\n(k={k}, alpha={alpha}, beta={beta}, n={n})")
-    fig.savefig(f"optimization/history_k{k}_a{alpha}_b{beta}_n{n}.png")
+    fig.savefig(path / "optimization_history.png")
