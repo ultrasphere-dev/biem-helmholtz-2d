@@ -69,7 +69,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
 
     def objective_num_diff(parameters: Array, /, *, eps: float = 1e-4) -> Array:
         grad = []
-        for i in range(parameters.shape[0]):
+        for i in trange(parameters.shape[0], position=1):
             parameters[i] += eps
             u_plus = objective(parameters)
             parameters[i] -= 2 * eps
@@ -79,15 +79,27 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
             grad.append(u_grad_i)
         return xp.stack(grad)
 
-    # simple optimization
     alpha = 0.1
     beta = 0.1
-    val_hist = []
-
     path = pathlib.Path(
         f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}_k{k}_a{alpha}_b{beta}_n{n}"
     )
     path.mkdir(parents=True, exist_ok=True)
+
+    # first, plot gradient distribution for curiosity
+    fig, ax = plt.subplots()
+    grad = objective_num_diff(parameters)
+    ax.plot(xp.arange(n), grad[:n], label="cos mt coefficients")
+    ax.plot(xp.arange(1, n), grad[n:], label="sin mt coefficients")
+    ax.legend()
+    ax.set_title("Gradient distribution at the initial point")
+    ax.set_xlabel("Fourier coefficient order m")
+    ax.set_ylabel("Derivative amplitude")
+    fig.savefig(path / "initial_gradient.png")
+    del fig, ax, grad
+
+    # simple optimization
+    val_hist = []
     pbar = trange(25)
     for i in pbar:
         if i % 5 == 0:
