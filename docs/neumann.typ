@@ -130,8 +130,8 @@ Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) !=
 #theorem[Circle case][
   $forall m in ZZ.$
   $
-                       (slp_(rho SS^1) e^(i m t)) (tau) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m tau) \
-    ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (tau) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m tau) \
+                       (slp_(rho SS^1) e^(i m t)) (t) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m t) \
+    ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (t) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m t) \
   $
 ]
 
@@ -168,13 +168,13 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
   Let $S$ kernel of $slp_Gamma$.
   $
       S (t, tau) & = i/4 S_1 (t, tau) \
-    S_1 (t, tau) & := hk1_0 (k dxa(t, tau)) abs(x'(t)) \
+    S_1 (t, tau) & := hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
   $
   Then
   $
-    (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-                      & = - k hk1_1 (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-                      & = - ht1_1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+    (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](tau) \
+                      & = - k hk1_1 (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(tau)) + hk1_0 (k dxa(t, tau)) (x'(tau) dot h'(tau)) / (abs(x'(tau))) \
+                      & = - ht1_1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(tau)) + hk1_0 (k dxa(t, tau)) (x'(tau) dot h'(tau)) / (abs(x'(tau))) \
         S'[h](t, tau) & = i/4 (S_1)'[h](t, tau) \
   $
 ]
@@ -184,7 +184,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
   Let $D$ kernel of $dlp_Gamma$.
   $
       D (t, tau) & := (i k^2)/4 D_1 (t, tau) \
-    D_1 (t, tau) & := D_2 (t, tau) (dx (t, tau) dot n^*(t)) \
+    D_1 (t, tau) & := D_2 (t, tau) (n^*(tau) dot dx (t, tau)) \
     D_2 (t, tau) & := (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau))
   $
   Then
@@ -196,7 +196,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
                       & = - k dxa' [h](t, tau) (k dxa(t, tau))^(-1) hk1_2 (k dxa(t, tau)) \
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^2 \
                       \
-    (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(t)) + D_2 (t, tau) (dh (t, tau) dot n^*(t) + dx (t, tau) dot (n^*)'[h](t)) \
+    (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(tau)) + D_2 (t, tau) (dh (t, tau) dot n^*(tau) + dx (t, tau) dot (n^*)'[h](tau)) \
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) ntaudotdxdxa2 (t, tau) \
                       & + ht1_1 (k dxa(t, tau)) (ntaudotdhdxa2(t, tau) + nptaudotdxdxa2(t, tau)) \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
