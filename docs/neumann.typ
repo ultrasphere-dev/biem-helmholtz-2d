@@ -10,7 +10,7 @@
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
 #set page(margin: 1cm)
-#let hk1 = $hk1$
+#let hk1 = $H^((1))$
 = Integrals involving Bessel functions of the second kind
 
 #definition[Euler--Mascheroni Constant][
@@ -193,7 +193,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^2 \
                       \
     (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(t)) + D_2 (t, tau) (dh (t, tau) dot n^*(t) + dx (t, tau) dot (n^*)'[h](t)) \
-                      & = - ht1_2^((1)) (k dxa(t, tau)) dxapdxa (t, tau) D_t (t, ) \
+                      & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) D_t (t, ) \
                       & + (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau)) (dh (tau, \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
   $
