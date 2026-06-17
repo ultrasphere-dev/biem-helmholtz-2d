@@ -203,8 +203,8 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
   $
   where
   $
-     ntaudotdhdxa2 & = (n^* (tau) dot dh(t, tau)) / (dxa(t, tau))^2 ->_(tau -> t) (h'_1(t) x''_2(t) - h'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
-    nptaudotdxdxa2 & = ((n^*)'[h](tau) dot dx(t, tau)) / (dxa(t, tau))^2
-                     ->_(tau -> t) (x'_1(t) h''_2(t) - x'_2(t) h''_1(t)) / (2 abs(x'(t))^2) \
+     ntaudotdhdxa2 (t, tau) & = (n^* (tau) dot dh(t, tau)) / (dxa(t, tau))^2 ->_(tau -> t) (h'_1(t) x''_2(t) - h'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
+    nptaudotdxdxa2 (t, tau) & = ((n^*)'[h](tau) dot dx(t, tau)) / (dxa(t, tau))^2
+                              ->_(tau -> t) (x'_1(t) h''_2(t) - x'_2(t) h''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
