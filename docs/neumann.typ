@@ -90,12 +90,21 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
     grad_y G(x, y) = (i k)/4 (H_1^(1) (k abs(x - y)))/(abs(x - y)) (x - y)
   $
 ]
+#definition[Counterclockwise outward vectors][
+  $
+    n(t) := (n^*(t))/ abs(x'(t)), quad n^*(t) := (x'_2(t), -x'_1(t))
+  $
+]
+#let dx = $op("dx")$
+#let dxa = $op("dxa")$
+#let dh = $op("dh")$
+#definition[
+  $
+     dx(t, tau) & := x(tau) - x(t) \
+    dxa(t, tau) & := abs(dx(t, tau))
+  $
+]
 #theorem[
-  Since counterclockwise, the outward normal is
-  $
-    n(t) = n^*(t) / abs(x'(t)) \
-    n^*(t) := (x'_2(t), -x'_1(t))
-  $
   $
     (slp_Gamma phi) (t) & = integral_0^(2 pi) G(x(t), x(tau)) phi(tau) abs(x'(tau)) dd(tau) \
                         & = integral_0^(2 pi) i/4 H_0^(1) (k abs(x(t) - x(tau))) phi(tau) abs(x'(tau)) dd(tau) \
@@ -126,19 +135,9 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[Chain rule][
   $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(y_0)$
 ]
-#let dx = $op("dx")$
-#let dxa = $op("dxa")$
-#let dh = $op("dh")$
-#theorem[
-  $forall x, h in C_(2 pi).$
+#theorem[Frechet derivative of $dx, dxa$][
   $
-     dx(t, tau) & := x(tau) - x(t) \
-    dxa(t, tau) & := abs(dx(t, tau)) \
-     dh(t, tau) & := h(tau) - h(t)
-  $
-  Then
-  $
-     dx'[h] & = (x(tau) - x(t))'[h] = dh \
+     dx'[h] & = (x(tau) - x(t))'[h] = dh, quad dh(t, tau) := h(tau) - h(t) \
     dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau)) \
   $
 ]
