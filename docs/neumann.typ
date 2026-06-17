@@ -106,7 +106,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 #let ntaudotdxdxa2 = $op("ntaudotdx/dxa2")$
 #definition[
   $
-     dx(t, tau) & := x(tau) - x(t) \
+     dx(t, tau) & := x(t) - x(tau) \
     dxa(t, tau) & := abs(dx(t, tau))
   $
 ]
@@ -146,8 +146,8 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 ]
 #theorem[Frechet derivative of $dx, dxa$][
   $
-     dx'[h] & = (x(tau) - x(t))'[h] = dh, quad dh(t, tau) := h(tau) - h(t) \
-    dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau)) \
+     dx'[h] & = (x(t) - x(tau))'[h] = dh, quad dh(t, tau) := h(t) - h(tau) \
+    dxa'[h] & = (abs(x(t) - x(tau)))'[h] = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau)) \
   $
 ]
 #let dxapdxa = $op("dxap/dxa")$
