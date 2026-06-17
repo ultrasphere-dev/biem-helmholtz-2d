@@ -110,7 +110,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
     S(t, tau) & := G(x(t), x(tau)) \
               & = i/4 H_0^(1) (k abs(x(t) - x(tau))) abs(x'(tau)) \
               & = i/4 H_0^(1) (k dxa(t, tau)) abs(x'(tau)) \
-    D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) phi(tau) abs(x'(tau)) \
+    D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
               & = n^* (tau) dot (i k)/4 (H_1^(1) (k abs(x(t) - x(tau))))/(abs(x(t) - x(tau))) (x(t) - x(tau)) phi(t) abs(x'(tau)) \
               & = i/4 (k abs(x(t) - x(tau))H_1^(1) (k abs(x(t) - x(tau)))) ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) phi(t) dd(t) \
   $
