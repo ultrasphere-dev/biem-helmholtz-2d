@@ -118,7 +118,7 @@ Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) !=
               & = i/4 hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
     D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
               & = n^* (tau) dot (i k)/4 (hk1_1 (k dxa(t, tau)))/dxa(t, tau) dx(t, tau) \
-              & = i/4 (ht1_1 (k dxa(t, tau))) ntaudotdxdxa2 \
+              & = i/4 (ht1_1 (k dxa(t, tau))) ntaudotdxdxa2 (t, tau) \
   $
   where
   $
