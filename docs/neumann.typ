@@ -132,20 +132,20 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[
   $forall x, h in C_(2 pi).$
   $
-     dx(tau, t) & := x(tau) - x(t) \
-    dxa(tau, t) & := abs(dx(tau, t)) \
-     dh(tau, t) & := h(tau) - h(t)
+     dx(t, tau) & := x(tau) - x(t) \
+    dxa(t, tau) & := abs(dx(t, tau)) \
+     dh(t, tau) & := h(tau) - h(t)
   $
   Then
   $
      dx'[h] & = (x(tau) - x(t))'[h] = dh \
-    dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t)) \
+    dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau)) \
   $
 ]
 #let dxapdxa = $op("dxap/dxa")$
 #theorem[
   $
-    dxapdxa (tau, t) := (dxa'[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
+    dxapdxa (t, tau) := (dxa'[h])/(dxa) = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau))^2
     ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
   $
 ]
@@ -160,36 +160,36 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
   $
-      S (tau, t) & = i/4 S_1 (tau, t) \
-    S_1 (tau, t) & := H_0^((1)) (k dxa(tau, t)) abs(x'(t)) \
+      S (t, tau) & = i/4 S_1 (t, tau) \
+    S_1 (t, tau) & := H_0^((1)) (k dxa(t, tau)) abs(x'(t)) \
   $
   Then
   $
-    (S_1)'[h](tau, t) & = pdv(S_1, dxa) dxa'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-                      & = - k H_1^((1)) (k dxa(tau, t)) dxa'[h](tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-                      & = - ht1 (k dxa(tau, t)) dxapdxa (tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-        S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
+    (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](t) \
+                      & = - k H_1^((1)) (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + H_0^((1)) (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - ht1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + H_0^((1)) (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+        S'[h](t, tau) & = (i/4) (S_1)'[h](t, tau) \
   $
 ]
 #theorem[Shape Derivative of $dlp$][
   Let $D$ kernel of $dlp_Gamma$.
   $
-      D (tau, t) & := (i k^2)/4 D_1 (tau, t) \
-    D_1 (tau, t) & := D_2 (tau, t) (dx (tau, t) dot n^*(t)) \
-    D_2 (tau, t) & := (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t))
+      D (t, tau) & := (i k^2)/4 D_1 (t, tau) \
+    D_1 (t, tau) & := D_2 (t, tau) (dx (t, tau) dot n^*(t)) \
+    D_2 (t, tau) & := (k dxa(t, tau))^(-1) H_1^((1)) (k dxa(t, tau))
   $
   Then
   $
     (n^*)'[h](t) & = (h'_2(t), -h'_1(t)) \
   $
   $
-    (D_2)'[h](tau, t) & = dxa' [h] pdv(D_2, dxa) \
-                      & = - k dxa' [h](tau, t) (k dxa(tau, t))^(-1) H_2^((1)) (k dxa(tau, t)) \
-                      & = - H_2^((1)) (k dxa(tau, t)) dxapdxa (tau, t) \
+    (D_2)'[h](t, tau) & = dxa' [h] pdv(D_2, dxa) \
+                      & = - k dxa' [h](t, tau) (k dxa(t, tau))^(-1) H_2^((1)) (k dxa(t, tau)) \
+                      & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^2 \
                       \
-    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (dx (tau, t) dot n^*(t)) + D_2 (tau, t) (dh (tau, t) dot n^*(t) + dx (tau, t) dot (n^*)'[h](t)) \
-                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxapdxa (tau, t) (dx (tau, t) dot n^*(t)) \
-                      & + (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t)) (dh (tau, \
-        D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
+    (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(t)) + D_2 (t, tau) (dh (t, tau) dot n^*(t) + dx (t, tau) dot (n^*)'[h](t)) \
+                      & = - ht1_2^((1)) (k dxa(t, tau)) dxapdxa (t, tau) D_t (t, ) \
+                      & + (k dxa(t, tau))^(-1) H_1^((1)) (k dxa(t, tau)) (dh (tau, \
+        D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
   $
 ]
