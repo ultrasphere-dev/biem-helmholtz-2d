@@ -203,6 +203,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
                       & = - k^(-2) ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) ntaudotdxdxa2 (t, tau) \
                       & + k^(-2) ht1_1 (k dxa(t, tau)) D_4 (t, tau) \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
+                      & = i/4(- ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) ntaudotdxdxa2 (t, tau) + ht1_1 (k dxa(t, tau)) D_4 (t, tau))
   $
   where
   $
