@@ -126,47 +126,6 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #theorem[Chain rule][
   $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(y_0)$
 ]
-// #proof[
-//   $norm(H(x_0 + h) - H(x_0) - H'(x_0) (h))_Z
-//    &= norm(G(F(x_0 + h)) - G(F(x_0)) - G'(y_0) (F'(x_0) (h)))_Z \
-//   &<= norm(G(F(x_0 + h)) - G(F(x_0)) - G'(y_0) (F(x_0 + h) - F(x_0)))_Z \
-//   & + norm(G'(y_0) (F(x_0 + h) - F(x_0) - F'(x_0) (h)))_Z \
-//   &<= epsilon_(G,F(x_0 + h) - F(x_0)) norm(F(x_0 + h) - F(x_0))_Y \
-//   &+ norm(G'(y_0))_(B(Y, Z)) norm(F(x_0 + h) - F(x_0) - F'(x_0) (h))_Y \
-//   &<= epsilon_(G,F(x_0 + h) - F(x_0)) (norm(F'(x_0))_(B(X, Y)) + epsilon_(F,h)) norm(h)_X \
-//   &+ norm(G'(y_0))_(B(Y, Z)) epsilon_(F,h) norm(h)_X \
-//   &< epsilon
-//   $
-// ]
-#theorem[
-  Let $f: KK^4 -> KK$ independent of $x$.
-  $
-    (f(x_1(t), x_2(t), x'_1(t), x'_2(t)))'[h] = pdv(f, x_1) h_1(t) + pdv(f, x_2) h_2(t) + pdv(f, x'_1) h'_1(t) + pdv(f, x'_2) h'_2(t)
-  $
-]
-#let csing = $C_"sing"$
-#definition[
-  $
-    csing := {A(t, tau) log(4 sin^2((t - tau)/2)) + B(t, tau) | A, B in C([0, 2 pi) times [0, 2 pi))}
-  $
-  Then the decomposition is unique because $log(4 sin^2((t - tau)/2)) in.not C([0, 2 pi) times [0, 2 pi))$.
-  $
-    norm(K)_csing := norm(A)_(infinity) + norm(B)_(infinity)
-  $
-  is a norm in $csing$.
-]
-#theorem[
-  $X, Y$: $KK$-norm spaces, $forall T in B(X, Y). T'[h](x) = T(h)$
-]
-#theorem[
-  $forall phi in C([0, 2 pi)).$
-  $
-    E: csing -> C([0, 2 pi)), K |-> (tau |-> integral_0^(2 pi) K(t, tau) phi(t) dd(t)) in B(csing, C([0, 2 pi)))
-  $
-]
-#proof[
-  Let $L := integral_0^(2 pi) log(4 sin^2((t - tau)/2)) phi(t) dd(t)$, then $norm(E phi)_infinity <= (norm(A)_infinity + L norm(B)_infinity) norm(phi)_(C([0, 2 pi))) <= L norm(K)_csing norm(phi)_infinity$
-]
 #let dx = $op("dx")$
 #let dxa = $op("dxa")$
 #let dh = $op("dh")$
@@ -186,7 +145,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #let dxapdxa = $op("dxap/dxa")$
 #theorem[
   $
-    dxapdxa (tau, t) := (dxa[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
+    dxapdxa (tau, t) := (dxa'[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
     ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
   $
 ]
@@ -226,7 +185,8 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
   $
     (D_2)'[h](tau, t) & = dxa' [h] pdv(D_2, dxa) \
                       & = - k dxa' [h](tau, t) (k dxa(tau, t))^(-1) H_2^((1)) (k dxa(tau, t)) \
-                      & = - k \
+                      & = - H_2^((1)) (k dxa(tau, t)) dxapdxa (tau, t) \
+                      \
     (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (dx (tau, t) dot n^*(t)) + D_2 (tau, t) (dh (tau, t) dot n^*(t) + dx (tau, t) dot (n^*)'[h](t)) \
                       & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxapdxa (tau, t) (dx (tau, t) dot n^*(t)) \
                       & + (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t)) (dh (tau, \
