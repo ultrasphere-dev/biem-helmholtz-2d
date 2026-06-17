@@ -1,4 +1,7 @@
 
+Let $x_1, x_2 in C[[e]]$.
+
+
 // #proof[
 //   $norm(H(x_0 + h) - H(x_0) - H'(x_0) (h))_Z
 //    &= norm(G(F(x_0 + h)) - G(F(x_0)) - G'(y_0) (F'(x_0) (h)))_Z \
