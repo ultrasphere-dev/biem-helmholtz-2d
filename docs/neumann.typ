@@ -9,7 +9,7 @@
 #let algorithm = thmplain("algorithm", "Algorithm")
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
-
+#set page(margin: 1cm)
 = Integrals involving Bessel functions of the second kind
 
 #definition[Euler--Mascheroni Constant][
@@ -183,10 +183,10 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
     dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t)) \
   $
 ]
-#let dxpdx = $op("dxp/dxa")$
+#let dxapdxa = $op("dxap/dxa")$
 #theorem[
   $
-    dxpdx (tau, t) := (dx'[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
+    dxapdxa (tau, t) := (dxa[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
     ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
   $
 ]
@@ -196,7 +196,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
 ]
 #let ht1 = $cal(H)^((1))$
-Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H_n^((1)) (f(z)), dxpdx$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
+Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H_n^((1)) (f(z)), dxapdxa$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
 
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
@@ -208,7 +208,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
   $
     (S_1)'[h](tau, t) & = pdv(S_1, dxa) dxa'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
                       & = - k H_1^((1)) (k dxa(tau, t)) dxa'[h](tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-                      & = - ht1 (k dxa(tau, t)) dxpdx (tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - ht1 (k dxa(tau, t)) dxapdxa (tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
         S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
   $
 ]
@@ -226,9 +226,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
   $
     (D_2)'[h](tau, t) & = dxa' [h] pdv(D_2, dxa) \
                       & = - k dxa' [h](tau, t) (k dxa(tau, t))^(-1) H_2^((1)) (k dxa(tau, t)) \
-    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (dx (tau, t) dot n^*(t)) \
-                      & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + dx (tau, t) dot (n^*)'[h](t)) \
-                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxpdx (tau, t) (dx (tau, t) dot n^*(t)) \
+                      & = - k \
+    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (dx (tau, t) dot n^*(t)) + D_2 (tau, t) (dh (tau, t) dot n^*(t) + dx (tau, t) dot (n^*)'[h](t)) \
+                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxapdxa (tau, t) (dx (tau, t) dot n^*(t)) \
                       & + (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t)) (dh (tau, \
         D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
