@@ -103,7 +103,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #let dx = $op("dx")$
 #let dxa = $op("dxa")$
 #let dh = $op("dh")$
-#let ntaudxdxa2 = $op("ntaudotdx/dxa2")$
+#let ntaudotdxdxa2 = $op("ntaudotdx/dxa2")$
 #definition[
   $
      dx(t, tau) & := x(tau) - x(t) \
@@ -118,13 +118,13 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
               & = i/4 hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
     D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
               & = n^* (tau) dot (i k)/4 (hk1_1 (k dxa(t, tau)))/dxa(t, tau) dx(t, tau) \
-              & = i/4 (ht1_1 (k dxa(t, tau))) ntaudxdxa2 \
+              & = i/4 (ht1_1 (k dxa(t, tau))) ntaudotdxdxa2 \
   $
   where
   $
-    ntaudxdxa2 (t, tau) & := (n^* (tau) dot dx(t, tau))/(dxa(t, tau)^2) \
-                        & := ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
-                        & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
+    ntaudotdxdxa2 (t, tau) & := (n^* (tau) dot dx(t, tau))/(dxa(t, tau)^2) \
+                           & := ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
+                           & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
 #theorem[Circle case][
@@ -175,9 +175,11 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
     (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](t) \
                       & = - k hk1_1 (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
                       & = - ht1_1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-        S'[h](t, tau) & = (i/4) (S_1)'[h](t, tau) \
+        S'[h](t, tau) & = i/4 (S_1)'[h](t, tau) \
   $
 ]
+#let ntaudotdhdxa2 = $op("ntaudotdh/dxa2")$
+#let nptaudotdxdxa2 = $op("nptaudotdx/dxa2")$
 #theorem[Shape Derivative of $dlp$][
   Let $D$ kernel of $dlp_Gamma$.
   $
@@ -195,8 +197,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^2 \
                       \
     (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(t)) + D_2 (t, tau) (dh (t, tau) dot n^*(t) + dx (t, tau) dot (n^*)'[h](t)) \
-                      & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) D_t (t, ) \
-                      & + (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau)) (dh (tau, \
+                      & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) ntaudotdxdxa2 (t, tau) \
+                      & + ht1_1 (k dxa(t, tau)) (ntaudotdhdxa2(t, tau) + nptaudotdxdxa2(t, tau)) \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
   $
+  where
 ]
