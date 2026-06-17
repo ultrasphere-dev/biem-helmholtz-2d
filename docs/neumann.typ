@@ -171,7 +171,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #let dxa = $op("dxa")$
 #let dh = $op("dh")$
 #theorem[
-  Let
+  $forall x, h in C_(2 pi).$
   $
      dx(tau, t) & := x(tau) - x(t) \
     dxa(tau, t) & := abs(dx(tau, t)) \
@@ -195,8 +195,8 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
     dv(, x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
   $
 ]
-
-Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)), dxpdx$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
+#let ht1 = $cal(H)^((1))$
+Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H_n^((1)) (f(z)), dxpdx$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
 
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
@@ -207,8 +207,8 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)
   Then
   $
     (S_1)'[h](tau, t) & = pdv(S_1, dxa) dxa'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-                      & = - k H_1^((1)) (k dxa(tau, t)) dxa'[h](tau, t) abs(x'(t)) \
-                      & + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - k H_1^((1)) (k dxa(tau, t)) dxa'[h](tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - ht1 (k dxa(tau, t)) dxpdx (tau, t) abs(x'(t)) + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
         S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
   $
 ]
