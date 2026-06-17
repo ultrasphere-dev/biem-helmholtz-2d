@@ -142,7 +142,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
   $X, Y$: $KK$-norm spaces, $forall O in cal(O)(X). forall F: O -> Y. F in frd(X) define exists A_x in B(X, Y). lim_(h -> 0) (norm(F(x + h) - F(x) - A_x [h])_Y) / (norm(h)_X) = 0$
 ]
 #theorem[Chain rule][
-  $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(y_0)$
+  $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(x_0)$
 ]
 #theorem[Frechet derivative of $dx, dxa$][
   $
