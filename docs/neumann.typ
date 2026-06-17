@@ -167,25 +167,26 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #proof[
   Let $L := integral_0^(2 pi) log(4 sin^2((t - tau)/2)) phi(t) dd(t)$, then $norm(E phi)_infinity <= (norm(A)_infinity + L norm(B)_infinity) norm(phi)_(C([0, 2 pi))) <= L norm(K)_csing norm(phi)_infinity$
 ]
-#let dx = $x_d$
-#let dh = $h_d$
+#let dx = $op("DX")$
+#let dxa = $op("DXA")$
+#let dh = $op("DH")$
 #theorem[
   Let
   $
-         dx(tau, t) & := x(tau) - x(t) \
-    abs(dx)(tau, t) & := abs(dx(tau, t)) \
-         dh(tau, t) & := h(tau) - h(t)
+     dx(tau, t) & := x(tau) - x(t) \
+    dxa(tau, t) & := abs(dx(tau, t)) \
+     dh(tau, t) & := h(tau) - h(t)
   $
   Then
   $
-         dx'[h] & = (x(tau) - x(t))'[h] = dh \
-    abs(dx)'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t)) \
+     dx'[h] & = (x(tau) - x(t))'[h] = dh \
+    dxa'[h] & = (abs(x(tau) - x(t)))'[h] = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t)) \
   $
 ]
-#let xhdx2 = $op("XHDX2")$
+#let dxpdx = $op("DXP/DX")$
 #theorem[
   $
-    xhdx2 (tau, t) := (dx'[h])/(abs(dx)) = (dx(tau, t) dot dh(tau, t)) / (abs(dx)(tau, t))^2
+    dxpdx (tau, t) := (dx'[h])/(dxa) = (dx(tau, t) dot dh(tau, t)) / (dxa(tau, t))^2
     ->_(tau -> t) (x'(t) dot h'(t)) / abs(x'(t))^2
   $
 ]
@@ -224,7 +225,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
                       & = - k abs(x_d)' [h](tau, t) (k abs(x_d (tau, t)))^(-1) H_2^((1)) (k abs(x_d (tau, t))) \
     (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
                       & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
-                      & = - (k abs(x_d (tau, t)))^2 H_2^((1)) (k abs(x_d (tau, t))) xhdx2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+                      & = - (k abs(x_d (tau, t)))^2 H_2^((1)) (k abs(x_d (tau, t))) dxpdx (tau, t) (x_d (tau, t) dot n^*(t)) \
                       & + (k abs(x_d (tau, t)))^(-1) H_1^((1)) (k abs(x_d (tau, t))) (dh (tau, \
         D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
