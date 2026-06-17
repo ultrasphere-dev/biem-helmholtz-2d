@@ -184,8 +184,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
   Let $D$ kernel of $dlp_Gamma$.
   $
       D (t, tau) & := (i k^2)/4 D_1 (t, tau) \
-    D_1 (t, tau) & := D_2 (t, tau) (n^*(tau) dot dx (t, tau)) \
-    D_2 (t, tau) & := (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau))
+    D_1 (t, tau) & := D_2 (t, tau) D_3 (t, tau) \
+    D_2 (t, tau) & := (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau)) \
+    D_3 (t, tau) & := n^*(tau) dot dx (t, tau)
   $
   Then
   $
@@ -196,15 +197,15 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
                       & = - k dxa' [h](t, tau) (k dxa(t, tau))^(-1) hk1_2 (k dxa(t, tau)) \
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^(-2) \
                       \
-    (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(tau)) + D_2 (t, tau) (dh (t, tau) dot n^*(tau) + dx (t, tau) dot (n^*)'[h](tau)) \
+    (D_3)'[h](t, tau) & = dh (t, tau) dot n^*(tau) + dx (t, tau) dot (n^*)'[h](tau) = D_4 (t, tau) (dxa (t, tau))^2 \
+    (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) D_3 (t, tau) + D_2 (t, tau) (D_3)'[h](t, tau) \
                       & = - k^(-2) ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) ntaudotdxdxa2 (t, tau) \
-                      & + k^(-2) ht1_1 (k dxa(t, tau)) (ntaudotdhdxa2(t, tau) + nptaudotdxdxa2(t, tau)) \
+                      & + k^(-2) ht1_1 (k dxa(t, tau)) D_4 (t, tau) \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
   $
   where
   $
-     ntaudotdhdxa2 (t, tau) & = (n^* (tau) dot dh(t, tau)) / (dxa(t, tau))^2 ->_(tau -> t) (h'_1(t) x''_2(t) - h'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
-    nptaudotdxdxa2 (t, tau) & = ((n^*)'[h](tau) dot dx(t, tau)) / (dxa(t, tau))^2
-                              ->_(tau -> t) (x'_1(t) h''_2(t) - x'_2(t) h''_1(t)) / (2 abs(x'(t))^2) \
+    D_4 (t, tau) & = ((n^* (tau) dot dh(t, tau)) + ((n^*)'[h](tau) dot dx(t, tau))) / dxa(t, tau)^2 \
+                 & ->_(tau -> t) ((h'_1(t) x''_2(t) - h'_2(t) x''_1(t)) + (x'_1(t) h''_2(t) - x'_2(t) h''_1(t))) / (2 abs(x'(t))^2)
   $
 ]
