@@ -120,10 +120,10 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 == Frechet Derivative
 #let define = $<==>_"define"$
 #let frd = $op("FRD")$
-#definition[
+#definition[Frechet derivative][
   $X, Y$: $KK$-norm spaces, $forall O in cal(O)(X). forall F: O -> Y. F in frd(X) define exists A_x in B(X, Y). lim_(h -> 0) (norm(F(x + h) - F(x) - A_x [h])_Y) / (norm(h)_X) = 0$
 ]
-#theorem[
+#theorem[Chain rule][
   $X, Y, Z$: $KK$-norm spaces, $forall x_0 in X. forall F in frd(x_0). y_0 := F(x_0). forall G in frd(y_0). H := G compose F. H'(x_0) = G'(y_0) compose F'(y_0)$
 ]
 // #proof[
@@ -216,7 +216,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)
   Let $D$ kernel of $dlp_Gamma$.
   $
       D (tau, t) & := (i k^2)/4 D_1 (tau, t) \
-    D_1 (tau, t) & := D_2 (tau, t) (x_d (tau, t) dot n^*(t)) \
+    D_1 (tau, t) & := D_2 (tau, t) (dx (tau, t) dot n^*(t)) \
     D_2 (tau, t) & := (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t))
   $
   Then
@@ -226,9 +226,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)
   $
     (D_2)'[h](tau, t) & = dxa' [h] pdv(D_2, dxa) \
                       & = - k dxa' [h](tau, t) (k dxa(tau, t))^(-1) H_2^((1)) (k dxa(tau, t)) \
-    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
-                      & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
-                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxpdx (tau, t) (x_d (tau, t) dot n^*(t)) \
+    (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (dx (tau, t) dot n^*(t)) \
+                      & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + dx (tau, t) dot (n^*)'[h](t)) \
+                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxpdx (tau, t) (dx (tau, t) dot n^*(t)) \
                       & + (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t)) (dh (tau, \
         D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
