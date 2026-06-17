@@ -196,7 +196,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
 ]
 
-Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)), dxpdx$ as below.
+Shape derivatives of $slp$ and $dlp$ may be expressed by $f(z)^n H_n^((1)) (f(z)), dxpdx$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
 
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
