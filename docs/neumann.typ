@@ -124,7 +124,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
   $
     ntaudotdxdxa2 (t, tau) & := (n^* (tau) dot dx(t, tau))/(dxa(t, tau)^2) \
                            & := ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
-                           & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
+                           & ->_(tau -> t) (x''_1(t) x'_2(t) - x''_2(t) x'_1(t)) / (2 abs(x'(t))^2) \
   $
 ]
 #theorem[Circle case][
@@ -207,6 +207,6 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
   where
   $
     D_4 (t, tau) & := ((n^* (tau) dot dh(t, tau)) + ((n^*)'[h](tau) dot dx(t, tau))) / dxa(t, tau)^2 \
-                 & ->_(tau -> t) ((h'_1(t) x''_2(t) - h'_2(t) x''_1(t)) + (x'_1(t) h''_2(t) - x'_2(t) h''_1(t))) / (2 abs(x'(t))^2)
+                 & ->_(tau -> t) ((h'_2(t) x''_1(t) - h'_1(t) x''_2(t)) + (x'_2(t) h''_1(t) - x'_1(t) h''_2(t))) / (2 abs(x'(t))^2)
   $
 ]
