@@ -199,13 +199,13 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   Let $S$ kernel of $slp_Gamma$.
   $
       S (tau, t) & = i/4 S_1 (tau, t) \
-    S_1 (tau, t) & := H_0^((1)) (k abs(dxa(tau, t))) abs(x'(t)) \
+    S_1 (tau, t) & := H_0^((1)) (k dxa(tau, t)) abs(x'(t)) \
   $
   Then
   $
     (S_1)'[h](tau, t) & = pdv(S_1, dxa) dxa'[h](tau, t) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-                      & = - k H_1^((1)) (k abs(dxa(tau, t))) dxa'[h](tau, t) abs(x'(t)) \
-                      & + H_0^((1)) (k abs(dxa(tau, t))) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - k H_1^((1)) (k dxa(tau, t)) dxa'[h](tau, t) abs(x'(t)) \
+                      & + H_0^((1)) (k dxa(tau, t)) (x'(t) dot h'(t)) / (abs(x'(t))) \
         S'[h](tau, t) & = (i/4) (S_1)'[h](tau, t) \
   $
 ]
@@ -214,7 +214,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
       D (tau, t) & := (i k^2)/4 D_1 (tau, t) \
     D_1 (tau, t) & := D_2 (tau, t) (x_d (tau, t) dot n^*(t)) \
-    D_2 (tau, t) & := (k abs(dxa(tau, t)))^(-1) H_1^((1)) (k abs(dxa(tau, t)))
+    D_2 (tau, t) & := (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t))
   $
   Then
   $
@@ -222,11 +222,11 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   $
   $
     (D_2)'[h](tau, t) & = dxa' [h] pdv(D_2, dxa) \
-                      & = - k dxa' [h](tau, t) (k abs(dxa(tau, t)))^(-1) H_2^((1)) (k abs(dxa(tau, t))) \
+                      & = - k dxa' [h](tau, t) (k dxa(tau, t))^(-1) H_2^((1)) (k dxa(tau, t)) \
     (D_1)'[h](tau, t) & = (D_2)'[h](tau, t) (x_d (tau, t) dot n^*(t)) \
                       & + D_2 (tau, t) (dh (tau, t) dot n^*(t) + x_d (tau, t) dot (n^*)'[h](t)) \
-                      & = - (k abs(dxa(tau, t)))^2 H_2^((1)) (k abs(dxa(tau, t))) dxpdx (tau, t) (x_d (tau, t) dot n^*(t)) \
-                      & + (k abs(dxa(tau, t)))^(-1) H_1^((1)) (k abs(dxa(tau, t))) (dh (tau, \
+                      & = - (k dxa(tau, t))^2 H_2^((1)) (k dxa(tau, t)) dxpdx (tau, t) (x_d (tau, t) dot n^*(t)) \
+                      & + (k dxa(tau, t))^(-1) H_1^((1)) (k dxa(tau, t)) (dh (tau, \
         D'[h](tau, t) & = (i k^2)/4 (D_1)'[h](tau, t) \
   $
 ]
