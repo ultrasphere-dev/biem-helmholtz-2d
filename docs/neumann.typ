@@ -116,11 +116,12 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
               & = i/4 hk1_0 (k abs(x(t) - x(tau))) abs(x'(tau)) \
               & = i/4 hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
     D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
-              & = n^* (tau) dot (i k)/4 (hk1_1 (k abs(x(t) - x(tau))))/(abs(x(t) - x(tau))) (x(t) - x(tau)) \
-              & = i/4 (ht1_1 (k abs(x(t) - x(tau)))) (n^* (tau) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) phi(t) dd(t) \
+              & = n^* (tau) dot (i k)/4 (hk1_1 (k dxa(t, tau)))/dxa(t, tau) dx(t, tau) \
+              & = i/4 (ht1_1 (k dxa(t, tau))) (n^* (tau) dot dx(t, tau))/(dxa(t, tau)^2) \
   $
+  where
   $
-    D_t (t, tau) & := (n^*(tau) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
+    D_t (t, tau) & := (n^* (tau) dot dx(t, tau))/(dxa(t, tau)^2) \
                  & := ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
                  & ->_(tau -> t) (x'_1(t) x''_2(t) - x'_2(t) x''_1(t)) / (2 abs(x'(t))^2) \
   $
