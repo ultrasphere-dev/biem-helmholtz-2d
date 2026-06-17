@@ -113,7 +113,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 #theorem[
   Let $S$, $K$ kernels of $slp_Gamma$, $dlp_Gamma$ respectively.
   $
-    S(t, tau) & := G(x(t), x(tau)) \
+    S(t, tau) & := G(x(t), x(tau)) abs(x'(tau)) \
               & = i/4 hk1_0 (k abs(x(t) - x(tau))) abs(x'(tau)) \
               & = i/4 hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
     D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
