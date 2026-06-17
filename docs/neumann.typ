@@ -73,10 +73,15 @@ For integration of singular functions, one would need to split the function into
 
 = Layer potentials
 
-Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
+Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
 
 #let slp = $cal(S)$
 #let dlp = $cal(D)$
+#definition[Counterclockwise outward vectors][
+  $
+    n(t) := (n^*(t))/ abs(x'(t)), quad n^*(t) := (x'_2(t), -x'_1(t))
+  $
+]
 #definition[
   $
     G(x, y) := i/4 hk1_0 (k abs(x - y))
@@ -94,11 +99,6 @@ Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) !=
 #let ht1 = $cal(H)^((1))$
 #definition[
   $ht1_n (x) := x^n hk1_n (x)$
-]
-#definition[Counterclockwise outward vectors][
-  $
-    n(t) := (n^*(t))/ abs(x'(t)), quad n^*(t) := (x'_2(t), -x'_1(t))
-  $
 ]
 #let dx = $op("dx")$
 #let dxa = $op("dxa")$
