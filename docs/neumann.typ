@@ -174,7 +174,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n h
   $
     (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](t) \
                       & = - k hk1_1 (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-                      & = - ht1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - ht1_1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
         S'[h](t, tau) & = (i/4) (S_1)'[h](t, tau) \
   $
 ]
