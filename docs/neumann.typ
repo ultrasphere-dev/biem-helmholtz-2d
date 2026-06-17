@@ -151,6 +151,7 @@ Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) !=
   $
 ]
 #let dxapdxa = $op("dxap/dxa")$
+Since $dxa'[h]$ is not programmatically evaluable at $t = tau$, the following $dxapdxa$ is defined.
 #theorem[
   $
     dxapdxa (t, tau) := (dxa'[h])/(dxa) = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau))^2
@@ -162,7 +163,7 @@ Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t in [0, 2 pi). abs(x'(t)) !=
     dv(, x) x^(-n) hk1_n (x) = - x^(-n) hk1_(n + 1) (x)
   $
 ]
-Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n hk1_n (f(z)), dxapdxa$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
+Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
 
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
