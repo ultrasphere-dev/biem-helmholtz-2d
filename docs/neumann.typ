@@ -10,6 +10,7 @@
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
 #set page(margin: 1cm)
+#let hk1 = $hk1$
 = Integrals involving Bessel functions of the second kind
 
 #definition[Euler--Mascheroni Constant][
@@ -78,7 +79,7 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 #let dlp = $cal(D)$
 #definition[
   $
-    G(x, y) := i/4 H_0^(1) (k abs(x - y))
+    G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
   $
     slp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
@@ -87,8 +88,12 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 ]
 #theorem[
   $
-    grad_y G(x, y) = (i k)/4 (H_1^(1) (k abs(x - y)))/(abs(x - y)) (x - y)
+    grad_y G(x, y) = (i k)/4 (hk1_1 (k abs(x - y)))/(abs(x - y)) (x - y)
   $
+]
+#let ht1 = $cal(H)^((1))$
+#definition[
+  $ht1_n (x) := x^n hk1_n (x)$
 ]
 #definition[Counterclockwise outward vectors][
   $
@@ -108,11 +113,11 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
   Let $S$, $K$ kernels of $slp_Gamma$, $dlp_Gamma$ respectively.
   $
     S(t, tau) & := G(x(t), x(tau)) \
-              & = i/4 H_0^(1) (k abs(x(t) - x(tau))) abs(x'(tau)) \
-              & = i/4 H_0^(1) (k dxa(t, tau)) abs(x'(tau)) \
+              & = i/4 hk1_0 (k abs(x(t) - x(tau))) abs(x'(tau)) \
+              & = i/4 hk1_0 (k dxa(t, tau)) abs(x'(tau)) \
     D(t, tau) & := n(tau) dot grad_y G(x(t), x(tau)) abs(x'(tau)) \
-              & = n^* (tau) dot (i k)/4 (H_1^(1) (k abs(x(t) - x(tau))))/(abs(x(t) - x(tau))) (x(t) - x(tau)) \
-              & = i/4 (k abs(x(t) - x(tau))H_1^(1) (k abs(x(t) - x(tau)))) ((x'_2(tau), -x'_1(tau)) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) phi(t) dd(t) \
+              & = n^* (tau) dot (i k)/4 (hk1_1 (k abs(x(t) - x(tau))))/(abs(x(t) - x(tau))) (x(t) - x(tau)) \
+              & = i/4 (ht1_1 (k abs(x(t) - x(tau)))) (n^* (tau) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) phi(t) dd(t) \
   $
   $
     D_t (t, tau) & := (n^*(tau) dot (x(t) - x(tau)))/(abs(x(t) - x(tau))^2) \
@@ -152,23 +157,22 @@ Let $x_1, x_2 in C[[e]]$. Let $x(t) := (x_1 (t), x_2 (t))$ satisfies $forall t i
 ]
 #theorem[
   $
-    dv(, x) x^(-n) H_n^((1)) (x) = - x^(-n) H_(n + 1)^((1)) (x)
+    dv(, x) x^(-n) hk1_n (x) = - x^(-n) hk1_(n + 1) (x)
   $
 ]
-#let ht1 = $cal(H)^((1))$
-Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H_n^((1)) (f(z)), dxapdxa$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
+Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n hk1_n (f(z)), dxapdxa$ as below, making it possible to evaluate the limit value $t = tau$ programmatically.
 
 #theorem[Shape Derivative of $slp$][
   Let $S$ kernel of $slp_Gamma$.
   $
       S (t, tau) & = i/4 S_1 (t, tau) \
-    S_1 (t, tau) & := H_0^((1)) (k dxa(t, tau)) abs(x'(t)) \
+    S_1 (t, tau) & := hk1_0 (k dxa(t, tau)) abs(x'(t)) \
   $
   Then
   $
     (S_1)'[h](t, tau) & = pdv(S_1, dxa) dxa'[h](t, tau) + pdv(S_1, abs(x')) abs(x')'[h](t) \
-                      & = - k H_1^((1)) (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + H_0^((1)) (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
-                      & = - ht1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + H_0^((1)) (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - k hk1_1 (k dxa(t, tau)) dxa'[h](t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
+                      & = - ht1 (k dxa(t, tau)) dxapdxa (t, tau) abs(x'(t)) + hk1_0 (k dxa(t, tau)) (x'(t) dot h'(t)) / (abs(x'(t))) \
         S'[h](t, tau) & = (i/4) (S_1)'[h](t, tau) \
   $
 ]
@@ -177,7 +181,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
   $
       D (t, tau) & := (i k^2)/4 D_1 (t, tau) \
     D_1 (t, tau) & := D_2 (t, tau) (dx (t, tau) dot n^*(t)) \
-    D_2 (t, tau) & := (k dxa(t, tau))^(-1) H_1^((1)) (k dxa(t, tau))
+    D_2 (t, tau) & := (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau))
   $
   Then
   $
@@ -185,12 +189,12 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)) := f(z)^n H
   $
   $
     (D_2)'[h](t, tau) & = dxa' [h] pdv(D_2, dxa) \
-                      & = - k dxa' [h](t, tau) (k dxa(t, tau))^(-1) H_2^((1)) (k dxa(t, tau)) \
+                      & = - k dxa' [h](t, tau) (k dxa(t, tau))^(-1) hk1_2 (k dxa(t, tau)) \
                       & = - ht1_2 (k dxa(t, tau)) dxapdxa (t, tau) (k dxa(t, tau))^2 \
                       \
     (D_1)'[h](t, tau) & = (D_2)'[h](t, tau) (dx (t, tau) dot n^*(t)) + D_2 (t, tau) (dh (t, tau) dot n^*(t) + dx (t, tau) dot (n^*)'[h](t)) \
                       & = - ht1_2^((1)) (k dxa(t, tau)) dxapdxa (t, tau) D_t (t, ) \
-                      & + (k dxa(t, tau))^(-1) H_1^((1)) (k dxa(t, tau)) (dh (tau, \
+                      & + (k dxa(t, tau))^(-1) hk1_1 (k dxa(t, tau)) (dh (tau, \
         D'[h](t, tau) & = (i k^2)/4 (D_1)'[h](t, tau) \
   $
 ]
