@@ -181,7 +181,7 @@ def dlp_kernel_split(
         eps=eps,
         t_singularity=t,
     )
-    d_t = A1(
+    a1 = A1(
         t,
         tau,
         x,
@@ -189,4 +189,4 @@ def dlp_kernel_split(
         ddx,
         eps=eps,
     )
-    return (1j / 4) * h1 * d_t, (1j / 4) * h2 * d_t
+    return (1j / 4) * h1 * a1, (1j / 4) * h2 * a1
