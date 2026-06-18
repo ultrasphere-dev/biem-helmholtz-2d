@@ -103,7 +103,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 #let dx = $op("dx")$
 #let dxa = $op("dxa")$
 #let dh = $op("dh")$
-#let ntaudotdxdxa2 = $op("ntaudotdx/dxa2")$
+#let ntaudotdxdxa2 = $op(A_1)$
 #definition[
   $
      dx(t, tau) & := x(t) - x(tau) \
@@ -150,7 +150,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
     dxa'[h] & = (abs(x(t) - x(tau)))'[h] = (dx(t, tau) dot dh(t, tau)) / (dxa(t, tau)) \
   $
 ]
-#let dxapdxa = $op("dxap/dxa")$
+#let dxapdxa = $op(A_2)$
 Since $dxa'[h]$ is not programmatically evaluable at $t = tau$, the following $dxapdxa$ is defined.
 #theorem[
   $
@@ -179,8 +179,6 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
         S'[h](t, tau) & = i/4 (S_1)'[h](t, tau) \
   $
 ]
-#let ntaudotdhdxa2 = $op("ntaudotdh/dxa2")$
-#let nptaudotdxdxa2 = $op("nptaudotdx/dxa2")$
 #theorem[Shape Derivative of $dlp$][
   Let $D$ kernel of $dlp_Gamma$.
   $
