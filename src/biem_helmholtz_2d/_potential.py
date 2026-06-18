@@ -21,27 +21,31 @@ def A1(
     eps: float = 0.0,
 ) -> Array:
     r"""
-    Kernel factor for the double-layer potential.
+    Kernel factor $A_1(t, \tau)$ for the double-layer potential.
+
+    $$
+    A_1(t, \tau) := \frac{n^*(\tau) \cdot (x(t) - x(\tau))}{|x(t) - x(\tau)|^2}
+    $$
 
     Parameters
     ----------
     t : Array
-        Source nodes of shape (...,).
+        Source nodes t of shape (...,).
     tau : Array
-        Target nodes of shape (...,).
+        Target nodes tau of shape (...,).
     x : Callable[[Array], Array]
-        Boundary parametrization returning shape (..., 2).
+        Boundary parametrization x of (...,) -> (..., 2).
     dx : Callable[[Array], Array]
-        First derivative of the parametrization of shape (..., 2).
+        First derivative dx of the parametrization of (...,) -> (..., 2).
     ddx : Callable[[Array], Array]
-        Second derivative of the parametrization of shape (..., 2).
+        Second derivative ddx of the parametrization of (...,) -> (..., 2).
     eps : float
-        If ``abs(tau - t) <= eps``, replace by the diagonal limit value.
+        If ``abs(tau - t) <= eps``, replace A_1(t, tau) by the diagonal limit value.
 
     Returns
     -------
     Array
-        Values of $D_t$ of shape (...,).
+        Values of $A_1(t, \tau)$ of shape (...,).
 
     """
     if eps < 0:
@@ -57,13 +61,13 @@ def A1(
     # non-limit part
     diff = x_t - x_tau
     dist = xp.linalg.vector_norm(diff, axis=-1)
-    outward_unnormalized = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
-    result = xp.sum(outward_unnormalized * diff, axis=-1) / (dist**2)
+    n_star_tau = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
+    result = xp.sum(n_star_tau * diff, axis=-1) / (dist**2)
 
     # limit part
     near0 = is_close(t, tau, eps)
-    limit = (dx_tau[..., 0] * ddx_tau[..., 1] - dx_tau[..., 1] * ddx_tau[..., 0]) / (
-        -2 * xp.linalg.vector_norm(dx_tau, axis=-1) ** 2
+    limit = (ddx_tau[..., 0] * dx_tau[..., 1] - ddx_tau[..., 1] * dx_tau[..., 0]) / (
+        2 * xp.linalg.vector_norm(dx_tau, axis=-1) ** 2
     )
     return xp.where(near0, limit, result)
 
@@ -84,24 +88,24 @@ def slp_kernel_split(
     Parameters
     ----------
     t : Array
-        Source nodes of shape (...,).
+        Source nodes t of shape (...,).
     tau : float
-        Target node of shape (...,).
+        Target node tau of shape (...,).
     k : float
-        Wave number of shape (...,).
+        Wave number k of shape (...,).
     x : Callable[[Array], Array]
-        Boundary parametrization returning shape (..., 2).
+        Boundary parametrization x of (...,) -> (..., 2).
     dx : Callable[[Array], Array]
-        First derivative of the parametrization of shape (..., 2).
+        First derivative dx of the parametrization of (...,) -> (..., 2).
     eps : float
-        If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
+        If ``abs(t - tau) <= eps``, replace the singular value of S(t, tau).
 
     Returns
     -------
     Array
-        Log-singular coefficient of shape (N',).
+        Log-singular coefficient of $S(t, \tau)$ of shape (...,).
     Array
-        Analytic remainder of shape (N',).
+        Analytic remainder of $S(t, \tau)$ of shape (...,).
 
     """
     xp = array_namespace(t, tau)
@@ -143,26 +147,26 @@ def dlp_kernel_split(
     Parameters
     ----------
     t : Array
-        Source nodes of shape (...,).
+        Source nodes t of shape (...,).
     tau : float
-        Target nodes of shape (...,).
+        Target node tau of shape (...,).
     k : float
-        Wave number of shape (...,).
+        Wave number k of shape (...,).
     x : Callable[[Array], Array]
-        Boundary parametrization returning shape (..., 2).
+        Boundary parametrization x of  (...,) -> (..., 2).
     dx : Callable[[Array], Array]
-        First derivative of the parametrization of shape (..., 2).
+        First derivative dx of the parametrization of (...,) -> (..., 2).
     ddx : Callable[[Array], Array]
-        Second derivative of the parametrization of shape (..., 2).
+        Second derivative ddx of the parametrization of (...,) -> (..., 2).
     eps : float
-        If ``abs(t - tau) <= eps``, replace by the diagonal limit value.
+        If ``abs(t - tau) <= eps``, replace the singular value of D(t, tau).
 
     Returns
     -------
     Array
-        Log-singular coefficient of shape (N',).
+        Log-singular coefficient of $D(t, \tau)$ of shape (...,).
     Array
-        Analytic remainder of shape (N',).
+        Analytic remainder of $D(t, \tau)$ of shape (...,).
 
     """
     xp = array_namespace(t, tau)
