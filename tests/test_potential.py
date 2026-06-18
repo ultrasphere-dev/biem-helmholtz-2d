@@ -17,7 +17,7 @@ from ie_circle import (
 )
 from ie_circle._bie import QuadratureType
 
-from biem_helmholtz_2d._potential import D_t, dlp_kernel_split, slp_kernel_split
+from biem_helmholtz_2d._potential import A1, dlp_kernel_split, slp_kernel_split
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv
 
 
@@ -56,7 +56,7 @@ def test_potential_match_known_values_kress_shape(
 @pytest.mark.parametrize("rho", [0.7, 1.3])
 def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float, t: float) -> None:
     shape = CircleShape(rho)
-    actual = D_t(
+    actual = A1(
         xp.asarray(t, device=device, dtype=dtype),
         xp.asarray(t, device=device, dtype=dtype),
         shape.x,
@@ -64,7 +64,7 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
         shape.ddx,
         eps=xp.inf,
     )
-    actual_numerical = D_t(
+    actual_numerical = A1(
         xp.asarray(t, device=device, dtype=dtype),
         xp.asarray(t + 1e-6, device=device, dtype=dtype),
         shape.x,

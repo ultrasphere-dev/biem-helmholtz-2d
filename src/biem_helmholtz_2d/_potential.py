@@ -10,7 +10,7 @@ from biem_helmholtz_2d._hankel import hankel_h1_h2
 from ._is_close import is_close
 
 
-def D_t(
+def A1(
     t: Array,
     tau: Array,
     x: Callable[[Array], Array],
@@ -181,7 +181,7 @@ def dlp_kernel_split(
         eps=eps,
         t_singularity=t,
     )
-    d_t = D_t(
+    d_t = A1(
         t,
         tau,
         x,
