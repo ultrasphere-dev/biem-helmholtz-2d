@@ -47,11 +47,11 @@
   $forall f in e C[[e]].$
   $
     y1_0 (f(z)) & = 0 \
-    y2_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + (2)/pi (log abs((f'(0))/2)) J_0 (f(z)) + e^2 C[[e]] \
+    y2_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + 2/pi log abs((f'(0))/2) + e C[[e]] \
     y3_0 (f(z)) & = 2/pi C + e^2 C[[e]] \
   $
   $
-    Y_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + underbrace(2/pi (log abs((f'(0))/2) + C), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
+    Y_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + underbrace(2/pi (log abs((f'(0))/2) + C), = Y_0^((2,f)) (0)) + e C[[e]] \
                & = Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
   $
   $forall n in NN.$
