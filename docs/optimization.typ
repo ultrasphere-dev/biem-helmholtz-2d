@@ -39,6 +39,7 @@
   $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$.
 ]
 #theorem[Adjoint method @matsushima_2023][
+  Let $dp(dot, dot)$ any bilinear form on $c2pi(CC), c2pi(CC)$.
   Let $k >= 2$.
   Let $r in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
   Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$. Let density $phi_r$ satisfy the boundary integral equation
