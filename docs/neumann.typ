@@ -117,7 +117,7 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
   $
 ]
 #theorem[
-  Let $S$, $K$ kernels of $slp_Gamma$, $dlp_Gamma$ respectively.
+  Let $S$, $D$ kernels of $slp_Gamma$, $dlp_Gamma$ respectively.
   $
     S(t, tau) & := G(x(t), x(tau)) abs(x'(tau)) \
               & = i/4 hk1_0 (k abs(x(t) - x(tau))) abs(x'(tau)) \
@@ -136,8 +136,8 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 #theorem[Circle case][
   $forall m in ZZ.$
   $
-                       (slp_(rho SS^1) e^(i m t)) (t) & = (i pi rho)/2 H_abs(m)^(1) (k rho) J_abs(m) (k rho) e^(i m t) \
-    ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (t) & = (i pi k rho)/2 H_abs(m)^(1) (k rho) J'_abs(m) (k rho) e^(i m t) \
+                       (slp_(rho SS^1) e^(i m t)) (t) & = (i pi rho)/2 hk1_abs(m) (k rho) J_abs(m) (k rho) e^(i m t) \
+    ((I_(rho SS^1)/2 + dlp_(rho SS^1)) e^(i m t)) (t) & = (i pi k rho)/2 hk1_abs(m) (k rho) J'_abs(m) (k rho) e^(i m t) \
   $
 ]
 
