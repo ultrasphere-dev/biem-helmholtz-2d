@@ -38,13 +38,13 @@
   Let $jp: C_(2 pi)^k times c2pi -> RR$. Let $phi_r$ satisfy the boundary integral equation
 
   $
-    (I/2 + dlp_r - i eta slp_r) phi_r = g (:= - uin compose r) quad x in [0, 2pi)
+    (I/2 + dlp_r - i eta slp_r) phi_r = g_r (:= - uin compose r) quad x in [0, 2pi)
   $
 
   Let $jr(r) := J(r, phi_r)$, then
 
   $
-    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g[h])_(c2pi, c2pi)
+    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi)
   $
   where $psi_r in c2pi$ satisfies the following adjoint equation:
   $
@@ -54,7 +54,7 @@
 #proof[
   Let $L: C_(2 pi)^k times C_(2 pi) times C_(2 pi) -> RR$ defined by
   $
-    L(r, phi, psi) := jp(r, phi) + dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g)_(c2pi,c2pi)
+    L(r, phi, psi) := jp(r, phi) + dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g_r)_(c2pi,c2pi)
   $
   Then
   $
@@ -62,7 +62,7 @@
   $
   The first term is
   $
-    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g[h])_(c2pi, c2pi) \
+    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi) \
   $
   The last two terms vanish since
   $
@@ -72,6 +72,12 @@
   $
     D_psi L(r, phi_r, psi) [h] = dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g)_(c2pi, c2pi) = dp(h, 0)_(c2pi, c2pi) = 0
   $
+]
+#algorithm[
+  Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
+  + Compute $phi_r$ by solving the boundary integral equation
+  + Compute $D_phi jp$, then compute $psi_r$ by solving the adjoint equation
+  + Compute $D_r jr(r) [h]$
 ]
 
 Periodic Sobolev space $H^3_(2 pi) subset.double C^2_(2 pi)$ is used for regularization.
