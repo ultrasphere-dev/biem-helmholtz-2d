@@ -34,7 +34,7 @@
 
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
-  Let $r in C_(2 pi)^k$.
+  Let $r, g in C_(2 pi)^k$.
   Let $jp: C_(2 pi)^k times c2pi -> RR$. Let $phi_r$ satisfy the boundary integral equation
 
   $
