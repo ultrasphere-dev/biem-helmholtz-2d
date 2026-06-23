@@ -44,8 +44,14 @@ def test_slp_shape_derivative_numerical(
     t = xp.asarray(0.0, device=device, dtype=dtype)
     tau = xp.asarray(0.1, device=device, dtype=dtype)
 
-    da_log, da_rem = _potential_shape_derivative.slp_shape_derivative(
-        t, tau, k, shape_x.x, shape_h.x, shape_x.dx, shape_h.dx
+    da_log, da_rem = _potential_shape_derivative.slp_shape_derivative_split(
+        t=t,
+        tau=tau,
+        k=k,
+        x=shape_x.x,
+        dx=shape_x.dx,
+        h=shape_h.x,
+        dh=shape_h.dx,
     )
 
     def make_shape(eps):
@@ -94,16 +100,16 @@ def test_dlp_shape_derivative_numerical(
     t = xp.asarray(0.0, device=device, dtype=dtype)
     tau = xp.asarray(0.1, device=device, dtype=dtype)
 
-    da_log, da_rem = _potential_shape_derivative.dlp_shape_derivative(
-        t,
-        tau,
-        k,
-        shape_x.x,
-        shape_h.x,
-        shape_x.dx,
-        shape_h.dx,
-        shape_x.ddx,
-        shape_h.ddx,
+    da_log, da_rem = _potential_shape_derivative.dlp_shape_derivative_split(
+        t=t,
+        tau=tau,
+        k=k,
+        x=shape_x.x,
+        dx=shape_x.dx,
+        ddx=shape_x.ddx,
+        h=shape_h.x,
+        dh=shape_h.dx,
+        ddh=shape_h.ddx,
     )
 
     def make_shape(eps):
