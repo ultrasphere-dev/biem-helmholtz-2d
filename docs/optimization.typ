@@ -85,7 +85,7 @@
 #remark[
   Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
 
-  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp = (dlp_r - i eta slp_r)^* grad_u J$.
+  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp (r, phi) = (dlp_r - i eta slp_r)^* grad J(r, (dlp_r - i eta slp_r) phi)$, since $dp(grad_u J, (dlp_r - i eta slp_r) h) = dp((dlp_r - i eta slp_r)^* grad_u J, h)$
 ]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
