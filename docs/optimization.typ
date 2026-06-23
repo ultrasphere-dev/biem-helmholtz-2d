@@ -93,7 +93,27 @@
   + Compute $D_phi jp$, then compute $psi_r$ by solving the adjoint equation
   + Compute $D_r jr(r) [h]$
 ]
+#let hdj = $grad^((H)) J$
+#let hdh = $h^((H))$
+#definition[Hilbertian Reguralization][
+  Let $H subset.double X$ be a Hilbert space continuously embedded in $X$.
 
+  $
+    ip(hdj(x), h)_H = D J (x) [h] quad forall h in H
+  $
+
+  $
+    hdh := - hdj(x)
+  $
+
+  Then
+
+  $
+    D J (x) [hdh] & = D J (x) [-hdj(x)] = -ip(hdj(x), hdj(x))_H \
+                  & = inf_(norm(h)_H = 1) ip(hdj(x), h)_H = inf_(norm(h)_H = 1) D J (x) [h]
+  $
+
+]
 Periodic Sobolev space $H^3_(2 pi) subset.double C^2_(2 pi)$ is used for regularization.
 
 #bibliography("main.bib")
