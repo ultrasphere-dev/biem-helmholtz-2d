@@ -30,6 +30,14 @@
 #let y3 = $Y^((3))$
 #lemma[
   $
+    log (x + 1) = sum_(n = 1)^oo ((-1)^(n - 1))/n x^n, quad x in (-1, 1]
+  $
+]
+#lemma[
+  If $f$ is analytic and nonzero, then $log f$ is analytic.
+]
+#lemma[
+  $
     Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z^2 CC[[z]]
   $
   $forall n in NN.$
