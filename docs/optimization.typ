@@ -27,7 +27,7 @@
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
-  Let $c2pi^k := C^k (RR \/ 2 pi)$, $r in c2pi^k$, $Gamma_r := {r(t) | t in [0, 2pi)}$.
+  Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $r in c2pi^k (RR^2)$, $Gamma_r := {r(t) | t in [0, 2pi)}$.
   $
     slp_r phi (x) := integral_Gamma_r G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma_r pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
@@ -40,19 +40,19 @@
 ]
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
-  Let $r in c2pi^k, g: c2pi^k -> c2pi^k$.
-  Let $jp: c2pi^k times c2pi -> RR$. Let density $phi_r$ satisfy the boundary integral equation
+  Let $r in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
+  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$. Let density $phi_r$ satisfy the boundary integral equation
 
   $
     (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
   $
 
   Let $jr(r) := J(r, phi_r)$.
-  Assume there exists $grad_phi J(r, phi_r)$ such that $forall h in c2pi, D_phi jp (r, phi_r) [h] = dp(grad_phi J(r, phi_r), h)_(c2pi, c2pi)$.
+  Assume there exists $grad_phi J(r, phi_r)$ such that $forall h in c2pi (CC), D_phi jp (r, phi_r) [h] = Re dp(grad_phi J(r, phi_r), h)$.
   Then $D_r jr(r) [h]$ is given by
 
   $
-    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi)
+    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])
   $
   where $psi_r in c2pi$ satisfies the following adjoint equation:
   $
@@ -60,9 +60,9 @@
   $
 ]
 #proof[
-  Let $L: c2pi^k times c2pi times c2pi -> RR$ defined by
+  Let $L: c2pi^k (RR^2) times c2pi (CC) times c2pi (CC) -> RR$ defined by
   $
-    L(r, phi, psi) := jp(r, phi) + dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g_r)_(c2pi,c2pi)
+    L(r, phi, psi) := jp(r, phi) + Re dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g_r)
   $
   Then
   $
@@ -70,15 +70,15 @@
   $
   The first term is
   $
-    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi) \
+    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h]) \
   $
   The last two terms vanish since for any $h in c2pi$,
   $
-    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + dp(psi_r, (I/2 + dlp_r - i eta slp_r) h)_(c2pi, c2pi) \
-                               & = dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), h)_(c2pi, c2pi) = dp(0, h)_(c2pi, c2pi) = 0
+    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + Re dp(psi_r, (I/2 + dlp_r - i eta slp_r) h) \
+                               & = Re dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), h) = Re dp(0, h) = 0
   $
   $
-    D_psi L(r, phi_r, psi) [h] = dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g)_(c2pi, c2pi) = dp(h, 0)_(c2pi, c2pi) = 0
+    D_psi L(r, phi_r, psi) [h] = Re dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g) = Re dp(h, 0) = 0
   $
 ]
 #remark[
