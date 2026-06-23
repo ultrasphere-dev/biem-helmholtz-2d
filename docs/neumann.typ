@@ -71,6 +71,8 @@ For integration of singular functions, one would need to split the function into
   + Compute the sum.
 ]
 
+When performing (hyper)singular integrals, extract the coefficient of the singular part explicitly.
+
 = Layer potentials
 
 Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
