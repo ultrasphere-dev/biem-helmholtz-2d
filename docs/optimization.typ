@@ -35,6 +35,9 @@
 #definition[Frechet derivative][
   $X, Y$: $KK$-norm spaces, $forall O in cal(O)(X). forall F: O -> Y. D F in B(X, Y) "defined as" lim_(h -> 0) (norm(F(x + h) - F(x) - D F [h])_Y) / (norm(h)_X) = 0$
 ]
+#definition[Bilinear form][
+  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$.
+]
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
   Let $r in c2pi^k, g: c2pi^k -> c2pi^k$.
@@ -53,7 +56,7 @@
   $
   where $psi_r in c2pi$ satisfies the following adjoint equation:
   $
-    I/2 + dlp_r^* - i eta slp_r psi_r = - grad_phi jp (r, phi_r)
+    (I/2 + dlp_r - i eta slp_r)^* psi_r = - grad_phi jp (r, phi_r)
   $
 ]
 #proof[
