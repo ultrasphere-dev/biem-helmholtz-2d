@@ -25,6 +25,9 @@
     e^k C[[e]] & := {f(e^(i z)) | f(z) in z^k CC[[z]]}
   $
 ]
+#let y1 = $Y^((1))$
+#let y2 = $Y^((2))$
+#let y3 = $Y^((3))$
 #lemma[
   $
     Y_0 (z) & = 2/pi (log(z/2) + C) J_0 (z) + z^2 CC[[z]]
@@ -36,13 +39,19 @@
       & + (2 / pi) log(z/2) J_n (z) \
       & - ( (1/2 z)^n ) / pi
         sum_(k = 0)^oo (psi(k + 1) + psi(n + k + 1))
-        ((-(1/4) z^2)^k) / (k! (n + k)!)
+        ((-(1/4) z^2)^k) / (k! (n + k)!) \
+      & =: y1_n (z) + y2_n (z) + y3_n (z)
   $
 ]
 #lemma[
   $forall f in e C[[e]].$
   $
-    Y_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + underbrace(2/pi (log abs((f'(0))/2) + C) J_0 (f(z)), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
+    y1_0 (f(z)) & = 0 \
+    y2_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + (2)/pi (log abs((f'(0))/2)) J_0 (f(z)) + e^2 C[[e]] \
+    y3_0 (f(z)) & = 2/pi C + e^2 C[[e]] \
+  $
+  $
+    Y_0 (f(z)) & = (J_0 (f(z)))/pi log(4 sin^2(z/2)) + underbrace(2/pi (log abs((f'(0))/2) + C), = Y_0^((2,f)) (0)) + e^2 C[[e]] \
                & = Y_0^((1,f)) (z) log(4 sin^2(z/2)) + Y_0^((2,f)) (z)
   $
   $forall n in NN.$
