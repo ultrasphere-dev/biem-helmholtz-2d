@@ -27,12 +27,14 @@
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
-  Let $c2pi^k := C^k (RR \/ 2 pi)$, $r in c2pi^k$, $Gamma := {r(t) | t in [0, 2pi)}$.
+  Let $c2pi^k := C^k (RR \/ 2 pi)$, $r in c2pi^k$, $Gamma_r := {r(t) | t in [0, 2pi)}$.
   $
-    slp_r phi (x) := integral_Gamma G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
+    slp_r phi (x) := integral_Gamma_r G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma_r pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
 ]
-
+#definition[Frechet derivative][
+  $X, Y$: $KK$-norm spaces, $forall O in cal(O)(X). forall F: O -> Y. D F in B(X, Y) "defined as" lim_(h -> 0) (norm(F(x + h) - F(x) - D F [h])_Y) / (norm(h)_X) = 0$
+]
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
   Let $r in c2pi^k, g: c2pi^k -> c2pi^k$.
@@ -42,14 +44,16 @@
     (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
   $
 
-  Let $jr(r) := J(r, phi_r)$, then
+  Let $jr(r) := J(r, phi_r)$.
+  Assume there exists $grad_phi J(r, phi_r)$ such that $forall h in c2pi, D_phi jp (r, phi_r) [h] = dp(grad_phi J(r, phi_r), h)_(c2pi, c2pi)$.
+  Then $D_r jr(r) [h]$ is given by
 
   $
     D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi)
   $
   where $psi_r in c2pi$ satisfies the following adjoint equation:
   $
-    (I/2 + dlp_r - i eta slp_r)^* psi_r = - (D_phi jp) (r, phi_r)
+    I/2 + dlp_r^* - i eta slp_r psi_r = - grad_phi jp (r, phi_r)
   $
 ]
 #proof[
@@ -65,10 +69,10 @@
   $
     D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])_(c2pi, c2pi) \
   $
-  The last two terms vanish since
+  The last two terms vanish since for any $h in c2pi$,
   $
-    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + dp(psi_r, (I/2 + dlp_r - i eta slp_r) h) \
-                               & = dp((I/2 + dlp_r - i eta slp_r)^* psi_r + D_phi jp (r, phi), h)_(c2pi, c2pi) = dp(0, h)_(c2pi, c2pi) = 0
+    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + dp(psi_r, (I/2 + dlp_r - i eta slp_r) h)_(c2pi, c2pi) \
+                               & = dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), h)_(c2pi, c2pi) = dp(0, h)_(c2pi, c2pi) = 0
   $
   $
     D_psi L(r, phi_r, psi) [h] = dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g)_(c2pi, c2pi) = dp(h, 0)_(c2pi, c2pi) = 0
@@ -77,7 +81,7 @@
 #remark[
   Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
 
-  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $D_phi jp (r, phi) [h] =$
+  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp = (dlp_r - i eta slp_r)^* grad_u J$.
 ]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
