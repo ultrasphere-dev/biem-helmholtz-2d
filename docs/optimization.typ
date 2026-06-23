@@ -10,7 +10,7 @@
 #let remark = thmplain("remark", "Remark")
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
-#set page(margin: 1cm)
+#set page(margin: 4mm, paper: "jis-b5")
 #let hk1 = $H^((1))$
 #let slp = $cal(S)$
 #let dlp = $cal(D)$
@@ -24,19 +24,19 @@
 #let arginf = $op("arginf")$
 #let c2pi = $C_(2 pi)$
 #let jr = $hat(J)$
-== Boundary integral equation @colton_inverse_2019 @matsushima_2023
+= Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
-#let c2pi = $C_(2 pi)$
 #definition[
+  $c2pi^k := C^k(RR \/ 2 pi)$
   $
-    slp_r phi (x) := integral_Gamma G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1(k abs(x - y))
+    slp_r phi (x) := integral_Gamma G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
 ]
 
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
-  Let $r in C_(2 pi)^k, g: C_(2 pi)^k -> C_(2 pi)^k$.
-  Let $jp: C_(2 pi)^k times c2pi -> RR$. Let density $phi_r$ satisfy the boundary integral equation
+  Let $r in c2pi^k, g: c2pi^k -> c2pi^k$.
+  Let $jp: c2pi^k times c2pi -> RR$. Let density $phi_r$ satisfy the boundary integral equation
 
   $
     (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
@@ -53,7 +53,7 @@
   $
 ]
 #proof[
-  Let $L: C_(2 pi)^k times C_(2 pi) times C_(2 pi) -> RR$ defined by
+  Let $L: c2pi^k times c2pi times c2pi -> RR$ defined by
   $
     L(r, phi, psi) := jp(r, phi) + dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g_r)_(c2pi,c2pi)
   $
@@ -76,6 +76,8 @@
 ]
 #remark[
   Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
+
+  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $D_phi jp (r, phi) [h] =$
 ]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
