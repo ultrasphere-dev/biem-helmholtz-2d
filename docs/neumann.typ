@@ -92,12 +92,14 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
      slp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
      dlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
     dlpa_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
-     tlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) (grad_y (grad_x G(x, y)_i))_j phi(y) dd(y) \
+     tlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y)
   $
 ]
-#theorem[
+#theorem[@zhang_superconvergence_2010][
   $
-    grad_y G(x, y) = (i k)/4 (hk1_1 (k abs(x - y)))/(abs(x - y)) (x - y)
+                                      grad_y G(x, y) & = (i k)/4 (hk1_1 (k abs(x - y)))/(abs(x - y)) (x - y) \
+    sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) & = (i k)/4 hk1_0 (k abs(x - y)) (k n(x) dot (x - y) n(y) dot (x - y)) / (abs(x - y)^2) \
+                                                     & + (i k)/4 hk1_1 (k abs(x - y)) ((n(x) dot n(y))/(abs(x - y)) - 2 (n(x) dot (x - y) n(y) dot (x - y))/(abs(x - y)^3))
   $
 ]
 #let ht1 = $cal(H)^((1))$
@@ -213,3 +215,5 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
                  & ->_(tau -> t) ((h'_2(t) x''_1(t) - h'_1(t) x''_2(t)) + (x'_2(t) h''_1(t) - x'_1(t) h''_2(t))) / (2 abs(x'(t))^2)
   $
 ]
+
+#bibliography("neumann.bib")
