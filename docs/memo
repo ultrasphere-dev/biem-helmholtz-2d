@@ -43,3 +43,6 @@ Let $x_1, x_2 in C[[e]]$.
 #proof[
   Let $L := integral_0^(2 pi) log(4 sin^2((t - tau)/2)) phi(t) dd(t)$, then $norm(E phi)_infinity <= (norm(A)_infinity + L norm(B)_infinity) norm(phi)_(C([0, 2 pi))) <= L norm(K)_csing norm(phi)_infinity$
 ]
+
+
+Let $r in C_(2 pi)^k$ locally minimizes $jp(r, phi_r) (:=  J(r, (slp_r - i eta dlp_r) phi))$ where $phi in c2pi$ satisfies the boundary integral equation @colton_inverse_2019
