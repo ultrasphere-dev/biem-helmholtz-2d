@@ -27,7 +27,7 @@
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
-  $c2pi^k := C^k(RR \/ 2 pi)$
+  Let $c2pi^k := C^k (RR \/ 2 pi)$, $r in c2pi^k$, $Gamma := {r(t) | t in [0, 2pi)}$.
   $
     slp_r phi (x) := integral_Gamma G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
