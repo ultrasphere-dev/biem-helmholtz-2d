@@ -11,13 +11,12 @@ from ._is_close import is_close
 
 
 def A1(
+    *,
     t: Array,
     tau: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
-    /,
-    *,
     eps: float = 0.0,
 ) -> Array:
     r"""
@@ -73,13 +72,12 @@ def A1(
 
 
 def slp_kernel_split(
+    *,
     t: Array,
     tau: Array,
     k: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
-    /,
-    *,
     eps: float = 0.0,
 ) -> tuple[Array, Array]:
     r"""
@@ -131,14 +129,13 @@ def slp_kernel_split(
 
 
 def dlp_kernel_split(
+    *,
     t: Array,
     tau: Array,
     k: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
-    /,
-    *,
     eps: float = 0.0,
 ) -> tuple[Array, Array]:
     r"""
@@ -186,11 +183,11 @@ def dlp_kernel_split(
         t_singularity=t,
     )
     a1 = A1(
-        t,
-        tau,
-        x,
-        dx,
-        ddx,
+        t=t,
+        tau=tau,
+        x=x,
+        dx=dx,
+        ddx=ddx,
         eps=eps,
     )
     return (1j / 4) * h1 * a1, (1j / 4) * h2 * a1

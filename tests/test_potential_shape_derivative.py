@@ -58,8 +58,8 @@ def test_slp_shape_derivative_numerical(
     shape_p = make_shape(epsilon)
     shape_m = make_shape(-epsilon)
 
-    p_log, p_rem = _potential.slp_kernel_split(t, tau, k, shape_p.x, shape_p.dx)
-    m_log, m_rem = _potential.slp_kernel_split(t, tau, k, shape_m.x, shape_m.dx)
+    p_log, p_rem = _potential.slp_kernel_split(t=t, tau=tau, k=k, x=shape_p.x, dx=shape_p.dx)
+    m_log, m_rem = _potential.slp_kernel_split(t=t, tau=tau, k=k, x=shape_m.x, dx=shape_m.dx)
 
     num_log = (p_log - m_log) / (2 * epsilon)
     num_rem = (p_rem - m_rem) / (2 * epsilon)
@@ -116,8 +116,12 @@ def test_dlp_shape_derivative_numerical(
     shape_p = make_shape(epsilon)
     shape_m = make_shape(-epsilon)
 
-    p_log, p_rem = _potential.dlp_kernel_split(t, tau, k, shape_p.x, shape_p.dx, shape_p.ddx)
-    m_log, m_rem = _potential.dlp_kernel_split(t, tau, k, shape_m.x, shape_m.dx, shape_m.ddx)
+    p_log, p_rem = _potential.dlp_kernel_split(
+        t=t, tau=tau, k=k, x=shape_p.x, dx=shape_p.dx, ddx=shape_p.ddx
+    )
+    m_log, m_rem = _potential.dlp_kernel_split(
+        t=t, tau=tau, k=k, x=shape_m.x, dx=shape_m.dx, ddx=shape_m.ddx
+    )
 
     num_log = (p_log - m_log) / (2 * epsilon)
     num_rem = (p_rem - m_rem) / (2 * epsilon)

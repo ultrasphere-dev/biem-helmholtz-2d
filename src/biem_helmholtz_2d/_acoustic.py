@@ -51,15 +51,19 @@ def scattering_dirichlet(
     device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
-        slp_log, _ = slp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx)
-        dlp_log, _ = dlp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        slp_log, _ = slp_kernel_split(t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx)
+        dlp_log, _ = dlp_kernel_split(
+            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
+        )
         res = alpha * dlp_log - 1j * eta * slp_log
         res = res[..., None, None]
         return res
 
     def k_cont(t: Array, tau: Array) -> Array:
-        _, slp_cont = slp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx)
-        _, dlp_cont = dlp_kernel_split(t, tau, k[..., None, None], shape.x, shape.dx, shape.ddx)
+        _, slp_cont = slp_kernel_split(t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx)
+        _, dlp_cont = dlp_kernel_split(
+            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
+        )
         res = alpha * dlp_cont - 1j * eta * slp_cont
         res = res[..., None, None]
         return res
