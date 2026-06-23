@@ -49,13 +49,13 @@
   $
 
   Let $jr(r) := J(r, phi_r)$.
-  Assume there exists $grad_phi J(r, phi_r)$ such that $forall h in c2pi (CC), D_phi jp (r, phi_r) [h] = Re dp(grad_phi J(r, phi_r), h)$.
+  Assume there exists $grad_phi J(r, phi_r)$ such that for any $h in c2pi (CC), D_phi jp (r, phi_r) [h] = dp(grad_phi J(r, phi_r), h)$.
   Then $D_r jr(r) [h]$ is given by
 
   $
     D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])
   $
-  where $psi_r in c2pi$ satisfies the following adjoint equation:
+  where $psi_r in c2pi (CC)$ satisfies the following adjoint equation:
   $
     (I/2 + dlp_r - i eta slp_r)^* psi_r = - grad_phi jp (r, phi_r)
   $
