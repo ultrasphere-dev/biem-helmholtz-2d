@@ -7,6 +7,7 @@
 #let definition = thmplain("definition", "Definition")
 #let theorem = thmplain("theorem", "Theorem")
 #let algorithm = thmplain("algorithm", "Algorithm")
+#let remark = thmplain("remark", "Remark")
 #let lemma = thmplain("lemma", "Lemma")
 #let proof = thmproof("proof", "Proof")
 #set page(margin: 1cm)
@@ -35,10 +36,10 @@
 #theorem[Adjoint method @matsushima_2023][
   Let $k >= 2$.
   Let $r in C_(2 pi)^k, g: C_(2 pi)^k -> C_(2 pi)^k$.
-  Let $jp: C_(2 pi)^k times c2pi -> RR$. Let $phi_r$ satisfy the boundary integral equation
+  Let $jp: C_(2 pi)^k times c2pi -> RR$. Let density $phi_r$ satisfy the boundary integral equation
 
   $
-    (I/2 + dlp_r - i eta slp_r) phi_r = g_r (:= - uin compose r) quad x in [0, 2pi)
+    (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
   $
 
   Let $jr(r) := J(r, phi_r)$, then
@@ -72,6 +73,9 @@
   $
     D_psi L(r, phi_r, psi) [h] = dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g)_(c2pi, c2pi) = dp(h, 0)_(c2pi, c2pi) = 0
   $
+]
+#remark[
+  Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
 ]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
