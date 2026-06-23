@@ -24,6 +24,7 @@ def perturbation_shape(t: sympy.Symbol) -> tuple[sympy.Expr, sympy.Expr]:
 ShapeFunc = Callable[[sympy.Symbol], tuple[sympy.Expr, sympy.Expr]]
 
 
+@pytest.mark.parametrize("t_equals_tau", [True, False])
 @pytest.mark.parametrize("k", [1.0, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 @pytest.mark.parametrize("func_h", [perturbation_shape])
@@ -36,13 +37,14 @@ def test_slp_shape_derivative_numerical(
     k: float,
     device: Any,
     dtype: Any,
+    t_equals_tau: bool,
 ) -> None:
     t_sym = sympy.Symbol("t")
     shape_x = SympyShape(*func_x(t_sym), t_sym)
     shape_h = SympyShape(*func_h(t_sym), t_sym)
 
     t = xp.asarray(0.0, device=device, dtype=dtype)
-    tau = xp.asarray(0.1, device=device, dtype=dtype)
+    tau = xp.asarray(0.0 if t_equals_tau else 1.0, device=device, dtype=dtype)
 
     da_log, da_rem = _potential_shape_derivative.slp_shape_derivative_split(
         t=t,
@@ -80,6 +82,7 @@ def test_slp_shape_derivative_numerical(
     )
 
 
+@pytest.mark.parametrize("t_equals_tau", [True, False])
 @pytest.mark.parametrize("k", [1.0, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 @pytest.mark.parametrize("func_h", [perturbation_shape])
@@ -92,13 +95,14 @@ def test_dlp_shape_derivative_numerical(
     k: float,
     device: Any,
     dtype: Any,
+    t_equals_tau: bool,
 ) -> None:
     t_sym = sympy.Symbol("t")
     shape_x = SympyShape(*func_x(t_sym), t_sym)
     shape_h = SympyShape(*func_h(t_sym), t_sym)
 
     t = xp.asarray(0.0, device=device, dtype=dtype)
-    tau = xp.asarray(0.1, device=device, dtype=dtype)
+    tau = xp.asarray(0.0 if t_equals_tau else 1.0, device=device, dtype=dtype)
 
     da_log, da_rem = _potential_shape_derivative.dlp_shape_derivative_split(
         t=t,
