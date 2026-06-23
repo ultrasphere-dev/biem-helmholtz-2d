@@ -44,7 +44,7 @@
   Let $jr(r) := J(r, phi_r)$, then
 
   $
-    D_r jr(r) [h] & = D jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g[h])_(c2pi, c2pi)
+    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g[h])_(c2pi, c2pi)
   $
   where $psi_r in c2pi$ satisfies the following adjoint equation:
   $
@@ -58,15 +58,19 @@
   $
   Then
   $
-    D_r jr(r) [h] =
+    D_r jr(r) [h] & = D_r L(r, phi_r, psi_r) [h] + D_phi L(r, phi_r, psi_r) [D_r phi_r [h]] + D_psi L(r, phi_r, psi_r) [D_r psi_r [h]]
   $
-  Frechet derivative of $L$ with respect to $phi$ is
+  The first term is
   $
-    D_phi L(r, phi, psi_r) [h] //&= D_phi jp (r, phi) [h] + dp(psi_r, (I/2 + dlp_r - i eta slp_r) h) \
-      & = dp(underbrace((I/2 + dlp_r - i eta slp_r)^* psi_r + D_phi jp (r, phi), "adjoint equation"), h)_(c2pi, c2pi) = 0
+    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g[h])_(c2pi, c2pi) \
+  $
+  The last two terms vanish since
+  $
+    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + dp(psi_r, (I/2 + dlp_r - i eta slp_r) h) \
+                               & = dp((I/2 + dlp_r - i eta slp_r)^* psi_r + D_phi jp (r, phi), h)_(c2pi, c2pi) = dp(0, h)_(c2pi, c2pi) = 0
   $
   $
-    & = D_r L(r, phi, psi) [h] \
+    D_psi L(r, phi_r, psi) [h] = dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g)_(c2pi, c2pi) = dp(h, 0)_(c2pi, c2pi) = 0
   $
 ]
 
