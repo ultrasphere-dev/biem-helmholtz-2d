@@ -143,7 +143,7 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $norm(hdr - hdk)_(h2pi^k) <=$
 ]
 
-#algorithm[
+#theorem[
   The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the steepest descent direction $hdk$ can be computed by
 
   $
