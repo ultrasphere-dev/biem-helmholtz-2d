@@ -104,13 +104,13 @@
   $
     ip(hdj(r), h)_H = D J (r) [h] quad forall h in H
   $
-  The reguralized steepest descent direction $hdh$ is defined as
+  The regularized steepest descent direction $hdh$ is defined as
   $
     hdh := - hdj(r)
   $
 ]
 #theorem[
-  The reguralized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
+  The regularized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
 ]
 #proof[
   $
