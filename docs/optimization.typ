@@ -39,7 +39,7 @@
   A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
 ]
 #definition[Bilinear form][
-  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$.
+  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$. $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
 ]
 #theorem[Adjoint method @matsushima_2023][
   Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$.
