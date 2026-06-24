@@ -42,7 +42,7 @@
   $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$.
 ]
 #theorem[Adjoint method @matsushima_2023][
-  Let $dp(dot, dot)$ any bilinear form on $c2pi(CC), c2pi(CC)$.
+  Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$.
   Let $k >= 2$.
   Let $r in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
   Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$. Let density $phi_r$ satisfy the boundary integral equation
@@ -52,7 +52,7 @@
   $
 
   Let $jr(r) := J(r, phi_r)$.
-  Assume there exists $grad_phi J(r, phi_r)$ such that for any $h in c2pi (CC), D_phi jp (r, phi_r) [h] = dp(grad_phi J(r, phi_r), h)$.
+  Assume there exists $grad_phi J(r, phi_r)$ such that for any $h in c2pi (CC), D_phi jp (r, phi_r) [h] = Re dp(grad_phi J(r, phi_r), h)$.
   Then $D_r jr(r) [h]$ is given by
 
   $
@@ -130,6 +130,6 @@
   $(h2pi^k, ip(dot, dot)_h2pi^k)$ is a Hilbert space.
 ]
 
-$h2pi^3 subset.double c2pi^2$ may be used for regularization.
+$h2pi^3 subset.neq c2pi^2$ may be used for regularization.
 
 #bibliography("main.bib")
