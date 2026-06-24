@@ -136,17 +136,7 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 #let hdk = $h^((h2pi^k))$
 #definition[
   Let $R_N := {a_0 / 2 + sum_(m = 1)^(N - 1) (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR} subset.neq h2pi^k (RR)$.
-
-  Since $R_N$ is a Hilbert space, there exists a Riesz representation $grad^((R_N)) J: c2pi^2 (RR^2) -> R_N$ such that for any $r in c2pi^2 (RR^2), h in R_N$,
-
-  $
-    ip(grad^((R_N)) J (r), h)_(h2pi^k) = D J (r) [h] quad forall h in R_N
-  $
-
-  The discrete regularized steepest descent direction $hdr$ is defined as
-  $
-    hdr := - (grad^((R_N)) J (r))/ norm(grad^((R_N)) J (r))_(h2pi^3)
-  $
+  $R_N$ is continuously embedded in $h2pi^k (RR)$.
 ]
 
 #theorem[Error estimate][
