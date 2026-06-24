@@ -106,16 +106,16 @@
   $
   The reguralized steepest descent direction $hdh$ is defined as
   $
-    hdh := - hdj(x)
+    hdh := - hdj(r)
   $
 ]
 #theorem[
-  The reguralized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
+  The reguralized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
 ]
 #proof[
   $
-    D J (x) [hdh] & = D J (x) [-hdj(x)] = -ip(hdj(x), hdj(x))_H \
-                  & = inf_(norm(h)_H = 1) ip(hdj(x), h)_H = inf_(norm(h)_H = 1) D J (x) [h]
+    D J (r) [hdh] & = D J (r) [-hdj(r)] = -ip(hdj(r), hdj(r))_H \
+                  & = inf_(norm(h)_H = 1) ip(hdj(r), h)_H = inf_(norm(h)_H = 1) D J (r) [h]
   $
 
 ]
