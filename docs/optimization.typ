@@ -109,15 +109,15 @@
   $
   The regularized steepest descent direction $hdh$ is defined as
   $
-    hdh := - hdj(r)
+    hdh := - hdj(r)/norm(hdj(r))_H
   $
 ]
 #theorem[
-  The regularized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
+  The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
 ]
 #proof[
   $
-    D J (r) [hdh] & = D J (r) [-hdj(r)] = -ip(hdj(r), hdj(r))_H \
+    D J (r) [hdh] & = D J (r) [-hdj(r)/norm(hdj(r))_H] = -ip(hdj(r), hdj(r) / norm(hdj(r))_H)_H \
                   & = inf_(norm(h)_H = 1) ip(hdj(r), h)_H = inf_(norm(h)_H = 1) D J (r) [h]
   $
 
