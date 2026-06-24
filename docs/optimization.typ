@@ -101,7 +101,7 @@
 #definition[Hilbertian Reguralization][
   Let $X$ be a norm space.
   Let $J: X -> RR$ be Frechet differentiable at $x in X$.
-  Let $H subset.double X$ be a Hilbert space continuously embedded in $X$.
+  Let $H subset.eq X$ be a Hilbert space continuously embedded in $X$.
   Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $r in X, h in H$,
 
   $
@@ -132,5 +132,37 @@
 ]
 
 $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
+#let hdr = $h^((R_N))$
+#let hdk = $h^((h2pi^k))$
+#definition[
+  Let $R_N := {a_0 / 2 + sum_(m = 1)^(N - 1) (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR} subset.neq h2pi^k (RR)$.
+
+  Since $R_N$ is a Hilbert space, there exists a Riesz representation $grad^((R_N)) J: c2pi^2 (RR^2) -> R_N$ such that for any $r in c2pi^2 (RR^2), h in R_N$,
+
+  $
+    ip(grad^((R_N)) J (r), h)_(h2pi^k) = D J (r) [h] quad forall h in R_N
+  $
+
+  The discrete regularized steepest descent direction $hdr$ is defined as
+  $
+    hdr := - (grad^((R_N)) J (r))/ norm(grad^((R_N)) J (r))_(h2pi^3)
+  $
+]
+
+#theorem[Error estimate][
+  $norm(hdr - hdk)_(h2pi^k) <=$
+]
+
+#algorithm[
+  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the steepest descent direction $hdk$ can be computed by
+
+  $
+    c'_m := (D_r J (r) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_r J (r) [sin(m t)]) / (1 + alpha m^2)^k
+  $
+
+  $
+    S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
+  $
+]
 
 #bibliography("main.bib")
