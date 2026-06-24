@@ -125,11 +125,12 @@
 #let h2pi = $H_(2 pi)$
 #definition[
   Let $alpha > 0$.
-  Let $ip(phi, psi)_h2pi^k := sum_(m in ZZ) (1 + alpha m^2)^k phi_m overline(psi_m)$, $phi_m := 1/(2 pi) integral_0^(2 pi) phi(t) e^(-i m t) dd(t)$, $psi_m := 1/(2 pi) integral_0^(2 pi) psi(t) e^(-i m t) dd(t)$.
-  Let $h2pi^k := {sum_(m in ZZ) c_m e^(i m t) | sum_(m in ZZ) (1 + alpha m^2)^k |c_m|^2 < infinity}$.
-  $(h2pi^k, ip(dot, dot)_h2pi^k)$ is a Hilbert space.
+  Let $a_m (phi) := 1/pi integral_0^(2 pi) phi(t) cos(m t) dd(t)$, $b_m (phi) := 1/pi integral_0^(2 pi) phi(t) sin(m t) dd(t)$.
+  Let $ip(phi, psi)_h2pi^k := 1/2 a_0 (phi) a_0 (psi) + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m (phi) a_m (psi) + b_m (phi) b_m (psi))$.
+  Let $h2pi^k (RR) := {a_0 / 2 + sum_(m = 1)^infinity (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR, a_0^2 + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m^2 + b_m^2) < infinity}$.
+  $(h2pi^k (RR), ip(dot, dot)_h2pi^k)$ is a Hilbert space.
 ]
 
-$h2pi^3 subset.neq c2pi^2$ may be used for regularization.
+$h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 
 #bibliography("main.bib")
