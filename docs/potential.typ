@@ -13,11 +13,15 @@
 #let hk1 = $H^((1))$
 = Layer potentials
 
-#theorem[Weakly singular kernels #cite(<kress_linear_2014>, supplement: "Theorem 2.30")][
+#theorem[Weakly singular kernels ][
   Let $m in NN, k in NN_0$.
   Let $D subset RR^m$ bounded open domain of $C^(k + 1)$ boundary $Gamma$.
   Let $K: Gamma^2 -> KK$ weakly singular, i.e. continuous on $T := Gamma^2 backslash {(x, x) | x in Gamma}$ and $exists M > 0. exists alpha in (0, m - 1]. forall x, y in T. abs(K(x, y)) <= M abs(x - y)^(alpha - m + 1)$.
   Then $(A phi) (x) := integral_Gamma K(x, y) phi(y) dd(s(y))$ is a compact linear operator on $C^k (Gamma)$.
+]
+#proof[
+  The case $k = 0$ follows #cite(<kress_linear_2014>, supplement: "Theorem 2.29, 2.30").
+  For $k >= 1$ this is wrong.
 ]
 
 Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
