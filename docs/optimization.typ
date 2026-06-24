@@ -24,6 +24,8 @@
 #let arginf = $op("arginf")$
 #let c2pi = $C_(2 pi)$
 #let jr = $hat(J)$
+#let hdj = $grad^((H)) J$
+#let hdh = $h^((H))$
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
@@ -76,13 +78,14 @@
   $
     D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h]) \
   $
-  The last two terms vanish since for any $h in c2pi$,
+  The last two terms vanish since for any $v in c2pi$,
   $
-    D_phi L(r, phi, psi_r) [h] & = D_phi jp (r, phi) [h] + Re dp(psi_r, (I/2 + dlp_r - i eta slp_r) h) \
-                               & = Re dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), h) = Re dp(0, h) = 0
+    D_phi L(r, phi, psi_r) [v] & = D_phi jp (r, phi) [v] + Re dp(psi_r, (I/2 + dlp_r - i eta slp_r) v) \
+                               & = Re dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), v) = Re dp(0, v) = 0
   $
+  and for any $w in c2pi$,
   $
-    D_psi L(r, phi_r, psi) [h] = Re dp(h, (I/2 + dlp_r - i eta slp_r) phi_r - g) = Re dp(h, 0) = 0
+    D_psi L(r, phi_r, psi) [w] = Re dp(w, (I/2 + dlp_r - i eta slp_r) phi_r - g) = Re dp(w, 0) = 0
   $
 ]
 #remark[
@@ -90,14 +93,17 @@
 
   In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp (r, phi) = (dlp_r - i eta slp_r)^* grad_u J (r, (dlp_r - i eta slp_r) phi)$, since $dp(grad_phi jp, h) = dp(grad_u J, (dlp_r - i eta slp_r) h) = dp((dlp_r - i eta slp_r)^* grad_u J, h)$
 ]
+
+#remark[
+  In the proof above, the step $D_phi L(r, phi_r, psi_r)[D_r phi_r[h]] = 0$ relies on the fact that the shape-induced variation $D_r phi_r[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
+]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
   + Compute $phi_r$ by solving the boundary integral equation
   + Compute $D_phi jp$, then compute $psi_r$ by solving the adjoint equation
-  + Compute $D_r jr(r) [h]$
+  + Compute the Riesz representative $hdj(r)$ of $D_r jr(r)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
+  + Update the shape: $r_(n + 1) = r_n - lambda hdh$ where $hdh := - hdj(r) / norm(hdj(r))_H$
 ]
-#let hdj = $grad^((H)) J$
-#let hdh = $h^((H))$
 #definition[Hilbertian Regularization][
   Let $X$ be a norm space.
   Let $J: X -> RR$ be Frechet differentiable at $x in X$.
@@ -116,11 +122,15 @@
   The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
 ]
 #proof[
+  By the Cauchy–Schwarz inequality,
   $
-    D J (r) [hdh] & = D J (r) [-hdj(r)/norm(hdj(r))_H] = -ip(hdj(r), hdj(r) / norm(hdj(r))_H)_H \
-                  & = inf_(norm(h)_H = 1) ip(hdj(r), h)_H = inf_(norm(h)_H = 1) D J (r) [h]
+    D J (r) [h] = ip(hdj(r), h)_H >= -norm(hdj(r))_H norm(h)_H = -norm(hdj(r))_H
   $
-
+  for any $norm(h)_H = 1$, with equality if and only if $h = -hdj(r) / norm(hdj(r))_H$.
+  Hence
+  $
+    D J (r) [hdh] = D J (r) [-hdj(r)/norm(hdj(r))_H] = -norm(hdj(r))_H = inf_(norm(h)_H = 1) D J (r) [h]
+  $
 ]
 #let h2pi = $H_(2 pi)$
 #definition[
@@ -139,12 +149,8 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $R_N$ is continuously embedded in $h2pi^k (RR)$.
 ]
 
-#theorem[Error estimate][
-  $norm(hdr - hdk)_(h2pi^k) <=$
-]
-
 #theorem[
-  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the steepest descent direction $hdk$ can be computed by
+  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ can be computed by
 
   $
     c'_m := (D_r J (r) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_r J (r) [sin(m t)]) / (1 + alpha m^2)^k
@@ -153,6 +159,25 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
     S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
   $
+  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(r)$.
+]
+
+#theorem[Error estimate][
+  Let $g := hdj(r)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_N$ its truncation in $R_N$. If $g in h2pi^(k + s)(RR)$ for some $s > 0$, then
+  $
+    norm(g - g_N)_(h2pi^k) <= (1 + alpha N^2)^(-s/2) norm(g)_(h2pi^(k + s))
+  $
+]
+#proof[
+  Let $c'_m, d'_m$ be the Fourier coefficients of $g$ as defined above.
+  The squared norm of the truncation error is the tail of the series:
+  $
+    norm(g - g_N)_(h2pi^k)^2 & = sum_(m = N)^infinity (1 + alpha m^2)^k ((c'_m)^2 + (d'_m)^2) \
+                             & = sum_(m = N)^infinity (1 + alpha m^2)^(-s) (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
+                             & <= (1 + alpha N^2)^(-s) sum_(m = N)^infinity (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
+                             & <= (1 + alpha N^2)^(-s) norm(g)_(h2pi^(k + s))^2
+  $
+  Taking square roots yields the claimed bound.
 ]
 
 #bibliography("main.bib")
