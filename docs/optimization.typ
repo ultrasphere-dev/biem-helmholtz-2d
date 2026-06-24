@@ -85,7 +85,7 @@
 #remark[
   Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
 
-  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp (r, phi) = (dlp_r - i eta slp_r)^* grad J(r, (dlp_r - i eta slp_r) phi)$, since $dp(grad_u J, (dlp_r - i eta slp_r) h) = dp((dlp_r - i eta slp_r)^* grad_u J, h)$
+  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp (r, phi) = (dlp_r - i eta slp_r)^* grad J_phi (r, (dlp_r - i eta slp_r) phi)$, since $dp(grad_u J, (dlp_r - i eta slp_r) h) = dp((dlp_r - i eta slp_r)^* grad_u J, h)$
 ]
 #algorithm[
   Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
@@ -96,18 +96,23 @@
 #let hdj = $grad^((H)) J$
 #let hdh = $h^((H))$
 #definition[Hilbertian Reguralization][
+  Let $X$ be a norm space.
+  Let $J: X -> RR$ be Frechet differentiable at $x in X$.
   Let $H subset.double X$ be a Hilbert space continuously embedded in $X$.
+  Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $r in X, h in H$,
 
   $
-    ip(hdj(x), h)_H = D J (x) [h] quad forall h in H
+    ip(hdj(r), h)_H = D J (r) [h] quad forall h in H
   $
-
+  The reguralized steepest descent direction $hdh$ is defined as
   $
     hdh := - hdj(x)
   $
-
-  Then
-
+]
+#theorem[
+  The reguralized steepest descent direction $hdh$ is the steepest descent direction in $H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
+]
+#proof[
   $
     D J (x) [hdh] & = D J (x) [-hdj(x)] = -ip(hdj(x), hdj(x))_H \
                   & = inf_(norm(h)_H = 1) ip(hdj(x), h)_H = inf_(norm(h)_H = 1) D J (x) [h]
