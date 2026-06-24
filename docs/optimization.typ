@@ -98,7 +98,7 @@
 ]
 #let hdj = $grad^((H)) J$
 #let hdh = $h^((H))$
-#definition[Hilbertian Reguralization][
+#definition[Hilbertian Regularization][
   Let $X$ be a norm space.
   Let $J: X -> RR$ be Frechet differentiable at $x in X$.
   Let $H subset.eq X$ be a Hilbert space continuously embedded in $X$.
