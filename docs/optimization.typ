@@ -122,8 +122,8 @@
 #let h2pi = $H_(2 pi)$
 #definition[
   Let $alpha > 0$.
-  Let $ip(phi, psi)_h2pi^k := sum_(m in NN) (1 + alpha m^2)^k phi_m overline(psi_m)$, $phi_m := 1/(2 pi) integral_0^(2 pi) phi(t) e^(-i m t) dd(t)$, $psi_m := 1/(2 pi) integral_0^(2 pi) psi(t) e^(-i m t) dd(t)$.
-  Let $h2pi^k := {sum_(m in NN) c_m e^(i m t) | sum_(m in NN) (1 + alpha m^2)^k |c_m|^2 < infinity}$.
+  Let $ip(phi, psi)_h2pi^k := sum_(m in ZZ) (1 + alpha m^2)^k phi_m overline(psi_m)$, $phi_m := 1/(2 pi) integral_0^(2 pi) phi(t) e^(-i m t) dd(t)$, $psi_m := 1/(2 pi) integral_0^(2 pi) psi(t) e^(-i m t) dd(t)$.
+  Let $h2pi^k := {sum_(m in ZZ) c_m e^(i m t) | sum_(m in ZZ) (1 + alpha m^2)^k |c_m|^2 < infinity}$.
   $(h2pi^k, ip(dot, dot)_h2pi^k)$ is a Hilbert space.
 ]
 
