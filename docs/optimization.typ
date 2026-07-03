@@ -54,7 +54,7 @@
   $
 
   Let $jr(r) := J(r, phi_r)$.
-  Assume there exists $grad_phi J(r, phi_r)$ such that for any $h in c2pi (CC), D_phi jp (r, phi_r) [h] = Re dp(grad_phi jp (r, phi_r), h)$.
+  Assume there exists $grad_phi J(r, phi_r) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi jp (r, phi_r) [h] = dp(grad_phi jp (r, phi_r), h)$.
   Then $D_r jr(r) [h]$ is given by
 
   $
