@@ -47,7 +47,7 @@
   Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$.
   Let $k >= 2$.
   Let $r in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
-  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$. Let density $phi_r$ satisfy the boundary integral equation
+  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$. Let density $phi_r in c2pi^k$ satisfy the boundary integral equation
 
   $
     (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
