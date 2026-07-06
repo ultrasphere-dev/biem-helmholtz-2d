@@ -180,34 +180,39 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   Taking square roots yields the claimed bound.
 ]
 
-#remark[Riesz representation of the Frechet derivative with respect to $phi$ for point evaluation][
-  Consider the objective
+#theorem[Riesz representation for point evaluation][
+  Let $x_0 in RR^2 without overline(Omega_r)$). Let $jp(r, phi) := abs(u(x))^2, u(x) := ((alpha dlp_r - i eta slp_r) phi) (x_0)$.
+  Then, the Riesz representation of the Frechet derivative of $jp$ with respect to $phi$ under the bilinear form
   $
-    jp(r, phi) := |(alpha dlp_r - i eta slp_r) phi (x_0)|^2,
+    dp(f, g) := integral_0^(2 pi) f(t) g(t) dd(t),
   $
-  where $x_0$ is a fixed exterior point.
-  Let the bilinear form be
+  is given by
   $
-    dp(f, g) := integral_0^(2 pi) f(t) g(t) dd(t).
+    grad_phi jp(r, phi)(tau) =
+    2 Re(overline(u(x_0)) (alpha D(x_0, tau) - i eta S(x_0, tau))),
   $
+  where $D(x_0, tau), S(x_0, tau)$ are kernels of the double- and single-layer potentials.
+]
+#proof[
+  Let $K(x_0, tau) := alpha D(x_0, tau) - i eta S(x_0, tau)$.
   The Frechet derivative of $jp$ with respect to $phi$ is
   $
     D_phi jp(r, phi)[h] =
-    2 Re(overline((alpha dlp_r - i eta slp_r) phi (x_0)) (alpha dlp_r - i eta slp_r) h (x_0)).
+    2 Re(overline(u(x_0)) (alpha dlp_r - i eta slp_r) h (x_0)).
   $
-  Writing the combined evaluation kernel
+  Expanding the evaluation operators gives
   $
-    K(x_0, tau) :=
-    alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)
+    (alpha dlp_r - i eta slp_r) h (x_0)
+    = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau).
   $
-  where $tilde(D), tilde(S)$ are the parametrised evaluation kernels of
-  the double- and single-layer potentials at $x_0$, the derivative becomes
+  Therefore
   $
-    D_phi jp(r, phi)[h] =
-    integral_0^(2 pi)
+    D_phi jp(r, phi)[h]
+    = integral_0^(2 pi)
     2 Re(overline(u(x_0)) K(x_0, tau)) h(tau) dd(tau).
   $
-  Hence the Riesz representation is
+  By definition of the Riesz representation,
+  $D_phi jp(r, phi)[h] = dp(grad_phi jp, h)$, hence
   $
     grad_phi jp(r, phi)(tau) =
     2 Re(overline(u(x_0)) K(x_0, tau)).
