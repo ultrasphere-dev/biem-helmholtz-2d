@@ -41,7 +41,7 @@
   A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
 ]
 #definition[Bilinear form][
-  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). forall x in X. forall y in Y. dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$. $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
+  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$. $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
 ]
 #theorem[Adjoint method @matsushima_2023][
   Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
@@ -102,7 +102,7 @@
   + Compute $phi_r$ by solving the boundary integral equation
   + Compute $D_phi jp$, then compute $psi_r$ by solving the adjoint equation
   + Compute the Riesz representative $hdj(r)$ of $D_r jr(r)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
-  + Update the shape: $r_(n + 1) = r_n - lambda hdh$ where $hdh := - hdj(r) / norm(hdj(r))_H$
+  + Update the shape: $r_(n + 1) = r_n + lambda hdh$ where $hdh := - hdj(r) / norm(hdj(r))_H$
 ]
 #definition[Hilbertian Regularization][
   Let $X$ be a norm space.
@@ -178,6 +178,40 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
                              & <= (1 + alpha N^2)^(-s) norm(g)_(h2pi^(k + s))^2
   $
   Taking square roots yields the claimed bound.
+]
+
+#remark[Riesz representation of the Frechet derivative with respect to $phi$ for point evaluation][
+  Consider the objective
+  $
+    jp(r, phi) := |(alpha dlp_r - i eta slp_r) phi (x_0)|^2,
+  $
+  where $x_0$ is a fixed exterior point.
+  Let the bilinear form be
+  $
+    dp(f, g) := integral_0^(2 pi) f(t) g(t) dd(t).
+  $
+  The Frechet derivative of $jp$ with respect to $phi$ is
+  $
+    D_phi jp(r, phi)[h] =
+    2 Re(overline((alpha dlp_r - i eta slp_r) phi (x_0)) (alpha dlp_r - i eta slp_r) h (x_0)).
+  $
+  Writing the combined evaluation kernel
+  $
+    K(x_0, tau) :=
+    alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)
+  $
+  where $tilde(D), tilde(S)$ are the parametrised evaluation kernels of
+  the double- and single-layer potentials at $x_0$, the derivative becomes
+  $
+    D_phi jp(r, phi)[h] =
+    integral_0^(2 pi)
+    2 Re(overline(u(x_0)) K(x_0, tau)) h(tau) dd(tau).
+  $
+  Hence the Riesz representation is
+  $
+    grad_phi jp(r, phi)(tau) =
+    2 Re(overline(u(x_0)) K(x_0, tau)).
+  $
 ]
 
 #bibliography("main.bib")

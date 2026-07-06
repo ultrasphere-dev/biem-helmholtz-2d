@@ -173,6 +173,7 @@ def test_circle_sol_matches_theorem(
         def k_cont(t: Array, tau: Array) -> Array:
             _, analytic = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0.0)
             return analytic[..., None, None]
+
     else:
 
         def a(t: Array) -> Array:

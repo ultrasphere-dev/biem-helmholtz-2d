@@ -45,7 +45,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
             point_to_minimize,
             k=k,
             shape=shape,
-            n=n + 20,
+            n=n,
             alpha=alpha_,
             eta=eta,
         )
@@ -117,12 +117,10 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
         grad /= (
             1
             + alpha
-            * xp.concat(
-                [
-                    xp.arange(n, dtype=dtype, device=device),
-                    xp.arange(1, n, dtype=dtype, device=device),
-                ]
-            )
+            * xp.concat([
+                xp.arange(n, dtype=dtype, device=device),
+                xp.arange(1, n, dtype=dtype, device=device),
+            ])
         ) ** 3
 
         # descent step
