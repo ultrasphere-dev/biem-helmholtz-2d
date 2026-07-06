@@ -191,3 +191,55 @@ def dlp_kernel_split(
         eps=eps,
     )
     return (1j / 4) * h1 * a1, (1j / 4) * h2 * a1
+
+
+def dlp_adjoint_kernel_split(
+    *,
+    t: Array,
+    tau: Array,
+    k: Array,
+    x: Callable[[Array], Array],
+    dx: Callable[[Array], Array],
+    ddx: Callable[[Array], Array],
+    eps: float = 0.0,
+) -> tuple[Array, Array]:
+    r"""
+    Split the adjoint double-layer kernel into log-singular and analytic parts.
+
+    The adjoint double-layer kernel $\mathcal{D}^*$ is the kernel of the
+    operator adjoint with respect to the $L^2$ bilinear form
+    $\langle f,g\rangle = \int f g$.  It is obtained by swapping
+    $t$ and $\tau$ in the pointwise kernel
+
+    $$
+    D^*(t, \tau) = D(\tau, t).
+    $$
+
+    Parameters
+    ----------
+    t : Array
+        Source nodes $t$ of shape (...,).
+    tau : Array
+        Target nodes $\tau$ of shape (...,).
+    k : Array
+        Wave number $k$ of shape (...,).
+    x : Callable[[Array], Array]
+        Boundary parametrization $x$ of (...,) -> (..., 2).
+    dx : Callable[[Array], Array]
+        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
+    ddx : Callable[[Array], Array]
+        Second derivative $x''$ of the parametrization of (...,) -> (..., 2).
+    eps : float
+        If ``abs(t - tau) <= eps``, replace singular values by their diagonal limits.
+
+    Returns
+    -------
+    Array
+        Log-singular coefficient of $D^*(t, \tau)$ of shape (...,).
+    Array
+        Analytic remainder of $D^*(t, \tau)$ of shape (...,).
+
+    """
+    # The adjoint kernel D* is just D with swapped arguments.
+    # Delegate to the regular DLP split with (t, tau) swapped.
+    return dlp_kernel_split(t=tau, tau=t, k=k, x=x, dx=dx, ddx=ddx, eps=eps)
