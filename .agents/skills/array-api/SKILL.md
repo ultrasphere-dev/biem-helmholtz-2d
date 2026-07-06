@@ -32,6 +32,10 @@ description: Conventions that MUST be followed when implementing array API compa
   - `xp.moveaxis()` may be used without worrying about performance, do not worry about internal complexity whcn choosing convention.
   - Do not worry about axis performance when choosing convention.
   - **Docstring: function output-dependent shape**: When the shape is variable (depending on function etc.) one can do `(..., ...(f))` where `f` implies the function but may replaced with something more suitable. `(..., *something)` is also possible but less preferred, yet sometimes it might be more suitable.
+  - **Docstring**: docstring should contain doctests. They should be "demostrative", cover the edge cases in terms of math (not errors, wrong types, etc.). When doctests are run, the file in which the function is implemented is imported, therefore do not re-import packages or the function.
+  - **Docstring: LaTeX**: Use LaTeX in docstring for mathematical symbols.
+    - Do not use sphinx's native math syntax (e.g. `:math:`).
+    - Use `$` for inline math and `$$` for block math. Install `sphinx_dollar_math` to `docs` group (`uv add --group docs sphinx_dollar_math`) and add `sphinx_dollar_math` to `extensions` in `docs/conf.py` if this is not already done and LaTeX needs to be written in docstring.
   - **Docstring**: The docstring should be Numpydoc style.
 
     ```python
@@ -54,10 +58,28 @@ description: Conventions that MUST be followed when implementing array API compa
         -------
         Array
             $x^p$ of shape (...,).
+
+        Examples
+        --------
+        >>> func(2, 3)
+        8
+        >>> import pytest
+        >>> with pytest.raises(ValueError):
+        >>>     func(0, -1)
         """
     ```
 
   - **Docstring: shape**: The docstring should mention the shape of the input / output arrays and the argument description should end with `of shape (..., a, b)`.
+  - **ExceptionGroup**: If multiple input checks can be done in a row, use `ExceptionGroup` to raise all errors at once, allowing the user to fix all errors at once.
+    ```python
+    errors = []
+    if x <= 0:
+        errors.append(ValueError("x must be positive"))
+    if y <= 0:
+        errors.append(ValueError("y must be positive"))
+    if errors:
+        raise ExceptionGroup("Invalid input", errors)
+    ```
   - **Shape checking**: The function should check the shape at the very beginning of its implementation.
     - Check every shape variable (etc. `N`) is correct
     - Check every variable-length shape variable (etc. `...`, `...(f)`) is both broadcastable and moreover has the same dimensions. (Does not need to have same shape.)
