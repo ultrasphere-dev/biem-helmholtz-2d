@@ -195,10 +195,18 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 ]
 #proof[
   Let $K(x_0, tau) := alpha D(x_0, tau) - i eta S(x_0, tau)$.
-  The Frechet derivative of $jp$ with respect to $phi$ is
+  Then
   $
-    D_phi jp(r, phi)[h] =
-    2 Re(overline(u(x_0)) (alpha dlp_r - i eta slp_r) h (x_0)).
+    D_phi jp(r, phi)[h] & =
+                          lim_(epsilon -> 0) (jp(r, phi + epsilon h) - jp(r, phi)) / epsilon \
+                        & = lim_(epsilon -> 0) (abs(u + epsilon v)^2 - abs(u)^2) / epsilon \
+                        & = lim_(epsilon -> 0) (abs(u)^2 + epsilon overline(u) v + epsilon u overline(v) + epsilon^2 abs(v)^2 - abs(u)^2) / epsilon \
+                        & = 2 Re (overline(u) v)
+  $
+  where
+  $
+    u := u(x_0) = (alpha dlp_r - i eta slp_r) phi (x_0),
+    v := (alpha dlp_r - i eta slp_r) h (x_0).
   $
   Expanding the evaluation operators gives
   $
