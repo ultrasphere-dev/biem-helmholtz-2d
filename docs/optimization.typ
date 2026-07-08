@@ -29,9 +29,9 @@
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
-  Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $r in c2pi^k (RR^2)$, $Gamma_r := {r(t) | t in [0, 2pi)}$.
+  Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $x in c2pi^k (RR^2)$, $Gamma_x := {x(t) | t in [0, 2pi)}$.
   $
-    slp_r phi (x) := integral_Gamma_r G(x, y) phi(y) dd(s(y)), quad dlp_r phi (x) := integral_Gamma_r pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
+    slp_x phi (x) := integral_Gamma_x G(x, y) phi(y) dd(s(y)), quad dlp_x phi (x) := integral_Gamma_x pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
 ]
 #definition[Frechet derivative][
@@ -46,90 +46,90 @@
 #theorem[Adjoint method @matsushima_2023][
   Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
-  Let $r in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
-  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_r in c2pi^k$ satisfy the boundary integral equation
+  Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
+  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
 
   $
-    (I/2 + dlp_r - i eta slp_r) phi_r = g_r quad x in [0, 2pi)
+    (I/2 + dlp_x - i eta slp_x) phi_x = g_x quad t in [0, 2pi)
   $
 
-  Let $jr(r) := J(r, phi_r)$.
-  Assume there exists $grad_phi J(r, phi_r) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi jp (r, phi_r) [h] = dp(grad_phi jp (r, phi_r), h)$.
-  Then $D_r jr(r) [h]$ is given by
+  Let $jr(x) := J(x, phi_x)$.
+  Assume there exists $grad_phi J(x, phi_x) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi jp (x, phi_x) [h] = dp(grad_phi jp (x, phi_x), h)$.
+  Then $D_x jr(x) [h]$ is given by
 
   $
-    D_r jr(r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h])
+    D_x jr(x) [h] & = D_x jp(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h])
   $
-  where $psi_r in c2pi (CC)$ satisfies the following adjoint equation:
+  where $psi_x in c2pi (CC)$ satisfies the following adjoint equation:
   $
-    (I/2 + dlp_r - i eta slp_r)^* psi_r = - grad_phi jp (r, phi_r)
+    (I/2 + dlp_x - i eta slp_x)^* psi_x = - grad_phi jp (x, phi_x)
   $
 ]
 #proof[
   Let $L: c2pi^k (RR^2) times c2pi (CC) times c2pi (CC) -> RR$ defined by
   $
-    L(r, phi, psi) := jp(r, phi) + Re dp(psi, (I/2 + dlp_r - i eta slp_r) phi - g_r)
+    L(x, phi, psi) := jp(x, phi) + Re dp(psi, (I/2 + dlp_x - i eta slp_x) phi - g_x)
   $
   Then
   $
-    D_r jr(r) [h] & = D_r L(r, phi_r, psi_r) [h] + D_phi L(r, phi_r, psi_r) [D_r phi_r [h]] + D_psi L(r, phi_r, psi_r) [D_r psi_r [h]]
+    D_x jr(x) [h] & = D_x L(x, phi_x, psi_x) [h] + D_phi L(x, phi_x, psi_x) [D_x phi_x [h]] + D_psi L(x, phi_x, psi_x) [D_x psi_x [h]]
   $
   The first term is
   $
-    D_r L(r, phi_r, psi_r) [h] & = D_r jp(r, phi_r) [h] + Re dp(psi_r, D_r dlp_r [h] phi_r - i eta D_r slp_r [h] phi_r - D_r g_r [h]) \
+    D_x L(x, phi_x, psi_x) [h] & = D_x jp(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h]) \
   $
   The last two terms vanish since for any $v in c2pi$,
   $
-    D_phi L(r, phi, psi_r) [v] & = D_phi jp (r, phi) [v] + Re dp(psi_r, (I/2 + dlp_r - i eta slp_r) v) \
-                               & = Re dp((I/2 + dlp_r - i eta slp_r)^* psi_r + grad_phi jp (r, phi), v) = Re dp(0, v) = 0
+    D_phi L(x, phi, psi_x) [v] & = D_phi jp (x, phi) [v] + Re dp(psi_x, (I/2 + dlp_x - i eta slp_x) v) \
+                               & = Re dp((I/2 + dlp_x - i eta slp_x)^* psi_x + grad_phi jp (x, phi), v) = Re dp(0, v) = 0
   $
   and for any $w in c2pi$,
   $
-    D_psi L(r, phi_r, psi) [w] = Re dp(w, (I/2 + dlp_r - i eta slp_r) phi_r - g) = Re dp(w, 0) = 0
+    D_psi L(x, phi_x, psi) [w] = Re dp(w, (I/2 + dlp_x - i eta slp_x) phi_x - g_x) = Re dp(w, 0) = 0
   $
 ]
 #remark[
-  Typically $g_r := - uin compose r$, $jp (r, phi) := J(r, (dlp_r - i eta slp_r) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on radius and scattered field, not density.
+  Typically $g_x := - uin compose x$, $jp (x, phi) := J(x, (dlp_x - i eta slp_x) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on shape and scattered field, not density.
 
-  In this case, $D_r g_r (x) [h] = - grad uin(r(x)) dot h(x)$, $grad_phi jp (r, phi) = (dlp_r - i eta slp_r)^* grad_u J (r, (dlp_r - i eta slp_r) phi)$, since $dp(grad_phi jp, h) = dp(grad_u J, (dlp_r - i eta slp_r) h) = dp((dlp_r - i eta slp_r)^* grad_u J, h)$
+  In this case, $D_x g_x (t) [h] = - grad uin(x(t)) dot h(t)$, $grad_phi jp (x, phi) = (dlp_x - i eta slp_x)^* grad_u J (x, (dlp_x - i eta slp_x) phi)$, since $dp(grad_phi jp, h) = dp(grad_u J, (dlp_x - i eta slp_x) h) = dp((dlp_x - i eta slp_x)^* grad_u J, h)$
 ]
 
 #remark[
-  In the proof above, the step $D_phi L(r, phi_r, psi_r)[D_r phi_r[h]] = 0$ relies on the fact that the shape-induced variation $D_r phi_r[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
+  In the proof above, the step $D_phi L(x, phi_x, psi_x)[D_x phi_x[h]] = 0$ relies on the fact that the shape-induced variation $D_x phi_x[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
 ]
 #algorithm[
-  Assume we have implementation of $jp, D_r jp, D_phi jp, r, r', r'', h, h', h'', slp_r, dlp_r, D_r slp_r, D_r dlp_r, g_r, D_r g_r$.
-  + Compute $phi_r$ by solving the boundary integral equation
-  + Compute $D_phi jp$, then compute $psi_r$ by solving the adjoint equation
-  + Compute the Riesz representative $hdj(r)$ of $D_r jr(r)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
-  + Update the shape: $r_(n + 1) = r_n + lambda hdh$ where $hdh := - hdj(r) / norm(hdj(r))_H$
+  Assume we have implementation of $jp, D_x jp, D_phi jp, x, x', x'', h, h', h'', slp_x, dlp_x, D_x slp_x, D_x dlp_x, g_x, D_x g_x$.
+  + Compute $phi_x$ by solving the boundary integral equation
+  + Compute $D_phi jp$, then compute $psi_x$ by solving the adjoint equation
+  + Compute the Riesz representative $hdj(x)$ of $D_x jr(x)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
+  + Update the shape: $x_(n + 1) = x_n + lambda hdh$ where $hdh := - hdj(x) / norm(hdj(x))_H$
 ]
 #definition[Hilbertian Regularization][
   Let $X$ be a norm space.
   Let $J: X -> RR$ be Frechet differentiable at $x in X$.
   Let $H subset.eq X$ be a Hilbert space continuously embedded in $X$.
-  Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $r in X, h in H$,
+  Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $x in X, h in H$,
 
   $
-    ip(hdj(r), h)_H = D J (r) [h] quad forall h in H
+    ip(hdj(x), h)_H = D J (x) [h] quad forall h in H
   $
   The regularized steepest descent direction $hdh$ is defined as
   $
-    hdh := - hdj(r)/norm(hdj(r))_H
+    hdh := - hdj(x)/norm(hdj(x))_H
   $
 ]
 #theorem[
-  The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (r) [h]$.
+  The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
 ]
 #proof[
   By the Cauchy–Schwarz inequality,
   $
-    D J (r) [h] = ip(hdj(r), h)_H >= -norm(hdj(r))_H norm(h)_H = -norm(hdj(r))_H
+    D J (x) [h] = ip(hdj(x), h)_H >= -norm(hdj(x))_H norm(h)_H = -norm(hdj(x))_H
   $
-  for any $norm(h)_H = 1$, with equality if and only if $h = -hdj(r) / norm(hdj(r))_H$.
+  for any $norm(h)_H = 1$, with equality if and only if $h = -hdj(x) / norm(hdj(x))_H$.
   Hence
   $
-    D J (r) [hdh] = D J (r) [-hdj(r)/norm(hdj(r))_H] = -norm(hdj(r))_H = inf_(norm(h)_H = 1) D J (r) [h]
+    D J (x) [hdh] = D J (x) [-hdj(x)/norm(hdj(x))_H] = -norm(hdj(x))_H = inf_(norm(h)_H = 1) D J (x) [h]
   $
 ]
 #let h2pi = $H_(2 pi)$
@@ -153,17 +153,17 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ can be computed by
 
   $
-    c'_m := (D_r J (r) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_r J (r) [sin(m t)]) / (1 + alpha m^2)^k
+    c'_m := (D_x J (x) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_x J (x) [sin(m t)]) / (1 + alpha m^2)^k
   $
 
   $
     S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
   $
-  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(r)$.
+  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(x)$.
 ]
 
 #theorem[Error estimate][
-  Let $g := hdj(r)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_N$ its truncation in $R_N$. If $g in h2pi^(k + s)(RR)$ for some $s > 0$, then
+  Let $g := hdj(x)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_N$ its truncation in $R_N$. If $g in h2pi^(k + s)(RR)$ for some $s > 0$, then
   $
     norm(g - g_N)_(h2pi^k) <= (1 + alpha N^2)^(-s/2) norm(g)_(h2pi^(k + s))
   $
@@ -181,14 +181,14 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 ]
 
 #theorem[Riesz representation for point evaluation][
-  Let $x_0 in RR^2 without overline(Omega_r)$). Let $jp(r, phi) := abs(u(x))^2, u(x) := ((alpha dlp_r - i eta slp_r) phi) (x_0)$.
+  Let $x_0 in RR^2 without overline(Omega_x)$). Let $jp(x, phi) := abs(u(x))^2, u(x) := ((alpha dlp_x - i eta slp_x) phi) (x_0)$.
   Then, the Riesz representation of the Frechet derivative of $jp$ with respect to $phi$ under the bilinear form
   $
     dp(f, g) := integral_0^(2 pi) f(t) g(t) dd(t),
   $
   is given by
   $
-    grad_phi jp(r, phi)(tau) =
+    grad_phi jp(x, phi)(tau) =
     2 Re(overline(u(x_0)) (alpha D(x_0, tau) - i eta S(x_0, tau))),
   $
   where $D(x_0, tau), S(x_0, tau)$ are kernels of the double- and single-layer potentials.
@@ -197,32 +197,32 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   Let $K(x_0, tau) := alpha D(x_0, tau) - i eta S(x_0, tau)$.
   Then
   $
-    D_phi jp(r, phi)[h] & =
-                          lim_(epsilon -> 0) (jp(r, phi + epsilon h) - jp(r, phi)) / epsilon \
+    D_phi jp(x, phi)[h] & =
+                          lim_(epsilon -> 0) (jp(x, phi + epsilon h) - jp(x, phi)) / epsilon \
                         & = lim_(epsilon -> 0) (abs(u + epsilon v)^2 - abs(u)^2) / epsilon \
                         & = lim_(epsilon -> 0) (abs(u)^2 + epsilon overline(u) v + epsilon u overline(v) + epsilon^2 abs(v)^2 - abs(u)^2) / epsilon \
                         & = 2 Re (overline(u) v)
   $
   where
   $
-    u := u(x_0) = (alpha dlp_r - i eta slp_r) phi (x_0),
-    v := (alpha dlp_r - i eta slp_r) h (x_0).
+    u := u(x_0) = (alpha dlp_x - i eta slp_x) phi (x_0),
+    v := (alpha dlp_x - i eta slp_x) h (x_0).
   $
   Expanding the evaluation operators gives
   $
-    (alpha dlp_r - i eta slp_r) h (x_0)
+    (alpha dlp_x - i eta slp_x) h (x_0)
     = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau).
   $
   Therefore
   $
-    D_phi jp(r, phi)[h]
+    D_phi jp(x, phi)[h]
     = integral_0^(2 pi)
     2 Re(overline(u(x_0)) K(x_0, tau)) h(tau) dd(tau).
   $
   By definition of the Riesz representation,
-  $D_phi jp(r, phi)[h] = dp(grad_phi jp, h)$, hence
+  $D_phi jp(x, phi)[h] = dp(grad_phi jp, h)$, hence
   $
-    grad_phi jp(r, phi)(tau) =
+    grad_phi jp(x, phi)(tau) =
     2 Re(overline(u(x_0)) K(x_0, tau)).
   $
 ]
