@@ -13,7 +13,7 @@ from ie_circle import (
     trapezoidal_quadrature,
 )
 
-from ._potential import dlp_adjoint_kernel_split, slp_kernel_split
+from ._potential import dlp_kernel_split, slp_kernel_split
 from ._potential_shape_derivative import (
     dlp_shape_derivative_split,
     slp_shape_derivative_split,
@@ -28,25 +28,35 @@ def _solve_adjoint(
     eta: Array,
     n: int,
     rhs: Callable[[Array], Array],
+    eps: float = 0,
 ) -> NystromInterpolant:
-    """Solve the adjoint BIE  (alpha/2 + D* - i eta S*) psi = rhs."""
+    r"""
+    Solve $A^* \psi = \mathrm{rhs}$ under the $L^2$ sesquilinear form.
+
+    $A^* = \frac\alpha2 I + \overline{\mathcal D(\tau,t)}
+    + i\eta\,\overline{\mathcal S(\tau,t)}$.
+    """
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
     device = k.device
 
     def k_log(t: Array, tau: Array) -> Array:
-        dlp_log, _ = dlp_adjoint_kernel_split(
-            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
+        dlp_log, _ = dlp_kernel_split(
+            t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=eps
         )
-        slp_log, _ = slp_kernel_split(t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx)
-        return (alpha * dlp_log - 1j * eta * slp_log)[..., None, None]
+        slp_log, _ = slp_kernel_split(
+            t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx, eps=eps
+        )
+        return (alpha * xp.conj(dlp_log) + 1j * eta * xp.conj(slp_log))[..., None, None]
 
     def k_cont(t: Array, tau: Array) -> Array:
-        _, dlp_cont = dlp_adjoint_kernel_split(
-            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
+        _, dlp_cont = dlp_kernel_split(
+            t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=eps
         )
-        _, slp_cont = slp_kernel_split(t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx)
-        return (alpha * dlp_cont - 1j * eta * slp_cont)[..., None, None]
+        _, slp_cont = slp_kernel_split(
+            t=tau, tau=t, k=k[..., None, None], x=shape.x, dx=shape.dx, eps=eps
+        )
+        return (alpha * xp.conj(dlp_cont) + 1j * eta * xp.conj(slp_cont))[..., None, None]
 
     def a(t: Array) -> Array:
         xp = array_namespace(t)
@@ -75,34 +85,21 @@ def objective_derivative(
     eps: float = 0,
 ) -> Array:
     r"""
-    Shape derivative $D_r J(r)[h]$ for objective $J(r)=j(r,\phi_r)$.
-
-    The forward solution $\phi_r$ satisfies
+    Shape derivative $D_r J(r)[h]$ under the $L^2$ sesquilinear form.
 
     $$
-    \bigl(\tfrac\alpha2 I + \mathcal D - i\eta\,\mathcal S\bigr)\phi_r = g_r .
-    $$
-
-    Let $\operatorname{grad}_\phi j$ be the Riesz representation (with
-    respect to the $L^2$ bilinear form $\langle f,g\rangle =
-    \int f g$) of the Frechet derivative of $j$ with respect to
-    $\phi$.  The adjoint solution satisfies
-
-    $$
-    \bigl(\tfrac\alpha2 I + \mathcal D^* - i\eta\,\mathcal S^*\bigr)\psi_r
-    = -\operatorname{grad}_\phi j .
-    $$
-
-    Then for a shape perturbation $h$,
-
-    $$
-    D_r J(r)[h] = D_r j(r,\phi_r)[h]
-    + \operatorname{Re}\bigl\langle
-        \psi_r,\;
-        D_r\mathcal D[h]\phi_r
-        - i\eta\,D_r\mathcal S[h]\phi_r
-        - D_r g[h]
-      \bigr\rangle .
+    \begin{aligned}
+    (\tfrac\alpha2 I + \mathcal D - i\eta\,\mathcal S)\phi_r &= g_r,\\[2mm]
+    (\tfrac\alpha2 I + \mathcal D^* + i\eta\,\mathcal S^*)\psi_r
+        &= -\operatorname{grad}_\phi j,\\[2mm]
+    D_r J(r)[h] &= D_r j(r,\phi_r)[h]
+        + \operatorname{Re}\bigl\langle
+            \psi_r,\;
+            D_r\mathcal D[h]\phi_r
+            - i\eta\,D_r\mathcal S[h]\phi_r
+            - D_r g[h]
+          \bigr\rangle .
+    \end{aligned}
     $$
 
     Parameters
@@ -120,12 +117,12 @@ def objective_derivative(
     phi : NystromInterpolant
         Forward density $\phi_r$.
     grad_phi_j : Callable[[Array], Array]
-        Riesz representation of the Frechet derivative of $j$ with
-        respect to $\phi$.  Signature (...,) -> (...,).
+        Riesz representation w.r.t. $\langle f,g\rangle=\int f\overline g$.
+        Signature (...,) -> (...,).
     dr_j : Array
         Value $D_r j(r,\phi_r)[h]$ (scalar).
     dr_g : Array
-        Shape derivative $D_r g[h]$ at quadrature nodes, shape ``(Q,)``.
+        Shape derivative $D_r g[h]$ at quadrature nodes of shape ``(Q,)``.
     h_shape : Shape
         Shape perturbation $h$, providing $h(t)$, $h'(t)$, $h''(t)$
         via ``h_shape.x``, ``h_shape.dx``, ``h_shape.ddx``
@@ -136,44 +133,46 @@ def objective_derivative(
     Returns
     -------
     Array
-        Shape derivative $D_r J(r)[h]$ as a scalar.
+        Shape derivative $D_r J(r)[h]$ as a scalar of shape (...,).
 
     Examples
     --------
     >>> import numpy as np
-    >>> from ie_circle import CircleShape, trapezoidal_quadrature
-    >>> from biem_helmholtz_2d._acoustic import scattering_dirichlet, near_field
-    >>> from ie_circle import Shape as _Shape
-    >>> xp = np
-    >>> k = xp.asarray(1.0)
-    >>> rho = 1.0
+    >>> from ie_circle import CircleShape
+    >>> from biem_helmholtz_2d._acoustic import scattering_dirichlet
+    >>> xp = np; k = xp.asarray(1.0); rho = 1.0
     >>> shape = CircleShape(rho)
-    >>> alpha = xp.asarray(1.0); eta = xp.asarray(0.0)
-    >>> x0 = xp.asarray([3.0, 3.0]); n = 8
+    >>> a = xp.asarray(1.0); e = xp.asarray(0.0)
     >>> def inc(x): return xp.exp(1j * k * x[..., 0])
-    >>> phi = scattering_dirichlet(k=k, shape=shape, incident_field=inc, alpha=alpha, eta=eta, n=n)
-    >>> u = near_field(phi, x0[None], k=k, shape=shape, n=n, alpha=alpha, eta=eta)
-    >>> def gj(t): return xp.zeros_like(t)
+    >>> phi = scattering_dirichlet(k=k, shape=shape, incident_field=inc, alpha=a, eta=e, n=8)
     >>> class _ZeroShape:
     ...     def x(self, t, /): return xp.zeros((*t.shape, 2))
     ...     def dx(self, t, /): return xp.zeros((*t.shape, 2))
     ...     def ddx(self, t, /): return xp.zeros((*t.shape, 2))
-    >>> t = trapezoidal_quadrature(n, xp=xp, device='cpu', dtype=xp.float64)[0]
-    >>> dr_g = xp.zeros(2 * n - 1)
+    >>> from ie_circle import trapezoidal_quadrature
+    >>> t, _ = trapezoidal_quadrature(8, xp=xp, device='cpu', dtype=xp.float64)
+    >>> dr_g = xp.zeros(2 * 8 - 1)
+    >>> def gj(t): return xp.zeros_like(t)
     >>> objective_derivative(
-    ...     k=k, shape=shape, alpha=alpha, eta=eta, n=n,
+    ...     k=k, shape=shape, alpha=a, eta=e, n=8,
     ...     phi=phi, grad_phi_j=gj, dr_j=xp.asarray(0.0),
     ...     dr_g=dr_g, h_shape=_ZeroShape(),
     ... )
     np.float64(0.0)
 
     """
-    xp = array_namespace(k, alpha, eta)
+    from array_api_shape_check import check_shapes
+
+    xp = array_namespace(k, alpha, eta, dr_j, dr_g)
     dtype = xp.result_type(k, alpha, eta)
     device = k.device
     t, w_trap = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     n_nodes = 2 * n - 1
     w_trap_val = w_trap[0]
+
+    # dr_g may be complex (depends on incident field gradient);
+    # only check its first dimension matches
+    check_shapes("Q", dr_g, names="dr_g")
 
     h = h_shape.x
     dh = h_shape.dx
@@ -186,6 +185,7 @@ def objective_derivative(
         eta=eta,
         n=n,
         rhs=lambda t_in: -grad_phi_j(t_in)[..., None],
+        eps=eps,
     )
     psi_t = psi(t)
     phi_t = phi(t)
@@ -230,6 +230,7 @@ def objective_derivative(
         k_cont_sd * phi_t * w_trap_val, axis=1
     )
 
-    inner = xp.sum(psi_t * (shape_deriv_phi - dr_g) * w_trap_val)
+    # sesquilinear inner product
+    inner = xp.sum(psi_t * xp.conj(shape_deriv_phi - dr_g) * w_trap_val)
 
     return dr_j + xp.real(inner)

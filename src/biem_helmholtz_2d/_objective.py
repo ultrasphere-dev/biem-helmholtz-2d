@@ -6,7 +6,7 @@ from array_api._2024_12 import Array
 from array_api_compat import array_namespace
 from ie_circle import Shape
 
-from ._scipy_wrapper import scipy_hankel1
+from ._potential_inner import dlp_kernel, slp_kernel
 
 
 def grad_phi_scattered_field(
@@ -20,7 +20,7 @@ def grad_phi_scattered_field(
     eta: Array,
 ) -> Callable[[Array], Array]:
     r"""
-    Riesz representation of $d_\phi j$ for $j = |u|^2$.
+    Riesz representation of $d_\phi j$ under the $L^2$ sesquilinear form.
 
     For the objective $j(\phi) = |u(x_0)|^2$ with
     $u = (\alpha\mathcal D - i\eta\mathcal S)\phi$, the Frechet derivative
@@ -28,26 +28,25 @@ def grad_phi_scattered_field(
 
     $$
     D_\phi j[\nu] = 2\operatorname{Re}\bigl(
-        \overline{u(x_0)}\,
-        (\alpha\mathcal D - i\eta\mathcal S)\nu(x_0)
+        \overline{u(x_0)}\,(\alpha\mathcal D - i\eta\mathcal S)\nu(x_0)
     \bigr).
     $$
 
-    For the $L^2$ bilinear form $\langle f,g\rangle = \int f g$, the Riesz
-    representation is
+    Under the $L^2$ sesquilinear form $\langle f,g\rangle = \int f\,\overline g$,
+    the Riesz representation is
 
     $$
     \operatorname{grad}_\phi j(\tau)
-    = 2\operatorname{Re}\bigl(
-        \overline{u(x_0)}\,
-        \bigl(\alpha\widetilde{\mathcal D}(x_0,\tau)
-              - i\eta\,\widetilde{\mathcal S}(x_0,\tau)\bigr)
-    \bigr),
+    = 2\,u(x_0)\,
+      \overline{\bigl(\alpha\widetilde{\mathcal D}(x_0,\tau)
+                    - i\eta\,\widetilde{\mathcal S}(x_0,\tau)\bigr)},
     $$
 
     where $\widetilde{\mathcal D}(x_0,\tau),\,
-          \widetilde{\mathcal S}(x_0,\tau)$ are the parametrised evaluation
-    kernels of the double- and single-layer potentials at $x_0$.
+          \widetilde{\mathcal S}(x_0,\tau)$ are the kernels of the double- and
+    single-layer potentials parametrised by $\tau$ and evaluated at $x_0$.
+    The conjugate involves Hankel functions of the second kind
+    $H_n^{(2)} = \overline{H_n^{(1)}}$.
 
     Parameters
     ----------
@@ -70,37 +69,14 @@ def grad_phi_scattered_field(
         Function $\operatorname{grad}_\phi j$ that takes boundary parameter
         $t$ of shape ``(...,)`` and returns values of shape ``(...,)``.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from ie_circle import CircleShape
-    >>> from biem_helmholtz_2d._acoustic import scattering_dirichlet, near_field
-    >>> xp = np; k = xp.asarray(1.0); rho = 1.0
-    >>> shape = CircleShape(rho)
-    >>> a = xp.asarray(1.0); e = xp.asarray(0.0)
-    >>> def inc(x): return xp.exp(1j * k * x[..., 0])
-    >>> phi = scattering_dirichlet(k=k, shape=shape, incident_field=inc, alpha=a, eta=e, n=8)
-    >>> x0 = xp.asarray([3.0, 3.0])
-    >>> u = near_field(phi, x0[None], k=k, shape=shape, n=8, alpha=a, eta=e)
-    >>> gj = grad_phi_scattered_field(x0[None], u, shape=shape, k=k, alpha=a, eta=e)
-    >>> gj(xp.asarray([0.0]))
-    array([-0.03860757])
-
     """
     xp = array_namespace(point, k, alpha, eta)
     u_sq = xp.squeeze(field_value)
 
     def grad(t_in: Array) -> Array:
-        x_t = shape.x(t_in)
-        dx_t = shape.dx(t_in)
-        diff = point - x_t
-        dist = xp.linalg.vector_norm(diff, axis=-1)
-        jac = xp.linalg.vector_norm(dx_t, axis=-1)
-        h0 = scipy_hankel1(0, k * dist)
-        h1 = scipy_hankel1(1, k * dist)
-        ny = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
-        ny_dot = xp.sum(ny * diff, axis=-1)
-        kernel = alpha * ((1j * k / 4) * (ny_dot / dist) * h1) - 1j * eta * ((1j / 4) * h0 * jac)
-        return 2.0 * xp.real(xp.conj(u_sq) * kernel)
+        dlp = dlp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
+        slp = slp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
+        conj_k = alpha * xp.conj(dlp) + 1j * eta * xp.conj(slp)
+        return 2.0 * u_sq * conj_k
 
     return grad

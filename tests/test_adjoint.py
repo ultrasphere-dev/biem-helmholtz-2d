@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from array_api.latest import Array
 from ie_circle import CircleShape, SympyShape, trapezoidal_quadrature
 
@@ -121,7 +122,4 @@ def test_adjoint_central_derivative(
     p_minus[m] -= eps_fd
     dr_num = (J(p_plus) - J(p_minus)) / (2 * eps_fd)
 
-    assert xp.abs(dr_adj - dr_num) < 1.0, (
-        f"adjoint {dr_adj:.6f}  FD {dr_num:.6f}  diff {abs(dr_adj - dr_num):.6f}  "
-        f"(inner {float(dr_adj - dr_j_val):.6f}, dr_j {float(dr_j_val):.6f})"
-    )
+    assert float(dr_adj) == pytest.approx(float(dr_num), rel=1e-5, abs=1e-8)

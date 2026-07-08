@@ -51,7 +51,7 @@ def test_grad_phi_central_derivative(
 
     v_t = v_func(t)
     gj_t = grad_phi_j(t)
-    inner = xp.sum(gj_t * v_t * wt)
+    inner = xp.real(xp.sum(gj_t * xp.conj(v_t) * wt))
 
     eps_fd = 1e-5
 
@@ -70,7 +70,4 @@ def test_grad_phi_central_derivative(
     j_minus = j_of_phi(_PerturbedDensity(-eps_fd))
     fd_deriv = (j_plus - j_minus) / (2 * eps_fd)
 
-    tol = 5e-2 * abs(fd_deriv) + 5e-2 * abs(inner) + 1e-4
-    assert xp.abs(inner - fd_deriv) < tol, (
-        f"Riesz inner {inner:.6f}  FD {fd_deriv:.6f}  diff {abs(inner - fd_deriv):.6f}"
-    )
+    assert float(inner) == pytest.approx(float(fd_deriv), rel=1e-6, abs=1e-8)
