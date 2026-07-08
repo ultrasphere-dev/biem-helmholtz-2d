@@ -40,11 +40,13 @@
   Let $F: O -> Y$, $x in X$.
   A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
 ]
-#definition[Bilinear form][
-  $X, Y$: $KK$-norm spaces, $forall B in B(X, Y). dp(x, y)$ is called a bilinear form if $dp(x, y)$ is linear in $x$ and $y$. $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
+#definition[Sesquilinear form][
+  $X, Y$: $KK$-norm spaces. $dp(x, y)$ is called a sesquilinear form if
+  it is linear in $x$ and conjugate-linear in $y$.
+  $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
 ]
 #theorem[Adjoint method @matsushima_2023][
-  Let $dp(dot, dot)$ any non-degenerate bilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
+  Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
   Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
   Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
@@ -182,14 +184,14 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 
 #theorem[Riesz representation for point evaluation][
   Let $x_0 in RR^2 without overline(Omega_x)$). Let $jp(x, phi) := abs(u(x))^2, u(x) := ((alpha dlp_x - i eta slp_x) phi) (x_0)$.
-  Then, the Riesz representation of the Frechet derivative of $jp$ with respect to $phi$ under the bilinear form
+  Then, the Riesz representation of the Frechet derivative of $jp$ with respect to $phi$ under the sesquilinear form
   $
-    dp(f, g) := integral_0^(2 pi) f(t) g(t) dd(t),
+    dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
   $
   is given by
   $
     grad_phi jp(x, phi)(tau) =
-    2 Re(overline(u(x_0)) (alpha D(x_0, tau) - i eta S(x_0, tau))),
+    2 u(x_0) overline((alpha D(x_0, tau) - i eta S(x_0, tau))),
   $
   where $D(x_0, tau), S(x_0, tau)$ are kernels of the double- and single-layer potentials.
 ]
