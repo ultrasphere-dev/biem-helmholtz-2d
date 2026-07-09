@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import pytest
 from array_api.latest import Array
 from ie_circle import Shape, trapezoidal_quadrature
@@ -83,8 +85,26 @@ def test_adjoint_central_derivative(
         up = near_field(pp, x0[None], k=k_arr, shape=s, n=n, alpha=a, eta=e)
         return xp.sum(xp.abs(up) ** 2)
 
-    j_plus = objective(shape_p)
-    j_minus = objective(shape_m)
-    dr_num = (j_plus - j_minus) / (2 * eps)
+    rows: list[dict[str, object]] = []
+    dr_adj_float = float(dr_adj)
+    dr_num_ref = None
 
-    assert float(dr_adj) == pytest.approx(float(dr_num), rel=1e-5, abs=1e-8)
+    for exponent in range(-1, -11, -1):
+        eps_val = 10**exponent
+        shape_p, shape_m = shape_central_difference(eps_val)
+        j_plus = objective(shape_p)
+        j_minus = objective(shape_m)
+        dr_num_val = float((j_plus - j_minus) / (2 * eps_val))
+        diff = abs(dr_adj_float - dr_num_val)
+        rows.append({"kind": str(eps_val), "val": dr_num_val, "diff": diff})
+        if exponent == -5:
+            dr_num_ref = dr_num_val
+
+    rows.append({"kind": "None", "val": dr_adj_float, "diff": None})
+
+    df = pd.DataFrame(rows, columns=["kind", "val", "diff"])
+    csv_name = f"test_adjoint_{shape.__class__.__name__}_{shape_h.__class__.__name__}.csv"
+    df.to_csv(Path(__file__).parent / csv_name, index=False)
+
+    assert dr_num_ref is not None
+    assert dr_adj_float == pytest.approx(dr_num_ref, rel=1e-5, abs=1e-8)
