@@ -1,11 +1,11 @@
 from typing import Any
 
 from array_api.latest import Array, ArrayNamespace
-from array_api_compat import array_namespace
 from ie_circle import KressShape
 from matplotlib import pyplot as plt
 
 from ._acoustic import far_field, plot_ner_field, scattering_dirichlet
+from ._incident import plane_wave
 
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
@@ -13,10 +13,8 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
     shape = KressShape()
-
-    def incident_field(x: Array) -> Array:
-        xp = array_namespace(x)
-        return xp.exp(1j * k * x[..., 0])
+    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    incident_field = plane_wave(k, direction)
 
     density = scattering_dirichlet(
         k=k,

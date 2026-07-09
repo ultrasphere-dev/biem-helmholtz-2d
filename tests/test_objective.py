@@ -5,15 +5,17 @@ from typing import Any
 
 import pytest
 from array_api.latest import Array
-from ie_circle import CircleShape, trapezoidal_quadrature
+from ie_circle import Shape, trapezoidal_quadrature
 
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
+from biem_helmholtz_2d._incident import plane_wave
 from biem_helmholtz_2d._objective import grad_phi_scattered_field
 
 
 @pytest.mark.parametrize("m", [1, 3])
 def test_grad_phi_central_derivative(
     xp: Any,
+    shape: Shape,
     device: Any,
     dtype: Any,
     m: int,
@@ -24,16 +26,14 @@ def test_grad_phi_central_derivative(
     Perturbation $v(t) = \cos(m t)$.
     """
     n = 8
-    shape = CircleShape(1.0)
     k_arr = xp.asarray(1.0, device=device, dtype=dtype)
     a = xp.asarray(1.0, device=device, dtype=dtype)
     e = xp.asarray(0.0, device=device, dtype=dtype)
     x0 = xp.asarray([3.0, 3.0], device=device, dtype=dtype)
     t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     wt = w[0]
-
-    def incident_field(x: Array) -> Array:
-        return xp.exp(1j * k_arr * x[..., 0])
+    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    incident_field = plane_wave(k_arr, direction)
 
     phi = scattering_dirichlet(
         k=k_arr,
@@ -53,7 +53,7 @@ def test_grad_phi_central_derivative(
     gj_t = grad_phi_j(t)
     inner = xp.real(xp.sum(gj_t * xp.conj(v_t) * wt))
 
-    eps_fd = 1e-5
+    eps = 1e-5
 
     def j_of_phi(phi_pert: Callable[[Array], Array]) -> Array:
         up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
@@ -66,8 +66,8 @@ def test_grad_phi_central_derivative(
         def __call__(self, t_in: Array) -> Array:
             return phi(t_in) + self._eps * v_func(t_in)
 
-    j_plus = j_of_phi(_PerturbedDensity(eps_fd))
-    j_minus = j_of_phi(_PerturbedDensity(-eps_fd))
-    fd_deriv = (j_plus - j_minus) / (2 * eps_fd)
+    j_plus = j_of_phi(_PerturbedDensity(eps))
+    j_minus = j_of_phi(_PerturbedDensity(-eps))
+    fd_deriv = (j_plus - j_minus) / (2 * eps)
 
     assert float(inner) == pytest.approx(float(fd_deriv), rel=1e-6, abs=1e-8)
