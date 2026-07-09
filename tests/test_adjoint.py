@@ -15,6 +15,10 @@ from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
 from biem_helmholtz_2d._objective import grad_phi_scattered_field
 
 
+def remove_trailing_exponent_zeros(s: str, /) -> str:
+    return s.replace("E+0", "E+").replace("E-0", "E-")
+
+
 def test_adjoint_central_derivative(
     xp: Any,
     shape: Shape,
@@ -96,11 +100,19 @@ def test_adjoint_central_derivative(
         j_minus = objective(shape_m)
         dr_num_val = float((j_plus - j_minus) / (2 * eps_val))
         diff = abs(dr_adj_float - dr_num_val)
-        rows.append({"kind": f"1e{exponent}", "val": f"{dr_num_val:.12e}", "diff": f"{diff:.1e}"})
+        rows.append({
+            "kind": f"1e{exponent}",
+            "val": remove_trailing_exponent_zeros(f"{dr_num_val:.12e}"),
+            "diff": remove_trailing_exponent_zeros(f"{diff:.1e}"),
+        })
         if exponent == -5:
             dr_num_ref = dr_num_val
 
-    rows.append({"kind": "None", "val": f"{dr_adj_float:.12e}", "diff": None})
+    rows.append({
+        "kind": "None",
+        "val": remove_trailing_exponent_zeros(f"{dr_adj_float:.12e}"),
+        "diff": None,
+    })
 
     df = pd.DataFrame(rows, columns=["kind", "val", "diff"])
     csv_name = f"test_adjoint_{shape.__class__.__name__}_{shape_h.__class__.__name__}.csv"
