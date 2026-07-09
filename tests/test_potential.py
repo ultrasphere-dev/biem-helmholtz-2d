@@ -204,4 +204,4 @@ def test_circle_sol_matches_theorem(
     eval_points = xp.random.random_uniform(shape=(3,), device=device, dtype=dtype) * 2 * math.pi
     actual = density(eval_points)
     expected = xp.exp(1j * m * eval_points)
-    assert xp.all(xpx.isclose(actual, expected, rtol=5e-6))
+    assert xp.all(xpx.isclose(actual, expected))
