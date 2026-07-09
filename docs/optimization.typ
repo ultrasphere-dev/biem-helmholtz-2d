@@ -12,6 +12,8 @@
 #let proof = thmproof("proof", "Proof")
 #set page(margin: 4mm, paper: "jis-b5")
 #let hk1 = $H^((1))$
+#let sl = $op("SL")$
+#let dl = $op("DL")$
 #let slp = $cal(S)$
 #let dlp = $cal(D)$
 #let dlpa = $cal(D)^*$
@@ -191,12 +193,17 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   is given by
   $
     grad_phi jp(x, phi)(tau) =
-    2 u(x_0) overline((alpha D(x_0, tau) - i eta S(x_0, tau))),
+    2 u(x_0) overline((alpha widetilde(D)(x_0, tau) - i eta widetilde(S)(x_0, tau))),
   $
-  where $D(x_0, tau), S(x_0, tau)$ are kernels of the double- and single-layer potentials.
+  where
+  $
+    widetilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
+    widetilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
+  $
+  are the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
-  Let $K(x_0, tau) := alpha D(x_0, tau) - i eta S(x_0, tau)$.
+  Let $K(x_0, tau) := alpha widetilde(D)(x_0, tau) - i eta widetilde(S)(x_0, tau)$.
   Then
   $
     D_phi jp(x, phi)[h] & =

@@ -42,9 +42,16 @@ def grad_phi_scattered_field(
                     - i\eta\,\widetilde{\mathcal S}(x_0,\tau)\bigr)},
     $$
 
-    where $\widetilde{\mathcal D}(x_0,\tau),\,
-          \widetilde{\mathcal S}(x_0,\tau)$ are the kernels of the double- and
-    single-layer potentials parametrised by $\tau$ and evaluated at $x_0$.
+    where
+
+    $$
+    \widetilde{\mathcal S}(x_0,\tau) := G(x_0, x(\tau))\,|x'(\tau)|,
+    \qquad
+    \widetilde{\mathcal D}(x_0,\tau) := n(\tau)\cdot\nabla_y G(x_0, x(\tau))\,|x'(\tau)|
+    $$
+
+    are the kernels of $\mathrm{SL}_x$, $\mathrm{DL}_x$
+    with jacobian multiplied, evaluated at $x_0$.
     The conjugate involves Hankel functions of the second kind
     $H_n^{(2)} = \overline{H_n^{(1)}}$.
 
