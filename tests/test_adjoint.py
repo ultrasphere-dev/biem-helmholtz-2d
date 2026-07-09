@@ -96,11 +96,11 @@ def test_adjoint_central_derivative(
         j_minus = objective(shape_m)
         dr_num_val = float((j_plus - j_minus) / (2 * eps_val))
         diff = abs(dr_adj_float - dr_num_val)
-        rows.append({"kind": str(eps_val), "val": dr_num_val, "diff": diff})
+        rows.append({"kind": f"1e{exponent}", "val": f"{dr_num_val:.12e}", "diff": f"{diff:.1e}"})
         if exponent == -5:
             dr_num_ref = dr_num_val
 
-    rows.append({"kind": "None", "val": dr_adj_float, "diff": None})
+    rows.append({"kind": "None", "val": f"{dr_adj_float:.12e}", "diff": None})
 
     df = pd.DataFrame(rows, columns=["kind", "val", "diff"])
     csv_name = f"test_adjoint_{shape.__class__.__name__}_{shape_h.__class__.__name__}.csv"
