@@ -16,7 +16,7 @@ from biem_helmholtz_2d._objective import grad_phi_scattered_field
 
 
 def remove_trailing_exponent_zeros(s: str, /) -> str:
-    return s.replace("E+0", "E+").replace("E-0", "E-")
+    return s.replace("E+0", "E+").replace("E-0", "E-").replace("e+0", "e+").replace("e-0", "e-")
 
 
 def test_adjoint_central_derivative(
