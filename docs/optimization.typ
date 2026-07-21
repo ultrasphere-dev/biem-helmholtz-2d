@@ -193,17 +193,17 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   is given by
   $
     grad_phi jp(x, phi)(tau) =
-    2 u(x_0) overline((alpha widetilde(D)(x_0, tau) - i eta widetilde(S)(x_0, tau))),
+    2 u(x_0) overline((alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau))),
   $
   where
   $
-    widetilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
-    widetilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
+    tilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
+    tilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
   $
   are the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
-  Let $K(x_0, tau) := alpha widetilde(D)(x_0, tau) - i eta widetilde(S)(x_0, tau)$.
+  Let $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
   Then
   $
     D_phi jp(x, phi)[h] & =
