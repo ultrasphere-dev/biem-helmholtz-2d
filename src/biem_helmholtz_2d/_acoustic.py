@@ -110,6 +110,7 @@ def plot_near_field(
     k: Array,
     alpha: Array,
     eta: Array,
+    n_plot: int = 100,
     ax_re: Axes | None = None,
     ax_im: Axes | None = None,
     ax_abs: Axes | None = None,
@@ -117,8 +118,8 @@ def plot_near_field(
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
     device = k.device
-    x = xp.linspace(xlim[0], xlim[1], 100, device=device, dtype=dtype)
-    y = xp.linspace(ylim[0], ylim[1], 100, device=device, dtype=dtype)
+    x = xp.linspace(xlim[0], xlim[1], n_plot, device=device, dtype=dtype)
+    y = xp.linspace(ylim[0], ylim[1], n_plot, device=device, dtype=dtype)
     x, y = xp.broadcast_arrays(x[:, None], y[None, :])
     xy = xp.stack([x, y], axis=-1)
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
@@ -127,6 +128,8 @@ def plot_near_field(
     u[isin_shape(xy, shape)] = xp.nan
     if ax_re is None and ax_im is None and ax_abs is None:
         ax_re = plt.gca()
+    vmax_reim = xp.max(xp.abs(xp.concat([u.real[~xp.isnan(u.real)], u.imag[~xp.isnan(u.imag)]])))
+    vmax_abs = xp.max(xp.abs(u[~xp.isnan(u)]))
     for ax, data, title in zip(
         (ax_re, ax_im, ax_abs),
         (u.real, u.imag, xp.abs(u)),
@@ -136,7 +139,10 @@ def plot_near_field(
         if ax is None:
             continue
 
-        vmax = xp.max(xp.abs(data[~xp.isnan(data)]))
+        if title != "Near field amplitude":
+            vmax = vmax_reim
+        else:
+            vmax = vmax_abs
         if title != "Near field amplitude":
             vmin = -vmax
         else:

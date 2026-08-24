@@ -10,7 +10,7 @@ from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from scipy.optimize import NonlinearConstraint, minimize
 
-from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
+from biem_helmholtz_2d._acoustic import near_field, plot_near_field, scattering_dirichlet
 from biem_helmholtz_2d._adjoint import objective_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
 from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
@@ -34,7 +34,7 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     k = xp.asarray(1.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
-    point = xp.asarray([3.0, 3.0], device=device, dtype=dtype)
+    point = xp.asarray([1.0, 3.0], device=device, dtype=dtype)
     direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
@@ -173,3 +173,28 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
     ax.set_aspect("equal")
     ax.set_title("Optimized shape")
     fig.savefig(path / "optimized_shape.png")
+
+    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+    density_opt = scattering_dirichlet(
+        k=k, shape=shape_opt, incident_field=incident_field, alpha=alpha, eta=eta, n=n
+    )
+    plot_near_field(
+        density_opt,
+        incident_field,
+        xlim=(-6.0, 6.0),
+        ylim=(-6.0, 6.0),
+        k=k,
+        shape=shape_opt,
+        n=n,
+        alpha=alpha,
+        eta=eta,
+        ax_re=ax[0],
+        ax_im=ax[1],
+        ax_abs=ax[2],
+        n_plot=200,
+    )
+    # add cross at the point
+    for a in ax:
+        a.plot(point[0], point[1], "rx", markersize=10, label="Point to minimize")
+        a.legend()
+    fig.savefig(path / "optimized_near_field.png")
