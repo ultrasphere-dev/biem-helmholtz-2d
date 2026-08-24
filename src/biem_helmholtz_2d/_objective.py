@@ -9,6 +9,32 @@ from ie_circle import Shape
 from ._potential_inner import dlp_kernel, slp_kernel
 
 
+def abs2_scattered_field(
+    target: Array,
+    /,
+    *,
+    field_value: Array,
+) -> Array:
+    r"""
+    Objective function $j(\phi) = |u(x_0)|^2$.
+
+    Parameters
+    ----------
+    target : Array
+        Target value $c$ of shape (...,).
+    field_value : Array
+        Scattered field $u(x_0)$ of shape (...,).
+
+    Returns
+    -------
+    Array
+        Objective value $j(\phi)$ of shape (...,).
+
+    """
+    xp = array_namespace(target, field_value)
+    return xp.abs(field_value - target) ** 2
+
+
 def grad_phi_abs2_scattered_field(
     point: Array,
     field_value: Array,
@@ -78,12 +104,11 @@ def grad_phi_abs2_scattered_field(
 
     """
     xp = array_namespace(point, k, alpha, eta)
-    u_sq = xp.squeeze(field_value)
 
     def grad(t_in: Array) -> Array:
         dlp = dlp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
         slp = slp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
         conj_k = alpha * xp.conj(dlp) + 1j * eta * xp.conj(slp)
-        return 2.0 * u_sq * conj_k
+        return 2 * field_value * conj_k
 
     return grad

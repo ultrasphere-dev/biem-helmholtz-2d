@@ -57,7 +57,7 @@
   $
 
   Let $jr(x) := J(x, phi_x)$.
-  Assume there exists $grad_phi J(x, phi_x) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi J (x, phi_x) [h] = dp(grad_phi J (x, phi_x), h)$.
+  Assume there exists $grad_phi J(x, phi_x) in c2pi (CC)$ such that for any $h in c2pi (CC), D_phi J (x, phi_x) [h] = Re dp(grad_phi J (x, phi_x), h)$.
   Then $D_x jr(x) [h]$ is given by
 
   $
@@ -186,8 +186,8 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 #theorem[Riesz representation for point evaluation][
   Let $x_0 in RR^2 without overline(Omega_x)$.
   Let $ju in C^1 (RR^2, RR)$
-  Let $J(x, phi) := ju(x |-> (Re u_phi (x), Im u_phi (x))), u_phi (x) := ((alpha dlp_x - i eta slp_x) phi)$.
-  (If $c in CC$, $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $D ju(u) [v] = 2 Re (overline(u - c) v) = 2 (Re u - Re c) Re v + 2 (Im u - Im c) Im v$.)
+  Let $J(x, phi) := ju(Re u_phi (x), Im u_phi (x)), u_phi (x) := ((alpha dlp_x - i eta slp_x) phi)$.
+  (If $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.)
   Then, the Riesz representation of the Frechet derivative of $J$ with respect to $phi$ under the sesquilinear form
   $
     dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
@@ -195,45 +195,38 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   is given by
   $
     grad_phi J(x, phi)(tau) =
-    D ju(u(x_0))[alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)],
+    (pdv(ju, x_1) + i pdv(ju, x_2)) (u_phi (x_0)) overline(K(x_0, tau)),
   $
-  where
+  where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
+  $
+    K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau),
+  $
+  with
   $
     tilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
     tilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
   $
-  are the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
+  the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
+  Let $u := u_phi (x_0)$ and $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
   Since
   $
-    D_phi J(x, phi)[h] & =
-                         lim_(epsilon -> 0) (J(x, phi + epsilon h) - J(x, phi)) / epsilon \
-                       & = D ju(u)[v]
+    D_phi J(x, phi)[h] = D ju(u) [(alpha dlp_x - i eta slp_x) h (x_0)]
   $
-  where
-  $
-    u := u(x_0) = (alpha dlp_x - i eta slp_x) phi (x_0),
-    v := (alpha dlp_x - i eta slp_x) h (x_0).
-  $
-  Let $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
-  Expanding the evaluation operators gives
+  and expanding the evaluation operators gives
   $
     (alpha dlp_x - i eta slp_x) h (x_0)
-    = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau).
+    = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau),
   $
-  Therefore
+  using that $ju$ is real-valued, hence $D ju$ is real-linear,
   $
-    D_phi J(x, phi)[h]
-    = integral_0^(2 pi)
-    D ju(u(x_0)) [K(x_0, tau)] h(tau) dd(tau).
+    D_phi J(x, phi)[h] & = pdv(ju, x_1)(u) Re integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) + pdv(ju, x_2)(u) Im integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) \
+                       & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u) K(x_0, tau) h(tau) dd(tau) \
+                       & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u) overline(K(x_0, tau)) overline(h(tau)) dd(tau),
   $
-  By definition of the Riesz representation,
-  $D_phi J(x, phi)[h] = dp(grad_phi J, h)$, hence
-  $
-    grad_phi J(x, phi)(tau) =
-    D ju(u(x_0)) [K(x_0, tau)].
-  $
+  where the last equality uses $Re(z) = Re(overline(z))$.
+  Comparing with $Re dp(grad_phi J, h)$ gives the claimed representation.
 ]
 
 #bibliography("main.bib")
