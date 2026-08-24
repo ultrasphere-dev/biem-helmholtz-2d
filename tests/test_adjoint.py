@@ -12,7 +12,7 @@ from ie_circle import Shape, trapezoidal_quadrature
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
 from biem_helmholtz_2d._adjoint import objective_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import grad_phi_scattered_field
+from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
 from biem_helmholtz_2d._potential_inner_derivative import (
     dlp_shape_derivative,
     slp_shape_derivative,
@@ -55,7 +55,9 @@ def test_adjoint_central_derivative(
         n=n,
     )
     u_scat = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
-    grad_phi_j = grad_phi_scattered_field(x0[None], u_scat, shape=shape, k=k_arr, alpha=a, eta=e)
+    grad_phi_j = grad_phi_abs2_scattered_field(
+        x0[None], u_scat, shape=shape, k=k_arr, alpha=a, eta=e
+    )
 
     incident_field_grad = plane_wave_grad(k_arr, direction)
     dr_g_vals = -xp.sum(incident_field_grad(shape.x(t)) * shape_h.x(t), axis=-1)

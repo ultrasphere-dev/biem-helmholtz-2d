@@ -9,7 +9,7 @@ from ie_circle import Shape
 from ._potential_inner import dlp_kernel, slp_kernel
 
 
-def grad_phi_scattered_field(
+def grad_phi_abs2_scattered_field(
     point: Array,
     field_value: Array,
     /,

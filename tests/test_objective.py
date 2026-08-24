@@ -9,7 +9,7 @@ from ie_circle import Shape, trapezoidal_quadrature
 
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
 from biem_helmholtz_2d._incident import plane_wave
-from biem_helmholtz_2d._objective import grad_phi_scattered_field
+from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
 
 
 @pytest.mark.parametrize("m", [1, 3])
@@ -44,7 +44,7 @@ def test_grad_phi_central_derivative(
         n=n,
     )
     u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
-    grad_phi_j = grad_phi_scattered_field(x0[None], u, shape=shape, k=k_arr, alpha=a, eta=e)
+    grad_phi_j = grad_phi_abs2_scattered_field(x0[None], u, shape=shape, k=k_arr, alpha=a, eta=e)
 
     def v_func(t_in: Array) -> Array:
         return xp.cos(m * t_in)
