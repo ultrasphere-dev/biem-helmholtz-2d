@@ -21,16 +21,47 @@ from biem_helmholtz_2d._potential_inner_derivative import (
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
-def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None:
-    """
+def example_optimization(
+    *,
+    xp: ArrayNamespace,
+    dtype: Any,
+    device: Any,
+    n_modes: int = 20,
+    alpha_reg: float = 0.1,
+    k_reg: int = 3,
+) -> None:
+    r"""
     Example optimization using adjoint method with trust-constr.
 
-    Minimizes |u_scat(x_0)|^2 subject to sum sqrt(a_n^2 + b_n^2) <= 1.
-    The constant Fourier coefficient is fixed to 1.
+    Minimizes $|u_{\mathrm{scat}}(x_0)|^2$ subject to
+    $\sum \sqrt{a_n^2 + b_n^2} \le 1$.
+    The constant Fourier coefficient is fixed to $1$.
+
+    Parameters
+    ----------
+    xp : ArrayNamespace
+        Array API namespace.
+    dtype : Any
+        Array dtype.
+    device : Any
+        Array device.
+    n_modes : int
+        Number of Fourier modes to optimize.
+    alpha_reg : float
+        Hilbertian regularization weight $\alpha$ in the inner product
+
+        $$
+        \langle \phi, \psi \rangle_{H_{2\pi}^k}
+        = \tfrac{1}{2} a_0(\phi) a_0(\psi)
+        + \sum_{m=1}^{\infty} (1 + \alpha m^2)^k
+            \bigl(a_m(\phi) a_m(\psi) + b_m(\phi) b_m(\psi)\bigr).
+        $$
+
+    k_reg : int
+        Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
 
     """
-    n = 8
-    n_modes = 4
+    n = n_modes * 2 + 1
     k = xp.asarray(1.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
@@ -118,6 +149,9 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
             )
 
         gradient = xp.concat([derivative(h_cos), derivative(h_sin)])
+        m = xp.arange(1, n_modes + 1, dtype=dtype, device=device)
+        weights = (1 + alpha_reg * m**2) ** k_reg
+        gradient = gradient / xp.concat([weights, weights])
         return np.asarray(gradient, device="cpu")
 
     def constraint_fun(x: np.ndarray) -> float:
@@ -136,7 +170,9 @@ def example_optimization(*, xp: ArrayNamespace, dtype: Any, device: Any) -> None
 
     constraint = NonlinearConstraint(constraint_fun, -np.inf, 1.0, jac=constraint_jac)
 
-    path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}_k{float(k)}_n{n}")
+    path = pathlib.Path(
+        f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}_k{float(k)}_n{n}_ar{alpha_reg}_kr{k_reg}"
+    )
     path.mkdir(parents=True, exist_ok=True)
 
     val_hist = []
