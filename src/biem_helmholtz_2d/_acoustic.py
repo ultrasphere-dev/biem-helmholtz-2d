@@ -95,7 +95,7 @@ def isin_shape(x: Array, shape: Shape, /) -> Array:
     integrand = upper / lower
     integral = xp.sum(integrand * w, axis=-1)
     winding_number = integral / (2 * math.pi)
-    return xp.abs(winding_number) > 0.01
+    return xp.abs(winding_number) > 0.00001
 
 
 def plot_near_field(

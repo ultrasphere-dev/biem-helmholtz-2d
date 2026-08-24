@@ -26,7 +26,7 @@ def example_optimization(
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
-    n_modes: int = 15,
+    n_modes: int = 10,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
 ) -> None:
@@ -61,7 +61,7 @@ def example_optimization(
         Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
 
     """
-    n = n_modes + 4
+    n = n_modes + 20
     k = xp.asarray(4.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
@@ -199,6 +199,7 @@ def example_optimization(
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Objective value")
     ax.set_title(f"Optimization history (k={float(k)}, n={n})")
+    fig.tight_layout()
     fig.savefig(path / "optimization_history.png")
 
     fig, ax = plt.subplots()
@@ -208,6 +209,7 @@ def example_optimization(
     ax.plot(x_plot[:, 0], x_plot[:, 1])
     ax.set_aspect("equal")
     ax.set_title("Optimized shape")
+    fig.tight_layout()
     fig.savefig(path / "optimized_shape.png")
 
     fig, ax = plt.subplots(1, 3, figsize=(15, 5))
@@ -233,4 +235,5 @@ def example_optimization(
     for a in ax:
         a.plot(point[0], point[1], "rx", markersize=10, label="Point to minimize")
         a.legend()
+    fig.tight_layout()
     fig.savefig(path / "optimized_near_field.png")
