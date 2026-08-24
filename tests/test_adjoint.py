@@ -13,6 +13,10 @@ from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
 from biem_helmholtz_2d._adjoint import objective_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
 from biem_helmholtz_2d._objective import grad_phi_scattered_field
+from biem_helmholtz_2d._potential_inner_derivative import (
+    dlp_shape_derivative,
+    slp_shape_derivative,
+)
 
 
 def remove_trailing_exponent_zeros(s: str, /) -> str:
@@ -56,12 +60,28 @@ def test_adjoint_central_derivative(
     incident_field_grad = plane_wave_grad(k_arr, direction)
     dr_g_vals = -xp.sum(incident_field_grad(shape.x(t)) * shape_h.x(t), axis=-1)
 
-    eps = 1e-5
-
-    shape_p, shape_m = shape_central_difference(eps)
-    u_plus = near_field(phi, x0[None], k=k_arr, shape=shape_p, n=n, alpha=a, eta=e)
-    u_minus = near_field(phi, x0[None], k=k_arr, shape=shape_m, n=n, alpha=a, eta=e)
-    dr_A_phi = (u_plus - u_minus) / (2 * eps)
+    # Compute dr_j analytically using shape derivatives of near-field operators
+    ds = slp_shape_derivative(
+        x0[None],
+        phi,
+        shape_x=shape.x,
+        shape_dx=shape.dx,
+        h=shape_h.x,
+        dh=shape_h.dx,
+        k=k_arr,
+        n=n,
+    )
+    dd = dlp_shape_derivative(
+        x0[None],
+        phi,
+        shape_x=shape.x,
+        shape_dx=shape.dx,
+        h=shape_h.x,
+        dh=shape_h.dx,
+        k=k_arr,
+        n=n,
+    )
+    dr_A_phi = xp.squeeze(a * dd - 1j * e * ds)
     dr_j_val = 2.0 * xp.real(xp.conj(u_scat) * dr_A_phi).squeeze()
 
     dr_adj = objective_derivative(

@@ -166,6 +166,43 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
                  & ->_(tau -> t) ((h'_2(t) x''_1(t) - h'_1(t) x''_2(t)) + (x'_2(t) h''_1(t) - x'_1(t) h''_2(t))) / (2 abs(x'(t))^2)
   $
 ]
+#let sl = $op(cal("SL"))$
+#let dl = $op(cal("DL"))$
+#let slk = $op("SL")$
+#let dlk = $op("DL")$
+#theorem[
+  Let $slk, dlk$ kernels of $sl_Gamma, dl_Gamma$ respectively. Then,
+  $
+    slk (x, tau) & := G(x, x(tau)) abs(x'(tau)) \
+                 & = i/4 hk1_0 (k abs(x - x(tau))) abs(x'(tau)) \
+    dlk (x, tau) & := n(tau) dot grad_y G(x, x(tau)) abs(x'(tau)) \
+                 & = n^* (tau) dot (i k)/4 (hk1_1 (k abs(x - x(tau))))/(abs(x - x(tau))) (x - x(tau))
+  $
+  Their shape derivatives are
+  $
+    (slk)'[h](x, tau) & = (i k)/4 hk1_1 (k abs(x - x(tau))) (x - x(tau)) dot h(tau) / abs(x - x(tau)) abs(x'(tau)) \
+                      & quad + i/4 hk1_0 (k abs(x - x(tau))) (x'(tau) dot h'(tau)) / abs(x'(tau)) \
+    (dlk)'[h](x, tau) & = (i k)/4 ((n^*)'[h](tau) dot (x - x(tau)) - n^* (tau) dot h(tau)) \
+                      & quad times (hk1_1 (k abs(x - x(tau))))/(abs(x - x(tau))) \
+                      & quad + (i k^2)/4 (n^* (tau) dot (x - x(tau))) ((x - x(tau)) dot h(tau)) \
+                      & quad times (hk1_2 (k abs(x - x(tau)))) / abs(x - x(tau))^2
+  $
+]
+#proof[
+  Since $x in.not Gamma$, the kernels are smooth in $tau$, so the chain rule applies directly.
+  For $slk$, use $dv(, z) hk1_0 (z) = - hk1_1 (z)$:
+  $
+    (slk)'[h](x, tau) & = - i/4 k hk1_1 (k r) r'[h] abs(x'(tau)) + i/4 hk1_0 (k r) (abs(x'))'[h](tau)
+  $
+  where $r := abs(x - x(tau))$, $r'[h] = - (x - x(tau)) dot h(tau) / r$ and $(abs(x'))'[h](tau) = (x'(tau) dot h'(tau)) / abs(x'(tau))$.
 
+  For $dlk$, write $dlk (x, tau) = n^* (tau) dot (i k)/4 f(r) (x - x(tau))$ with $f(r) := hk1_1 (k r) / r$. Then
+  $
+    (dlk)'[h](x, tau) & = (n^*)'[h](tau) dot (i k)/4 f(r) (x - x(tau)) \
+                      & quad + n^* (tau) dot (i k)/4 f'(r) r'[h] (x - x(tau)) \
+                      & quad + n^* (tau) dot (i k)/4 f(r) (- h(tau))
+  $
+  Since $f'(r) = - k hk1_2 (k r) / r$ (from $dv(, z) z^(-1) hk1_1 (z) = - z^(-1) hk1_2 (z)$), substituting gives the result.
+]
 
 #bibliography("neumann.bib")
