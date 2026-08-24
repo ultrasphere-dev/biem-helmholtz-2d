@@ -98,7 +98,7 @@ def isin_shape(x: Array, shape: Shape, /) -> Array:
     return xp.abs(winding_number) > 0.01
 
 
-def plot_ner_field(
+def plot_near_field(
     density: Callable[[Array], Array],
     incident_field: Callable[[Array], Array],
     /,
