@@ -46,33 +46,37 @@ class ParameterShape(RadiusShape):
 
     def r(self, t: Array, /) -> Array:
         xp = array_namespace(t, self.cos_coefs, self.sin_coefs)
-        t = t[..., None]
-        m_cos = xp.arange(self.cos_coefs.shape[0], dtype=t.dtype, device=t.device)
-        m_sin = xp.arange(1, self.sin_coefs.shape[0] + 1, dtype=t.dtype, device=t.device)
-        cos_basis = xp.cos(t * m_cos)
-        sin_basis = xp.sin(t * m_sin)
-        return xp.sum(self.cos_coefs * cos_basis, axis=-1) + xp.sum(
-            self.sin_coefs * sin_basis, axis=-1
-        )
+        t_expanded = t[..., None]
+        m_cos = xp.arange(self.cos_coefs.shape[-1], dtype=t.dtype, device=t.device)
+        m_sin = xp.arange(1, self.sin_coefs.shape[-1] + 1, dtype=t.dtype, device=t.device)
+        cos_basis = xp.cos(t_expanded * m_cos)
+        sin_basis = xp.sin(t_expanded * m_sin)
+        cos_coefs = self.cos_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        sin_coefs = self.sin_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        return xp.sum(cos_coefs * cos_basis, axis=-1) + xp.sum(sin_coefs * sin_basis, axis=-1)
 
     def dr(self, t: Array, /) -> Array:
         xp = array_namespace(t, self.cos_coefs, self.sin_coefs)
-        t = t[..., None]
-        m_cos = xp.arange(self.cos_coefs.shape[0], dtype=t.dtype, device=t.device)
-        m_sin = xp.arange(1, self.sin_coefs.shape[0] + 1, dtype=t.dtype, device=t.device)
-        cos_basis_derivative = -xp.sin(t * m_cos) * m_cos
-        sin_basis_derivative = xp.cos(t * m_sin) * m_sin
-        return xp.sum(self.cos_coefs * cos_basis_derivative, axis=-1) + xp.sum(
-            self.sin_coefs * sin_basis_derivative, axis=-1
+        t_expanded = t[..., None]
+        m_cos = xp.arange(self.cos_coefs.shape[-1], dtype=t.dtype, device=t.device)
+        m_sin = xp.arange(1, self.sin_coefs.shape[-1] + 1, dtype=t.dtype, device=t.device)
+        cos_basis_derivative = -xp.sin(t_expanded * m_cos) * m_cos
+        sin_basis_derivative = xp.cos(t_expanded * m_sin) * m_sin
+        cos_coefs = self.cos_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        sin_coefs = self.sin_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        return xp.sum(cos_coefs * cos_basis_derivative, axis=-1) + xp.sum(
+            sin_coefs * sin_basis_derivative, axis=-1
         )
 
     def ddr(self, t: Array, /) -> Array:
         xp = array_namespace(t, self.cos_coefs, self.sin_coefs)
-        t = t[..., None]
-        m_cos = xp.arange(self.cos_coefs.shape[0], dtype=t.dtype, device=t.device)
-        m_sin = xp.arange(1, self.sin_coefs.shape[0] + 1, dtype=t.dtype, device=t.device)
-        cos_basis_second_derivative = -xp.cos(t * m_cos) * (m_cos**2)
-        sin_basis_second_derivative = -xp.sin(t * m_sin) * (m_sin**2)
-        return xp.sum(self.cos_coefs * cos_basis_second_derivative, axis=-1) + xp.sum(
-            self.sin_coefs * sin_basis_second_derivative, axis=-1
+        t_expanded = t[..., None]
+        m_cos = xp.arange(self.cos_coefs.shape[-1], dtype=t.dtype, device=t.device)
+        m_sin = xp.arange(1, self.sin_coefs.shape[-1] + 1, dtype=t.dtype, device=t.device)
+        cos_basis_second_derivative = -xp.cos(t_expanded * m_cos) * (m_cos**2)
+        sin_basis_second_derivative = -xp.sin(t_expanded * m_sin) * (m_sin**2)
+        cos_coefs = self.cos_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        sin_coefs = self.sin_coefs[(...,) + (None,) * t.ndim + (slice(None),)]
+        return xp.sum(cos_coefs * cos_basis_second_derivative, axis=-1) + xp.sum(
+            sin_coefs * sin_basis_second_derivative, axis=-1
         )

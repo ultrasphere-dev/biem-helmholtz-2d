@@ -120,9 +120,9 @@ def objective_derivative(
         Riesz representation w.r.t. $\langle f,g\rangle=\int f\overline g$.
         Signature (...,) -> (...,).
     dr_j : Array
-        Value $D_r j(r,\phi_r)[h]$ (scalar).
+        Value $D_r j(r,\phi_r)[h]$ of shape (...,).
     dr_g : Array
-        Shape derivative $D_r g[h]$ at quadrature nodes of shape ``(Q,)``.
+        Shape derivative $D_r g[h]$ at quadrature nodes of shape ``(..., Q)``.
     h_shape : Shape
         Shape perturbation $h$, providing $h(t)$, $h'(t)$, $h''(t)$
         via ``h_shape.x``, ``h_shape.dx``, ``h_shape.ddx``
@@ -133,7 +133,7 @@ def objective_derivative(
     Returns
     -------
     Array
-        Shape derivative $D_r J(r)[h]$ as a scalar of shape (...,).
+        Shape derivative $D_r J(r)[h]$ of shape (...,).
 
     Examples
     --------
@@ -171,8 +171,8 @@ def objective_derivative(
     w_trap_val = w_trap[0]
 
     # dr_g may be complex (depends on incident field gradient);
-    # only check its first dimension matches
-    check_shapes("Q", dr_g, names="dr_g")
+    # only check its last dimension matches
+    check_shapes("*BQ", dr_g, names="dr_g")
 
     h = h_shape.x
     dh = h_shape.dx
@@ -226,11 +226,11 @@ def objective_derivative(
     k_log_sd = alpha * dlp_log - 1j * eta * slp_log
     k_cont_sd = alpha * dlp_cont - 1j * eta * slp_cont
 
-    shape_deriv_phi = xp.sum(k_log_sd * phi_t * w_log_cot, axis=1) + xp.sum(
-        k_cont_sd * phi_t * w_trap_val, axis=1
+    shape_deriv_phi = xp.sum(k_log_sd * phi_t * w_log_cot, axis=-1) + xp.sum(
+        k_cont_sd * phi_t * w_trap_val, axis=-1
     )
 
     # sesquilinear inner product
-    inner = xp.sum(psi_t * xp.conj(shape_deriv_phi - dr_g) * w_trap_val)
+    inner = xp.sum(psi_t * xp.conj(shape_deriv_phi - dr_g) * w_trap_val, axis=-1)
 
     return dr_j + xp.real(inner)
