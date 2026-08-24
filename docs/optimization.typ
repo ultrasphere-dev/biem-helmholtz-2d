@@ -21,7 +21,6 @@
 #let uin = $u_"in"$
 #let dp(x, y) = $lr(chevron.l #x, #y chevron.r)$
 #let ip(x, y) = $lr(( #x, #y ))$
-#let jp = $tilde(J)$
 #let hd = $hat(h)$
 #let arginf = $op("arginf")$
 #let c2pi = $C_(2 pi)$
@@ -51,28 +50,28 @@
   Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
   Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
-  Let $jp: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
+  Let $J: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
 
   $
     (I/2 + dlp_x - i eta slp_x) phi_x = g_x quad t in [0, 2pi)
   $
 
   Let $jr(x) := J(x, phi_x)$.
-  Assume there exists $grad_phi J(x, phi_x) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi jp (x, phi_x) [h] = dp(grad_phi jp (x, phi_x), h)$.
+  Assume there exists $grad_phi J(x, phi_x) in c2pi (RR)$ such that for any $h in c2pi (RR), D_phi J (x, phi_x) [h] = dp(grad_phi J (x, phi_x), h)$.
   Then $D_x jr(x) [h]$ is given by
 
   $
-    D_x jr(x) [h] & = D_x jp(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h])
+    D_x jr(x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h])
   $
   where $psi_x in c2pi (CC)$ satisfies the following adjoint equation:
   $
-    (I/2 + dlp_x - i eta slp_x)^* psi_x = - grad_phi jp (x, phi_x)
+    (I/2 + dlp_x - i eta slp_x)^* psi_x = - grad_phi J (x, phi_x)
   $
 ]
 #proof[
   Let $L: c2pi^k (RR^2) times c2pi (CC) times c2pi (CC) -> RR$ defined by
   $
-    L(x, phi, psi) := jp(x, phi) + Re dp(psi, (I/2 + dlp_x - i eta slp_x) phi - g_x)
+    L(x, phi, psi) := J(x, phi) + Re dp(psi, (I/2 + dlp_x - i eta slp_x) phi - g_x)
   $
   Then
   $
@@ -80,12 +79,12 @@
   $
   The first term is
   $
-    D_x L(x, phi_x, psi_x) [h] & = D_x jp(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h]) \
+    D_x L(x, phi_x, psi_x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h]) \
   $
   The last two terms vanish since for any $v in c2pi$,
   $
-    D_phi L(x, phi, psi_x) [v] & = D_phi jp (x, phi) [v] + Re dp(psi_x, (I/2 + dlp_x - i eta slp_x) v) \
-                               & = Re dp((I/2 + dlp_x - i eta slp_x)^* psi_x + grad_phi jp (x, phi), v) = Re dp(0, v) = 0
+    D_phi L(x, phi, psi_x) [v] & = D_phi J (x, phi) [v] + Re dp(psi_x, (I/2 + dlp_x - i eta slp_x) v) \
+                               & = Re dp((I/2 + dlp_x - i eta slp_x)^* psi_x + grad_phi J (x, phi), v) = Re dp(0, v) = 0
   $
   and for any $w in c2pi$,
   $
@@ -93,18 +92,18 @@
   $
 ]
 #remark[
-  Typically $g_x := - uin compose x$, $jp (x, phi) := J(x, (dlp_x - i eta slp_x) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on shape and scattered field, not density.
+  Typically $g_x := - uin compose x$, $J (x, phi) := J(x, (dlp_x - i eta slp_x) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on shape and scattered field, not density.
 
-  In this case, $D_x g_x (t) [h] = - grad uin(x(t)) dot h(t)$, $grad_phi jp (x, phi) = (dlp_x - i eta slp_x)^* grad_u J (x, (dlp_x - i eta slp_x) phi)$, since $dp(grad_phi jp, h) = dp(grad_u J, (dlp_x - i eta slp_x) h) = dp((dlp_x - i eta slp_x)^* grad_u J, h)$
+  In this case, $D_x g_x (t) [h] = - grad uin(x(t)) dot h(t)$, $grad_phi J (x, phi) = (dlp_x - i eta slp_x)^* grad_u J (x, (dlp_x - i eta slp_x) phi)$, since $dp(grad_phi J, h) = dp(grad_u J, (dlp_x - i eta slp_x) h) = dp((dlp_x - i eta slp_x)^* grad_u J, h)$
 ]
 
 #remark[
   In the proof above, the step $D_phi L(x, phi_x, psi_x)[D_x phi_x[h]] = 0$ relies on the fact that the shape-induced variation $D_x phi_x[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
 ]
 #algorithm[
-  Assume we have implementation of $jp, D_x jp, D_phi jp, x, x', x'', h, h', h'', slp_x, dlp_x, D_x slp_x, D_x dlp_x, g_x, D_x g_x$.
+  Assume we have implementation of $J, D_x J, D_phi J, x, x', x'', h, h', h'', slp_x, dlp_x, D_x slp_x, D_x dlp_x, g_x, D_x g_x$.
   + Compute $phi_x$ by solving the boundary integral equation
-  + Compute $D_phi jp$, then compute $psi_x$ by solving the adjoint equation
+  + Compute $D_phi J$, then compute $psi_x$ by solving the adjoint equation
   + Compute the Riesz representative $hdj(x)$ of $D_x jr(x)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
   + Update the shape: $x_(n + 1) = x_n + lambda hdh$ where $hdh := - hdj(x) / norm(hdj(x))_H$
 ]
@@ -183,17 +182,20 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   Taking square roots yields the claimed bound.
 ]
-
+#let ju = $tilde(J)$
 #theorem[Riesz representation for point evaluation][
-  Let $x_0 in RR^2 without overline(Omega_x)$). Let $jp(x, phi) := abs(u(x))^2, u(x) := ((alpha dlp_x - i eta slp_x) phi) (x_0)$.
-  Then, the Riesz representation of the Frechet derivative of $jp$ with respect to $phi$ under the sesquilinear form
+  Let $x_0 in RR^2 without overline(Omega_x)$.
+  Let $ju in C^1 (RR^2, RR)$
+  Let $J(x, phi) := ju(x |-> (Re u_phi (x), Im u_phi (x))), u_phi (x) := ((alpha dlp_x - i eta slp_x) phi)$.
+  (If $c in CC$, $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $D ju(u) [v] = 2 Re (overline(u - c) v) = 2 (Re u - Re c) Re v + 2 (Im u - Im c) Im v$.)
+  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $phi$ under the sesquilinear form
   $
     dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
   $
   is given by
   $
-    grad_phi jp(x, phi)(tau) =
-    2 u(x_0) overline((alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau))),
+    grad_phi J(x, phi)(tau) =
+    D ju(u(x_0))[alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)],
   $
   where
   $
@@ -203,20 +205,18 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   are the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
-  Let $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
-  Then
+  Since
   $
-    D_phi jp(x, phi)[h] & =
-                          lim_(epsilon -> 0) (jp(x, phi + epsilon h) - jp(x, phi)) / epsilon \
-                        & = lim_(epsilon -> 0) (abs(u + epsilon v)^2 - abs(u)^2) / epsilon \
-                        & = lim_(epsilon -> 0) (abs(u)^2 + epsilon overline(u) v + epsilon u overline(v) + epsilon^2 abs(v)^2 - abs(u)^2) / epsilon \
-                        & = 2 Re (overline(u) v)
+    D_phi J(x, phi)[h] & =
+                         lim_(epsilon -> 0) (J(x, phi + epsilon h) - J(x, phi)) / epsilon \
+                       & = D ju(u)[v]
   $
   where
   $
     u := u(x_0) = (alpha dlp_x - i eta slp_x) phi (x_0),
     v := (alpha dlp_x - i eta slp_x) h (x_0).
   $
+  Let $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
   Expanding the evaluation operators gives
   $
     (alpha dlp_x - i eta slp_x) h (x_0)
@@ -224,15 +224,15 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   Therefore
   $
-    D_phi jp(x, phi)[h]
+    D_phi J(x, phi)[h]
     = integral_0^(2 pi)
-    2 Re(overline(u(x_0)) K(x_0, tau)) h(tau) dd(tau).
+    D ju(u(x_0)) [K(x_0, tau)] h(tau) dd(tau).
   $
   By definition of the Riesz representation,
-  $D_phi jp(x, phi)[h] = dp(grad_phi jp, h)$, hence
+  $D_phi J(x, phi)[h] = dp(grad_phi J, h)$, hence
   $
-    grad_phi jp(x, phi)(tau) =
-    2 Re(overline(u(x_0)) K(x_0, tau)).
+    grad_phi J(x, phi)(tau) =
+    D ju(u(x_0)) [K(x_0, tau)].
   $
 ]
 
