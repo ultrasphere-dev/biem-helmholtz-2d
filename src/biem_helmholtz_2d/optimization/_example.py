@@ -26,7 +26,7 @@ def example_optimization(
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
-    n_modes: int = 20,
+    n_modes: int = 15,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
 ) -> None:
@@ -61,11 +61,11 @@ def example_optimization(
         Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
 
     """
-    n = n_modes * 2 + 1
-    k = xp.asarray(1.0, device=device, dtype=dtype)
+    n = n_modes + 4
+    k = xp.asarray(4.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
-    point = xp.asarray([1.0, 3.0], device=device, dtype=dtype)
+    point = xp.asarray([-2.0, 3.0], device=device, dtype=dtype)
     direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
