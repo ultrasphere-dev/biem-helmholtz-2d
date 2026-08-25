@@ -13,15 +13,17 @@ from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
 
 
 @pytest.mark.parametrize("m", [1, 3])
+@pytest.mark.parametrize("target_val", [0.0, 1.0 + 0.5j])
 def test_grad_phi_central_derivative(
     xp: Any,
     shape: Shape,
     device: Any,
     dtype: Any,
     m: int,
+    target_val: complex,
 ) -> None:
     r"""
-    Verify $\operatorname{grad}_\phi j$ by central FD on $j(\phi)=|u(x_0)|^2$.
+    Verify $\operatorname{grad}_\phi j$ by central FD on $j(\phi)=|u(x_0) - c|^2$.
 
     Perturbation $v(t) = \cos(m t)$.
     """
@@ -44,7 +46,12 @@ def test_grad_phi_central_derivative(
         n=n,
     )
     u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
-    grad_phi_j = grad_phi_abs2_scattered_field(x0[None], u, shape=shape, k=k_arr, alpha=a, eta=e)
+
+    target_arr = xp.asarray(target_val, dtype=xp.result_type(dtype, 1j), device=device)
+
+    grad_phi_j = grad_phi_abs2_scattered_field(
+        x0[None], u, shape=shape, k=k_arr, alpha=a, eta=e, target=target_arr
+    )
 
     def v_func(t_in: Array) -> Array:
         return xp.cos(m * t_in)
@@ -57,7 +64,7 @@ def test_grad_phi_central_derivative(
 
     def j_of_phi(phi_pert: Callable[[Array], Array]) -> Array:
         up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
-        return xp.sum(xp.abs(up) ** 2)
+        return xp.sum(xp.abs(up - target_arr) ** 2)
 
     class _PerturbedDensity:
         def __init__(self, eps_pert: float) -> None:

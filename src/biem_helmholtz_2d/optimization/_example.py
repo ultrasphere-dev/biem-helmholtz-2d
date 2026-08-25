@@ -29,12 +29,14 @@ def example_optimization(
     n_modes: int = 10,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
+    desired_total_field: complex = 0j,
 ) -> None:
     r"""
     Example optimization using adjoint method with trust-constr.
 
-    Minimizes $|u_{\mathrm{scat}}(x_0)|^2$ subject to
-    $\sum \sqrt{a_n^2 + b_n^2} \le 1$.
+    Minimizes $|u_{\mathrm{total}}(x_0) - c|^2$ subject to
+    $\sum \sqrt{a_n^2 + b_n^2} \le 1$, where
+    $u_{\mathrm{total}} = u_{\mathrm{scat}} + u_{\mathrm{inc}}$.
     The constant Fourier coefficient is fixed to $1$.
 
     Parameters
@@ -59,6 +61,8 @@ def example_optimization(
 
     k_reg : int
         Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
+    desired_total_field : complex
+        Desired total field value $c$ at $x_0$.
 
     """
     n = n_modes + 20
@@ -81,24 +85,27 @@ def example_optimization(
 
     def solve(
         cos_coefs: Array, sin_coefs: Array, /
-    ) -> tuple[ParameterShape, NystromInterpolant, Array]:
+    ) -> tuple[ParameterShape, NystromInterpolant, Array, Array]:
         shape = ParameterShape(cos_coefs=cos_coefs, sin_coefs=sin_coefs)
         phi = scattering_dirichlet(
             k=k, shape=shape, incident_field=incident_field, alpha=alpha, eta=eta, n=n
         )
         u_scat = near_field(phi, point[None], k=k, shape=shape, n=n, alpha=alpha, eta=eta)
-        return shape, phi, u_scat
+        u_inc = incident_field(point)
+        return shape, phi, u_scat, u_inc
 
     def fun(x: np.ndarray) -> float:
         cos_coefs, sin_coefs = unpack(x)
-        _, _, u_scat = solve(cos_coefs, sin_coefs)
-        return float(xp.sum(xp.abs(u_scat) ** 2))
+        _, _, u_scat, u_inc = solve(cos_coefs, sin_coefs)
+        u_total = u_scat + u_inc
+        return float(xp.sum(xp.abs(u_total - desired_total_field) ** 2))
 
     def jac(x: np.ndarray) -> np.ndarray:
         cos_coefs, sin_coefs = unpack(x)
-        shape, phi, u_scat = solve(cos_coefs, sin_coefs)
+        shape, phi, u_scat, u_inc = solve(cos_coefs, sin_coefs)
+        target = desired_total_field - u_inc
         grad_phi_j = grad_phi_abs2_scattered_field(
-            point[None], u_scat, shape=shape, k=k, alpha=alpha, eta=eta
+            point[None], u_scat, shape=shape, k=k, alpha=alpha, eta=eta, target=target
         )
 
         # Basis shape perturbations, batched over all design directions
@@ -134,7 +141,9 @@ def example_optimization(
                 k=k,
                 n=n,
             )
-            dr_j = 2.0 * xp.real(xp.conj(u_scat) * (alpha * dlp_deriv - 1j * eta * slp_deriv))
+            dr_j = 2.0 * xp.real(
+                (xp.conj(u_scat) - xp.conj(target)) * (alpha * dlp_deriv - 1j * eta * slp_deriv)
+            )
             return objective_derivative(
                 k=k,
                 shape=shape,

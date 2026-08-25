@@ -55,8 +55,9 @@ def test_adjoint_central_derivative(
         n=n,
     )
     u_scat = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
+    zero = xp.asarray(0.0, dtype=dtype, device=device)
     grad_phi_j = grad_phi_abs2_scattered_field(
-        x0[None], u_scat, shape=shape, k=k_arr, alpha=a, eta=e
+        x0[None], u_scat, shape=shape, k=k_arr, alpha=a, eta=e, target=zero
     )
 
     incident_field_grad = plane_wave_grad(k_arr, direction)

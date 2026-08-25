@@ -16,7 +16,7 @@ def abs2_scattered_field(
     field_value: Array,
 ) -> Array:
     r"""
-    Objective function $j(\phi) = |u(x_0)|^2$.
+    Objective function $j(\phi) = |u(x_0) - c|^2$.
 
     Parameters
     ----------
@@ -44,17 +44,18 @@ def grad_phi_abs2_scattered_field(
     k: Array,
     alpha: Array,
     eta: Array,
+    target: Array,
 ) -> Callable[[Array], Array]:
     r"""
     Riesz representation of $d_\phi j$ under the $L^2$ sesquilinear form.
 
-    For the objective $j(\phi) = |u(x_0)|^2$ with
+    For the objective $j(\phi) = |u(x_0) - c|^2$ with
     $u = (\alpha\mathcal D - i\eta\mathcal S)\phi$, the Frechet derivative
     with respect to $\phi$ is
 
     $$
     D_\phi j[\nu] = 2\operatorname{Re}\bigl(
-        \overline{u(x_0)}\,(\alpha\mathcal D - i\eta\mathcal S)\nu(x_0)
+        (\overline{u(x_0)} - \overline{c})\,(\alpha\mathcal D - i\eta\mathcal S)\nu(x_0)
     \bigr).
     $$
 
@@ -63,7 +64,7 @@ def grad_phi_abs2_scattered_field(
 
     $$
     \operatorname{grad}_\phi j(\tau)
-    = 2\,u(x_0)\,
+    = 2\,(u(x_0) - c)\,
       \overline{\bigl(\alpha\widetilde{\mathcal D}(x_0,\tau)
                     - i\eta\,\widetilde{\mathcal S}(x_0,\tau)\bigr)},
     $$
@@ -95,20 +96,23 @@ def grad_phi_abs2_scattered_field(
         Coupling parameter $\alpha$ of shape (...,).
     eta : Array
         Coupling parameter $\eta$ of shape (...,).
+    target : Array
+        Target value $c$ of shape (...,).
 
     Returns
     -------
     Callable[[Array], Array]
-        Function $\operatorname{grad}_\phi j$ that takes boundary parameter
+        Riesz representation of $d_\phi j$ that takes boundary parameter
         $t$ of shape ``(...,)`` and returns values of shape ``(...,)``.
 
     """
-    xp = array_namespace(point, k, alpha, eta)
+    xp = array_namespace(point, k, alpha, eta, target)
+    diff = field_value - target
 
     def grad(t_in: Array) -> Array:
         dlp = dlp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
         slp = slp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
         conj_k = alpha * xp.conj(dlp) + 1j * eta * xp.conj(slp)
-        return 2 * field_value * conj_k
+        return 2 * diff * conj_k
 
     return grad
