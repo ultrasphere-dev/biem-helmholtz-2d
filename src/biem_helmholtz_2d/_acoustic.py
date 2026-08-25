@@ -128,7 +128,7 @@ def plot_near_field(
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
     uin = incident_field(xy)
     u = uscat + uin
-    u[isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_n_quad)] = xp.nan
+    u[isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol)] = xp.nan
     if ax_re is None and ax_im is None and ax_abs is None:
         ax_re = plt.gca()
     vmax_reim = quantile(
