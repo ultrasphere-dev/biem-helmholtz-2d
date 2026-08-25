@@ -4,7 +4,7 @@ from array_api.latest import Array, ArrayNamespace
 from ie_circle import KressShape
 from matplotlib import pyplot as plt
 
-from ._acoustic import far_field, plot_near_field, scattering_dirichlet
+from ._acoustic import far_field, plot_near_field, plot_near_field_prepare, scattering_dirichlet
 from ._incident import plane_wave
 
 
@@ -25,7 +25,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         n=n,
     )
     fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-    plot_near_field(
+    field_data = plot_near_field_prepare(
         density,
         incident_field,
         xlim=(-6.0, 6.0),
@@ -35,9 +35,12 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         n=n,
         alpha=alpha,
         eta=eta,
-        ax_re=ax[0],
-        ax_im=ax[1],
-        ax_abs=ax[2],
+    )
+    plot_near_field(
+        field_data,
+        ax_utot_re=ax[0],
+        ax_utot_im=ax[1],
+        ax_utot_abs=ax[2],
     )
     fig.savefig("example_3_1.png")
     direction = xp.asarray((1.0, 0), device=device, dtype=dtype)

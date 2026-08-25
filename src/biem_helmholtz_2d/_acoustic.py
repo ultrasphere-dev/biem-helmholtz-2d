@@ -1,5 +1,6 @@
 import math
 from collections.abc import Callable
+from typing import Any, Literal
 
 from array_api.latest import Array
 from array_api_compat import array_namespace
@@ -99,7 +100,24 @@ def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Arr
     return xp.abs(winding_number) > tol
 
 
-def plot_near_field(
+_FieldKind = Literal["uin", "uscat", "utot"]
+_FieldComponent = Literal["re", "im", "abs"]
+_FieldEntry = dict[str, Any]
+_FieldData = dict[tuple[_FieldKind, _FieldComponent], _FieldEntry]
+
+_FIELD_NAMES: dict[_FieldKind, str] = {
+    "uin": "Incident",
+    "uscat": "Scattered",
+    "utot": "Total",
+}
+_COMPONENT_NAMES: dict[_FieldComponent, str] = {
+    "re": "real part",
+    "im": "imaginary part",
+    "abs": "amplitude",
+}
+
+
+def plot_near_field_prepare(
     density: Callable[[Array], Array],
     incident_field: Callable[[Array], Array],
     /,
@@ -111,13 +129,54 @@ def plot_near_field(
     k: Array,
     alpha: Array,
     eta: Array,
-    isin_shape_n_quad: int,
+    isin_shape_n_quad: int = 500,
     n_plot: int = 100,
-    ax_re: Axes | None = None,
-    ax_im: Axes | None = None,
-    ax_abs: Axes | None = None,
     isin_shape_tol: float = 1e-5,
-) -> None:
+) -> _FieldData:
+    r"""
+    Precompute near-field data on a grid for plotting.
+
+    Computes the incident, scattered, and total fields on a regular grid,
+    masks points inside the scatterer with NaN, and determines
+    per-field color limits.
+
+    Parameters
+    ----------
+    density : Callable[[Array], Array]
+        Density function of shape (...) -> (..., ...(B), 1, 1).
+    incident_field : Callable[[Array], Array]
+        Incident field of shape (..., 2) -> (...,).
+    xlim : tuple[float, float]
+        Horizontal extent of the plot domain.
+    ylim : tuple[float, float]
+        Vertical extent of the plot domain.
+    n : int
+        Maximum order minus $1$.
+    shape : Shape
+        Boundary parametrisation of (...,) -> (..., 2).
+    k : Array
+        Wave number of shape (...(B),).
+    alpha : Array
+        Coupling parameter of shape (...(B),).
+    eta : Array
+        Coupling parameter of shape (...(B),).
+    isin_shape_n_quad : int
+        Number of quadrature nodes for the inside-shape test.
+    n_plot : int
+        Number of grid points per axis.
+    isin_shape_tol : float
+        Winding-number threshold for the inside-shape test.
+
+    Returns
+    -------
+    _FieldData
+        Dictionary keyed by ``(field, component)`` tuples where
+        ``field`` is one of ``"uin"``, ``"uscat"``, ``"utot"``
+        and ``component`` is one of ``"re"``, ``"im"``, ``"abs"``.
+        Each value is a dict with keys ``"data"``, ``"vmax"``,
+        ``"vmin"``, ``"extent"``.
+
+    """
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
     device = k.device
@@ -127,43 +186,116 @@ def plot_near_field(
     xy = xp.stack([x, y], axis=-1)
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
     uin = incident_field(xy)
-    u = uscat + uin
-    u[isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol)] = xp.nan
-    if ax_re is None and ax_im is None and ax_abs is None:
-        ax_re = plt.gca()
-    vmax_reim = quantile(
-        xp.abs(xp.concat([u.real[~xp.isnan(u.real)], u.imag[~xp.isnan(u.imag)]])), 0.99
-    )
-    vmax_abs = quantile(xp.abs(u[~xp.isnan(u)]), 0.99)
-    for ax, data, title in zip(
-        (ax_re, ax_im, ax_abs),
-        (u.real, u.imag, xp.abs(u)),
-        ("Near field real part", "Near field imaginary part", "Near field amplitude"),
-        strict=True,
-    ):
+    utot = uscat + uin
+    inside = isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol)
+    uscat[inside] = xp.nan
+    uin[inside] = xp.nan
+    utot[inside] = xp.nan
+
+    extent = (xlim[0], xlim[1], ylim[0], ylim[1])
+
+    result: _FieldData = {}
+    for field_name, field_val in (("uin", uin), ("uscat", uscat), ("utot", utot)):
+        valid_reim = xp.abs(
+            xp.concat([
+                field_val.real[~xp.isnan(field_val.real)],
+                field_val.imag[~xp.isnan(field_val.imag)],
+            ])
+        )
+        vmax_reim = float(quantile(valid_reim, 0.99))
+        vmax_abs = float(quantile(xp.abs(field_val[~xp.isnan(field_val)]), 0.99))
+
+        for component in ("re", "im", "abs"):
+            if component == "re":
+                data = field_val.real
+                vmax = vmax_reim
+                vmin = -vmax
+            elif component == "im":
+                data = field_val.imag
+                vmax = vmax_reim
+                vmin = -vmax
+            else:
+                data = xp.abs(field_val)
+                vmax = vmax_abs
+                vmin = 0.0
+            result[field_name, component] = {  # type: ignore
+                "data": data,
+                "vmax": vmax,
+                "vmin": vmin,
+                "extent": extent,
+            }
+    return result
+
+
+def plot_near_field(
+    field_data: _FieldData,
+    /,
+    *,
+    ax_uin_re: Axes | None = None,
+    ax_uin_im: Axes | None = None,
+    ax_uin_abs: Axes | None = None,
+    ax_uscat_re: Axes | None = None,
+    ax_uscat_im: Axes | None = None,
+    ax_uscat_abs: Axes | None = None,
+    ax_utot_re: Axes | None = None,
+    ax_utot_im: Axes | None = None,
+    ax_utot_abs: Axes | None = None,
+) -> None:
+    r"""
+    Plot precomputed near-field data on provided axes.
+
+    Parameters
+    ----------
+    field_data : _FieldData
+        Output of :func:`plot_near_field_prepare`.
+    ax_uin_re : Axes | None
+        Axes for incident field real part.
+    ax_uin_im : Axes | None
+        Axes for incident field imaginary part.
+    ax_uin_abs : Axes | None
+        Axes for incident field amplitude.
+    ax_uscat_re : Axes | None
+        Axes for scattered field real part.
+    ax_uscat_im : Axes | None
+        Axes for scattered field imaginary part.
+    ax_uscat_abs : Axes | None
+        Axes for scattered field amplitude.
+    ax_utot_re : Axes | None
+        Axes for total field real part.
+    ax_utot_im : Axes | None
+        Axes for total field imaginary part.
+    ax_utot_abs : Axes | None
+        Axes for total field amplitude.
+
+    """
+    axes: list[tuple[tuple[_FieldKind, _FieldComponent], Axes | None]] = [
+        (("uin", "re"), ax_uin_re),
+        (("uin", "im"), ax_uin_im),
+        (("uin", "abs"), ax_uin_abs),
+        (("uscat", "re"), ax_uscat_re),
+        (("uscat", "im"), ax_uscat_im),
+        (("uscat", "abs"), ax_uscat_abs),
+        (("utot", "re"), ax_utot_re),
+        (("utot", "im"), ax_utot_im),
+        (("utot", "abs"), ax_utot_abs),
+    ]
+    for key, ax in axes:
         if ax is None:
             continue
-
-        if title != "Near field amplitude":
-            vmax = vmax_reim
-        else:
-            vmax = vmax_abs
-        if title != "Near field amplitude":
-            vmin = -vmax
-        else:
-            vmin = 0
+        entry = field_data[key]
+        cmap = "inferno" if key[1] == "abs" else "seismic"
         im = ax.imshow(
-            data.T,
-            extent=(xlim[0], xlim[1], ylim[0], ylim[1]),
+            entry["data"].T,
+            extent=entry["extent"],
             origin="lower",
-            cmap="inferno" if title == "Near field amplitude" else "seismic",
-            vmin=vmin,
-            vmax=vmax,
+            cmap=cmap,
+            vmin=entry["vmin"],
+            vmax=entry["vmax"],
         )
         plt.colorbar(im, ax=ax)
         ax.set_xlabel("x")
         ax.set_ylabel("y")
-        ax.set_title(title)
+        ax.set_title(f"{_FIELD_NAMES[key[0]]} field {_COMPONENT_NAMES[key[1]]}")
 
 
 def near_field(

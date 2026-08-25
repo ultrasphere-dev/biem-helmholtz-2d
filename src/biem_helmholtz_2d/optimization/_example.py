@@ -10,7 +10,12 @@ from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from scipy.optimize import NonlinearConstraint, minimize
 
-from biem_helmholtz_2d._acoustic import near_field, plot_near_field, scattering_dirichlet
+from biem_helmholtz_2d._acoustic import (
+    near_field,
+    plot_near_field,
+    plot_near_field_prepare,
+    scattering_dirichlet,
+)
 from biem_helmholtz_2d._adjoint import objective_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
 from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
@@ -224,7 +229,7 @@ def example_optimization(
     density_opt = scattering_dirichlet(
         k=k, shape=shape_opt, incident_field=incident_field, alpha=alpha, eta=eta, n=n
     )
-    plot_near_field(
+    field_data = plot_near_field_prepare(
         density_opt,
         incident_field,
         xlim=(-4.0, 4.0),
@@ -234,12 +239,15 @@ def example_optimization(
         n=n,
         alpha=alpha,
         eta=eta,
-        ax_re=ax[0],
-        ax_im=ax[1],
-        ax_abs=ax[2],
         n_plot=200,
         isin_shape_n_quad=500,
         isin_shape_tol=1e-5,
+    )
+    plot_near_field(
+        field_data,
+        ax_utot_re=ax[0],
+        ax_utot_im=ax[1],
+        ax_utot_abs=ax[2],
     )
     # add cross at the point
     for a in ax:
