@@ -75,6 +75,16 @@ def example_optimization(
     incident_field_grad = plane_wave_grad(k, direction)
     t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
 
+    # Basis shape perturbations, batched over all 2 * n_modes design directions
+    eye = xp.eye(n_modes, dtype=dtype, device=device)
+    zeros_n = xp.zeros((n_modes, n_modes), dtype=dtype, device=device)
+    zeros_n1 = xp.zeros((n_modes, n_modes + 1), dtype=dtype, device=device)
+    eye_cos = xp.eye(n_modes, n_modes + 1, k=1, dtype=dtype, device=device)
+    h_all = ParameterShape(
+        cos_coefs=xp.concat([eye_cos, zeros_n1], axis=0),
+        sin_coefs=xp.concat([zeros_n, eye], axis=0),
+    )
+
     def unpack(x: np.ndarray, /) -> tuple[Array, Array]:
         cos_coefs = xp.concat([
             xp.ones(1, dtype=dtype, device=device),
@@ -108,56 +118,43 @@ def example_optimization(
             point[None], u_scat, shape=shape, k=k, alpha=alpha, eta=eta, target=target
         )
 
-        # Basis shape perturbations, batched over all design directions
-        h_cos = ParameterShape(
-            cos_coefs=xp.eye(n_modes, n_modes + 1, k=1, dtype=dtype, device=device),
-            sin_coefs=xp.zeros((n_modes, n_modes), dtype=dtype, device=device),
-        )
-        h_sin = ParameterShape(
-            cos_coefs=xp.zeros((n_modes, n_modes + 1), dtype=dtype, device=device),
-            sin_coefs=xp.eye(n_modes, dtype=dtype, device=device),
-        )
         incident_grad_at_shape = incident_field_grad(shape.x(t))
-
-        def derivative(h_shape: ParameterShape, /) -> Array:
-            dr_g = -xp.sum(incident_grad_at_shape * h_shape.x(t), axis=-1)
-            slp_deriv = slp_shape_derivative(
-                point[None],
-                phi,
-                shape_x=shape.x,
-                shape_dx=shape.dx,
-                h=h_shape.x,
-                dh=h_shape.dx,
-                k=k,
-                n=n,
-            )
-            dlp_deriv = dlp_shape_derivative(
-                point[None],
-                phi,
-                shape_x=shape.x,
-                shape_dx=shape.dx,
-                h=h_shape.x,
-                dh=h_shape.dx,
-                k=k,
-                n=n,
-            )
-            dr_j = 2.0 * xp.real(
-                (xp.conj(u_scat) - xp.conj(target)) * (alpha * dlp_deriv - 1j * eta * slp_deriv)
-            )
-            return objective_derivative(
-                k=k,
-                shape=shape,
-                alpha=alpha,
-                eta=eta,
-                n=n,
-                phi=phi,
-                grad_phi_j=grad_phi_j,
-                dr_j=dr_j,
-                dr_g=dr_g,
-                h_shape=h_shape,
-            )
-
-        gradient = xp.concat([derivative(h_cos), derivative(h_sin)])
+        dr_g = -xp.sum(incident_grad_at_shape * h_all.x(t), axis=-1)
+        slp_deriv = slp_shape_derivative(
+            point[None],
+            phi,
+            shape_x=shape.x,
+            shape_dx=shape.dx,
+            h=h_all.x,
+            dh=h_all.dx,
+            k=k,
+            n=n,
+        )
+        dlp_deriv = dlp_shape_derivative(
+            point[None],
+            phi,
+            shape_x=shape.x,
+            shape_dx=shape.dx,
+            h=h_all.x,
+            dh=h_all.dx,
+            k=k,
+            n=n,
+        )
+        dr_j = 2.0 * xp.real(
+            (xp.conj(u_scat) - xp.conj(target)) * (alpha * dlp_deriv - 1j * eta * slp_deriv)
+        )
+        gradient = objective_derivative(
+            k=k,
+            shape=shape,
+            alpha=alpha,
+            eta=eta,
+            n=n,
+            phi=phi,
+            grad_phi_j=grad_phi_j,
+            dr_j=dr_j,
+            dr_g=dr_g,
+            h_shape=h_all,
+        )
         m = xp.arange(1, n_modes + 1, dtype=dtype, device=device)
         weights = (1 + alpha_reg * m**2) ** k_reg
         gradient = gradient / xp.concat([weights, weights])
