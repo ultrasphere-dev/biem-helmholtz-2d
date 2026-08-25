@@ -198,7 +198,7 @@ def example_optimization(
         jac=jac,
         constraints=constraint,
         callback=callback,
-        options={"verbose": 1, "maxiter": 50},
+        options={"verbose": 1, "maxiter": 100},
     )
 
     cos_coefs_opt, sin_coefs_opt = unpack(result.x)
@@ -254,10 +254,11 @@ def example_optimization(
         a.plot(
             point[0],
             point[1],
-            "bx",
-            markersize=15,
-            linewidths=4,
-            edgecolors="white",
+            "X",
+            markersize=25,
+            markerfacecolor="black",
+            markeredgewidth=3,
+            markeredgecolor="white",
             label="Point to minimize",
         )
         a.legend()
