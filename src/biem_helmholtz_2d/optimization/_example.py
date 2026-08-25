@@ -237,11 +237,13 @@ def example_optimization(
         ax_re=ax[0],
         ax_im=ax[1],
         ax_abs=ax[2],
-        n_plot=500,
+        n_plot=200,
+        isin_shape_n_quad=500,
+        isin_shape_tol=1e-5,
     )
     # add cross at the point
     for a in ax:
-        a.plot(point[0], point[1], "x", markersize=25, label="Point to minimize")
+        a.plot(point[0], point[1], "bx", markersize=15, label="Point to minimize")
         a.legend()
     fig.tight_layout()
     fig.savefig(path / "optimized_near_field.png")

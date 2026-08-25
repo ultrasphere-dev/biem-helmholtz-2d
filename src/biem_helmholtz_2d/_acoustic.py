@@ -85,9 +85,9 @@ def scattering_dirichlet(
     return result
 
 
-def isin_shape(x: Array, shape: Shape, /) -> Array:
+def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Array:
     xp = array_namespace(x)
-    t, w = trapezoidal_quadrature(100, xp=xp, device=x.device, dtype=x.dtype)
+    t, w = trapezoidal_quadrature(n_quad, xp=xp, device=x.device, dtype=x.dtype)
     x_t = shape.x(t)
     nx_t_unnormalized = xp.stack([shape.dx(t)[..., 1], -shape.dx(t)[..., 0]], axis=-1)
     diff = x_t - x[..., None, :]
@@ -96,7 +96,7 @@ def isin_shape(x: Array, shape: Shape, /) -> Array:
     integrand = upper / lower
     integral = xp.sum(integrand * w, axis=-1)
     winding_number = integral / (2 * math.pi)
-    return xp.abs(winding_number) > 0.00001
+    return xp.abs(winding_number) > tol
 
 
 def plot_near_field(
@@ -111,10 +111,12 @@ def plot_near_field(
     k: Array,
     alpha: Array,
     eta: Array,
+    isin_shape_n_quad: int,
     n_plot: int = 100,
     ax_re: Axes | None = None,
     ax_im: Axes | None = None,
     ax_abs: Axes | None = None,
+    isin_shape_tol: float = 1e-5,
 ) -> None:
     xp = array_namespace(k, alpha, eta)
     dtype = xp.result_type(k, alpha, eta)
@@ -126,7 +128,7 @@ def plot_near_field(
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
     uin = incident_field(xy)
     u = uscat + uin
-    u[isin_shape(xy, shape)] = xp.nan
+    u[isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_n_quad)] = xp.nan
     if ax_re is None and ax_im is None and ax_abs is None:
         ax_re = plt.gca()
     vmax_reim = quantile(
