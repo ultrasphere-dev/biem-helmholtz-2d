@@ -26,7 +26,7 @@ def example_optimization(
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
-    n_modes: int = 10,
+    n_modes: int = 30,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
     desired_total_field: complex = 0j,
@@ -204,12 +204,14 @@ def example_optimization(
     ax.set_yscale("log")
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Objective value")
-    ax.set_title(f"Optimization history (k={float(k)}, n={n})")
+    ax.set_title(
+        f"Optimization history (k={float(k)}, n={n}, alpha_reg={alpha_reg}, k_reg={k_reg})"
+    )
     fig.tight_layout()
     fig.savefig(path / "optimization_history.png")
 
     fig, ax = plt.subplots()
-    t_plot = np.linspace(0, 2 * np.pi, 200)
+    t_plot = np.linspace(0, 2 * np.pi, 10000)
     t_arr = xp.asarray(t_plot, dtype=dtype, device=device)
     x_plot = np.asarray(shape_opt.x(t_arr), device="cpu")
     ax.plot(x_plot[:, 0], x_plot[:, 1])
@@ -225,8 +227,8 @@ def example_optimization(
     plot_near_field(
         density_opt,
         incident_field,
-        xlim=(-6.0, 6.0),
-        ylim=(-6.0, 6.0),
+        xlim=(-4.0, 4.0),
+        ylim=(-4.0, 4.0),
         k=k,
         shape=shape_opt,
         n=n,
@@ -235,11 +237,11 @@ def example_optimization(
         ax_re=ax[0],
         ax_im=ax[1],
         ax_abs=ax[2],
-        n_plot=200,
+        n_plot=500,
     )
     # add cross at the point
     for a in ax:
-        a.plot(point[0], point[1], "rx", markersize=10, label="Point to minimize")
+        a.plot(point[0], point[1], "x", markersize=25, label="Point to minimize")
         a.legend()
     fig.tight_layout()
     fig.savefig(path / "optimized_near_field.png")
