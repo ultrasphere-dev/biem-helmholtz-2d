@@ -8,6 +8,7 @@ from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from scipy.stats import quantile
 
 from ._potential import dlp_kernel_split, slp_kernel_split
 from ._potential_inner import dlp, slp
@@ -128,8 +129,10 @@ def plot_near_field(
     u[isin_shape(xy, shape)] = xp.nan
     if ax_re is None and ax_im is None and ax_abs is None:
         ax_re = plt.gca()
-    vmax_reim = xp.max(xp.abs(xp.concat([u.real[~xp.isnan(u.real)], u.imag[~xp.isnan(u.imag)]])))
-    vmax_abs = xp.max(xp.abs(u[~xp.isnan(u)]))
+    vmax_reim = quantile(
+        xp.abs(xp.concat([u.real[~xp.isnan(u.real)], u.imag[~xp.isnan(u.imag)]])), 0.99
+    )
+    vmax_abs = quantile(xp.abs(u[~xp.isnan(u)]), 0.99)
     for ax, data, title in zip(
         (ax_re, ax_im, ax_abs),
         (u.real, u.imag, xp.abs(u)),
