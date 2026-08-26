@@ -325,6 +325,10 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_xlabel("Mode number")
     ax.set_ylabel("Magnitude")
     ax.set_title("Optimized Fourier coefficients")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(path / "optimized_coefficients.png")
+    plt.close(fig)
 
     # Optimized shape plot
     fig, ax = plt.subplots()

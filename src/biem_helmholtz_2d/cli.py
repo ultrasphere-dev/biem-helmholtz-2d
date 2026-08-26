@@ -60,7 +60,12 @@ def optimize() -> None:
 
 
 _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_near_field.json")
-_PNG_FILES = ("optimization_history.png", "optimized_shape.png", "optimized_near_field.png")
+_PNG_FILES = (
+    "optimization_history.png",
+    "optimized_shape.png",
+    "optimized_near_field.png",
+    "optimized_coefficients.png",
+)
 
 
 @app.command()
