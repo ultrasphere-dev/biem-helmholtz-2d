@@ -313,6 +313,19 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     fig.savefig(path / "optimization_history.png")
     plt.close(fig)
 
+    # Magnitude of coefficients plot
+    fig, ax = plt.subplots()
+    sin_coefs = np.asarray(history["final_parameters"]["sin_coefs"])
+    cos_coefs = np.asarray(history["final_parameters"]["cos_coefs"])[1:]
+    n_modes = len(sin_coefs)
+    m = np.arange(1, n_modes + 1)
+    ax.plot(m, np.abs(cos_coefs), "o-", label="cosine coefficients")
+    ax.plot(m, np.abs(sin_coefs), "o-", label="sine coefficients")
+    ax.set_yscale("log")
+    ax.set_xlabel("Mode number")
+    ax.set_ylabel("Magnitude")
+    ax.set_title("Optimized Fourier coefficients")
+
     # Optimized shape plot
     fig, ax = plt.subplots()
     ax.plot(shape_data["x"], shape_data["y"])
