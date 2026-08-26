@@ -47,7 +47,7 @@ def optimize() -> None:
             n=100,
             alpha=1,
             eta=1,
-            n_modes=20,
+            n_modes=10,
             n_steps=20,
             target_point=(-3, 3),
             desired_total_field=0,
