@@ -35,6 +35,7 @@ def example_optimization(
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
+    n_steps: int = 10,
     n_modes: int = 20,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
@@ -62,7 +63,9 @@ def example_optimization(
     device : Any
         Array device.
     n_modes : int
-        Number of Fourier modes to optimize.
+        Number of Fourier modes divided by 2.
+    n_steps : int
+        Number of optimization steps.
     alpha_reg : float
         Hilbertian regularization weight $\alpha$ in the inner product
 
@@ -203,7 +206,7 @@ def example_optimization(
         jac=jac,
         constraints=constraint,
         callback=callback,
-        options={"verbose": 1, "maxiter": 100},
+        options={"verbose": 1, "maxiter": n_steps},
     )
 
     cos_coefs_opt, sin_coefs_opt = unpack(result.x)
@@ -223,6 +226,8 @@ def example_optimization(
             "n": n,
             "alpha_reg": alpha_reg,
             "k_reg": k_reg,
+            "n_modes": n_modes,
+            "n_steps": n_steps,
         })
     )
 
