@@ -13,7 +13,7 @@ from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
 
 
 @pytest.mark.parametrize("m", [1, 3])
-@pytest.mark.parametrize("target_val", [0.0, 1.0 + 0.5j])
+@pytest.mark.parametrize("target_val", [0, 1 + 0.5j])
 def test_grad_phi_central_derivative(
     xp: Any,
     shape: Shape,
@@ -28,13 +28,13 @@ def test_grad_phi_central_derivative(
     Perturbation $v(t) = \cos(m t)$.
     """
     n = 8
-    k_arr = xp.asarray(1.0, device=device, dtype=dtype)
-    a = xp.asarray(1.0, device=device, dtype=dtype)
-    e = xp.asarray(0.0, device=device, dtype=dtype)
-    x0 = xp.asarray([3.0, 3.0], device=device, dtype=dtype)
+    k_arr = xp.asarray(1, device=device, dtype=dtype)
+    a = xp.asarray(1, device=device, dtype=dtype)
+    e = xp.asarray(0, device=device, dtype=dtype)
+    x0 = xp.asarray([3, 3], device=device, dtype=dtype)
     t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     wt = w[0]
-    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
 
     phi = scattering_dirichlet(

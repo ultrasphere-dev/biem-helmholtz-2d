@@ -53,12 +53,12 @@ def dtype(request: pytest.FixtureRequest, xp: ArrayNamespaceFull) -> str:
     return getattr(xp, request.param)
 
 
-@pytest.fixture(params=[CircleShape(1.0), KressShape()])
+@pytest.fixture(params=[CircleShape(1), KressShape()])
 def shape(request: pytest.FixtureRequest) -> Shape:
     return request.param
 
 
-@pytest.fixture(params=[CircleShape(1.0), KressShape()])
+@pytest.fixture(params=[CircleShape(1), KressShape()])
 def shape_h(request: pytest.FixtureRequest) -> Shape:
     return request.param
 

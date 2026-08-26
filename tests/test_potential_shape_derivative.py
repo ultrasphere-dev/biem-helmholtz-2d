@@ -11,7 +11,7 @@ from biem_helmholtz_2d import _potential, _potential_shape_derivative
 
 
 @pytest.mark.parametrize("t_equals_tau", [True, False])
-@pytest.mark.parametrize("k", [1.0, 2.5])
+@pytest.mark.parametrize("k", [1, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 def test_slp_shape_derivative_numerical(
     xp: ArrayNamespace,
@@ -24,8 +24,8 @@ def test_slp_shape_derivative_numerical(
     dtype: Any,
     t_equals_tau: bool,
 ) -> None:
-    t = xp.asarray(0.0, device=device, dtype=dtype)
-    tau = xp.asarray(0.0 if t_equals_tau else 1.0, device=device, dtype=dtype)
+    t = xp.asarray(0, device=device, dtype=dtype)
+    tau = xp.asarray(0 if t_equals_tau else 1, device=device, dtype=dtype)
 
     da_log, da_rem = _potential_shape_derivative.slp_shape_derivative_split(
         t=t,
@@ -56,7 +56,7 @@ def test_slp_shape_derivative_numerical(
 
 
 @pytest.mark.parametrize("t_equals_tau", [True, False])
-@pytest.mark.parametrize("k", [1.0, 2.5])
+@pytest.mark.parametrize("k", [1, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 def test_dlp_shape_derivative_numerical(
     xp: ArrayNamespace,
@@ -69,8 +69,8 @@ def test_dlp_shape_derivative_numerical(
     dtype: Any,
     t_equals_tau: bool,
 ) -> None:
-    t = xp.asarray(0.0, device=device, dtype=dtype)
-    tau = xp.asarray(0.0 if t_equals_tau else 1.0, device=device, dtype=dtype)
+    t = xp.asarray(0, device=device, dtype=dtype)
+    tau = xp.asarray(0 if t_equals_tau else 1, device=device, dtype=dtype)
 
     da_log, da_rem = _potential_shape_derivative.dlp_shape_derivative_split(
         t=t,

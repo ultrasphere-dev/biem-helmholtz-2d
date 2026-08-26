@@ -39,12 +39,12 @@ def test_adjoint_central_derivative(
     Objective $J(x) = |u_{\mathrm{scat}}(x_0, x)|^2$ (scattered field at
     $x_0 = (3,3)$).  Perturbation is $h = \mathtt{shape\_h}$.
     """
-    k_arr = xp.asarray(1.0, device=device, dtype=dtype)
-    alpha = xp.asarray(1.0, device=device, dtype=dtype)
-    eta = xp.asarray(1.0, device=device, dtype=dtype)
-    x0 = xp.asarray([3.0, 3.0], device=device, dtype=dtype)
+    k_arr = xp.asarray(1, device=device, dtype=dtype)
+    alpha = xp.asarray(1, device=device, dtype=dtype)
+    eta = xp.asarray(1, device=device, dtype=dtype)
+    x0 = xp.asarray([3, 3], device=device, dtype=dtype)
     t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
-    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
 
     phi = scattering_dirichlet(
@@ -56,7 +56,7 @@ def test_adjoint_central_derivative(
         n=n,
     )
     u_scat = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
-    zero = xp.asarray(0.0, dtype=dtype, device=device)
+    zero = xp.asarray(0, dtype=dtype, device=device)
     grad_phi_j = grad_phi_abs2_scattered_field(
         x0[None], u_scat, shape=shape, k=k_arr, alpha=alpha, eta=eta, target=zero
     )
@@ -86,7 +86,7 @@ def test_adjoint_central_derivative(
         n=n,
     )
     dr_A_phi = xp.squeeze(alpha * dd - 1j * eta * ds)
-    dr_j_val = 2.0 * xp.real(xp.conj(u_scat) * dr_A_phi).squeeze()
+    dr_j_val = 2 * xp.real(xp.conj(u_scat) * dr_A_phi).squeeze()
 
     dr_adj = objective_derivative(
         k=k_arr,

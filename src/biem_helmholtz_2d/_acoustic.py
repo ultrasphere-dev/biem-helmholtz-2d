@@ -217,7 +217,7 @@ def plot_near_field_prepare(
             else:
                 data = xp.abs(field_val)
                 vmax = vmax_abs
-                vmin = 0.0
+                vmin = 0
             result[field_name, component] = {  # type: ignore
                 "data": data,
                 "vmax": vmax,

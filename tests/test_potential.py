@@ -32,16 +32,16 @@ def test_potential_match_known_values_kress_shape(
 ) -> None:
     shape = KressShape()
     t = trapezoidal_quadrature(3, xp=xp, device=device, dtype=dtype)[0]
-    k = xp.asarray(1.0, device=device, dtype=dtype)
+    k = xp.asarray(1, device=device, dtype=dtype)
     t, tau = t[:, None], t[None, :]
     if type == "slp":
-        actual = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0.0)[
+        actual = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0)[
             0 if singularity == "log" else 1
         ]
     else:
-        actual = dlp_kernel_split(
-            t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0.0
-        )[0 if singularity == "log" else 1]
+        actual = dlp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0)[
+            0 if singularity == "log" else 1
+        ]
     expected = xp.asarray(
         np.loadtxt(
             f"tests/kress_shape/{type}_{singularity}.csv", delimiter=",", dtype=np.complex128
@@ -81,8 +81,8 @@ def test_D_t_diagonal_limit_circle(xp: Any, device: Any, dtype: Any, rho: float,
 @pytest.mark.parametrize("tau", [0, 0.11])
 @pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
 @pytest.mark.parametrize("m", [0, 1, 2])
-@pytest.mark.parametrize("rho", [1.0])
-@pytest.mark.parametrize("k", [1.0])
+@pytest.mark.parametrize("rho", [1])
+@pytest.mark.parametrize("k", [1])
 def test_circle_case_matches_theorem(
     xp: Any,
     device: Any,
@@ -109,10 +109,10 @@ def test_circle_case_matches_theorem(
     exp_mt_tau = xp.exp(1j * m * xp.asarray(tau, device=device, dtype=dtype))
 
     if kernel_kind == "slp":
-        log_coeff, analytic = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0.0)
+        log_coeff, analytic = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0)
     else:
         log_coeff, analytic = dlp_kernel_split(
-            t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0.0
+            t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0
         )
 
     actual = xp.sum(exp_mt * (r * log_coeff + w * analytic))
@@ -137,8 +137,8 @@ def test_circle_case_matches_theorem(
 @pytest.mark.parametrize("n", [8, 10, 128])
 @pytest.mark.parametrize("kernel_kind", ["slp", "dlp"])
 @pytest.mark.parametrize("m", [0, 1, 2])
-@pytest.mark.parametrize("rho", [1.0])
-@pytest.mark.parametrize("k", [1.0])
+@pytest.mark.parametrize("rho", [1])
+@pytest.mark.parametrize("k", [1])
 def test_circle_sol_matches_theorem(
     xp: Any,
     device: Any,
@@ -167,11 +167,11 @@ def test_circle_sol_matches_theorem(
             ]
 
         def k_log(t: Array, tau: Array) -> Array:
-            log_coeff, _ = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0.0)
+            log_coeff, _ = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0)
             return log_coeff[..., None, None]
 
         def k_cont(t: Array, tau: Array) -> Array:
-            _, analytic = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0.0)
+            _, analytic = slp_kernel_split(t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, eps=0)
             return analytic[..., None, None]
 
     else:
@@ -186,13 +186,13 @@ def test_circle_sol_matches_theorem(
 
         def k_log(t: Array, tau: Array) -> Array:
             log_coeff, _ = dlp_kernel_split(
-                t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0.0
+                t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0
             )
             return log_coeff[..., None, None]
 
         def k_cont(t: Array, tau: Array) -> Array:
             _, analytic = dlp_kernel_split(
-                t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0.0
+                t=t, tau=tau, k=k, x=shape.x, dx=shape.dx, ddx=shape.ddx, eps=0
             )
             return analytic[..., None, None]
 

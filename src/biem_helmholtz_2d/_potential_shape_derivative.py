@@ -18,7 +18,7 @@ def A2(
     dx: Callable[[Array], Array],
     h: Callable[[Array], Array],
     dh: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> Array:
     r"""
     Kernel factor $A_2(t, \tau)$ for the shape derivative.
@@ -86,7 +86,7 @@ def D4(
     h: Callable[[Array], Array],
     dh: Callable[[Array], Array],
     ddh: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> Array:
     r"""
     Kernel factor $D_4(t, \tau)$ for the shape derivative of the double-layer potential.
@@ -190,7 +190,7 @@ def slp_shape_derivative_split(
     dx: Callable[[Array], Array],
     h: Callable[[Array], Array],
     dh: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Split the shape derivative of the single-layer kernel into log-singular and analytic parts.
@@ -284,7 +284,7 @@ def dlp_shape_derivative_split(
     h: Callable[[Array], Array],
     dh: Callable[[Array], Array],
     ddh: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Split the shape derivative of the double-layer kernel into log-singular and analytic parts.

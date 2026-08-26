@@ -62,7 +62,7 @@ def test_split_quadrature_matches_trapezoidal(
         order=order,
         f=_f,
         fprime0=fprime0,
-        eps=0.0001,
+        eps=1e-4,
         t_singularity=t_singularity,
     )
     g_vals = _g(x)

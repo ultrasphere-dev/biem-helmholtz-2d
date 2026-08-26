@@ -19,7 +19,7 @@ def _neumann_y1_y2(
     order: int,
     f: Callable[[Array], Array],
     fprime0: Array | None = None,
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     if order == 0 and fprime0 is None:
         msg = "fprime0 (shape (...,)) is required when order == 0."
@@ -64,7 +64,7 @@ def neumann_y1_y2(
     order: int,
     f: Callable[[Array], Array],
     fprime0: Array | None = None,
-    eps: float = 0.0,
+    eps: float = 0,
     t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""
@@ -124,7 +124,7 @@ def hankel_h1_h2(
     order: int,
     f: Callable[[Array], Array],
     fprime0: Array | None = None,
-    eps: float = 0.0,
+    eps: float = 0,
     t_singularity: Array,
 ) -> tuple[Array, Array]:
     r"""

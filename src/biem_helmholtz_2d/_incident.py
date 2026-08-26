@@ -25,9 +25,9 @@ def plane_wave(k: Array, direction: Array, /) -> Callable[[Array], Array]:
     Examples
     --------
     >>> import numpy as np
-    >>> k = np.asarray(1.0)
-    >>> pw = plane_wave(k, np.asarray([1.0, 0.0]))
-    >>> x = np.asarray([[0.0, 0.0], [1.0, 2.0]])
+    >>> k = np.asarray(1)
+    >>> pw = plane_wave(k, np.asarray([1, 0]))
+    >>> x = np.asarray([[0, 0], [1, 2]])
     >>> pw(x)
     array([1. +0.j       , 0.54030231+0.84147098j])
 
@@ -65,9 +65,9 @@ def plane_wave_grad(k: Array, direction: Array, /) -> Callable[[Array], Array]:
     Examples
     --------
     >>> import numpy as np
-    >>> k = np.asarray(1.0)
-    >>> pwg = plane_wave_grad(k, np.asarray([1.0, 0.0]))
-    >>> x = np.asarray([[0.0, 0.0], [1.0, 2.0]])
+    >>> k = np.asarray(1)
+    >>> pwg = plane_wave_grad(k, np.asarray([1, 0]))
+    >>> x = np.asarray([[0, 0], [1, 2]])
     >>> pwg(x)
     array([[0.        +1.j        , 0.        +0.j        ],
            [0.84147098+0.54030231j, 0.        +0.j        ]])

@@ -81,11 +81,11 @@ def example_optimization(
     """
     path.mkdir(parents=True, exist_ok=True)
     n = n_modes + 20
-    k = xp.asarray(2.0, device=device, dtype=dtype)
+    k = xp.asarray(2, device=device, dtype=dtype)
     eta = xp.asarray(1, device=device, dtype=dtype)
-    alpha = xp.asarray(1.0, device=device, dtype=dtype)
-    point = xp.asarray([-2.0, 3.0], device=device, dtype=dtype)
-    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    alpha = xp.asarray(1, device=device, dtype=dtype)
+    point = xp.asarray([-2, 3], device=device, dtype=dtype)
+    direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
     t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
@@ -155,7 +155,7 @@ def example_optimization(
             k=k,
             n=n,
         )
-        dr_j = 2.0 * xp.real(
+        dr_j = 2 * xp.real(
             (xp.conj(u_scat) - xp.conj(target)) * (alpha * dlp_deriv - 1j * eta * slp_deriv)
         )
         gradient = objective_derivative(
@@ -189,7 +189,7 @@ def example_optimization(
         np.divide(sin_part, r, out=gradient[n_modes:], where=r > 0)
         return gradient
 
-    constraint = NonlinearConstraint(constraint_fun, -np.inf, 1.0, jac=constraint_jac)
+    constraint = NonlinearConstraint(constraint_fun, -np.inf, 1, jac=constraint_jac)
 
     val_hist = []
 
@@ -241,8 +241,8 @@ def example_optimization(
     field_data = plot_near_field_prepare(
         density_opt,
         incident_field,
-        xlim=(-4.0, 4.0),
-        ylim=(-4.0, 4.0),
+        xlim=(-4, 4),
+        ylim=(-4, 4),
         k=k,
         shape=shape_opt,
         n=n,

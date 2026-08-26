@@ -140,9 +140,9 @@ def objective_derivative(
     >>> import numpy as np
     >>> from ie_circle import CircleShape
     >>> from biem_helmholtz_2d._acoustic import scattering_dirichlet
-    >>> xp = np; k = xp.asarray(1.0); rho = 1.0
+    >>> xp = np; k = xp.asarray(1); rho = 1
     >>> shape = CircleShape(rho)
-    >>> a = xp.asarray(1.0); e = xp.asarray(0.0)
+    >>> a = xp.asarray(1); e = xp.asarray(0)
     >>> def inc(x): return xp.exp(1j * k * x[..., 0])
     >>> phi = scattering_dirichlet(k=k, shape=shape, incident_field=inc, alpha=a, eta=e, n=8)
     >>> class _ZeroShape:
@@ -155,10 +155,10 @@ def objective_derivative(
     >>> def gj(t): return xp.zeros_like(t)
     >>> objective_derivative(
     ...     k=k, shape=shape, alpha=a, eta=e, n=8,
-    ...     phi=phi, grad_phi_j=gj, dr_j=xp.asarray(0.0),
+    ...     phi=phi, grad_phi_j=gj, dr_j=xp.asarray(0),
     ...     dr_g=dr_g, h_shape=_ZeroShape(),
     ... )
-    np.float64(0.0)
+    np.float64(0)
 
     """
     from array_api_shape_check import check_shapes

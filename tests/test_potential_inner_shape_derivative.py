@@ -10,7 +10,7 @@ from ie_circle import Shape
 from biem_helmholtz_2d import _potential_inner, _potential_inner_derivative
 
 
-@pytest.mark.parametrize("k", [1.0, 2.5])
+@pytest.mark.parametrize("k", [1, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 def test_slp_shape_derivative_numerical(
     xp: ArrayNamespace,
@@ -23,7 +23,7 @@ def test_slp_shape_derivative_numerical(
     dtype: Any,
 ) -> None:
     n = 8
-    x = xp.asarray([[3.0, 3.0]], device=device, dtype=dtype)
+    x = xp.asarray([[3, 3]], device=device, dtype=dtype)
     func = xp.ones_like
 
     da = _potential_inner_derivative.slp_shape_derivative(
@@ -48,7 +48,7 @@ def test_slp_shape_derivative_numerical(
     assert xp.all(xp.abs(da - num) < 1e-6 * xp.abs(da) + 1e-6), "SLP shape derivative mismatch"
 
 
-@pytest.mark.parametrize("k", [1.0, 2.5])
+@pytest.mark.parametrize("k", [1, 2.5])
 @pytest.mark.parametrize("epsilon", [1e-6])
 def test_dlp_shape_derivative_numerical(
     xp: ArrayNamespace,
@@ -61,7 +61,7 @@ def test_dlp_shape_derivative_numerical(
     dtype: Any,
 ) -> None:
     n = 8
-    x = xp.asarray([[3.0, 3.0]], device=device, dtype=dtype)
+    x = xp.asarray([[3, 3]], device=device, dtype=dtype)
     func = xp.ones_like
 
     da = _potential_inner_derivative.dlp_shape_derivative(

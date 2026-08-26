@@ -9,11 +9,11 @@ from ._incident import plane_wave
 
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
-    k = xp.asarray(1.0, device=device, dtype=dtype)
-    eta = xp.asarray(0.0, device=device, dtype=dtype)
-    alpha = xp.asarray(1.0, device=device, dtype=dtype)
+    k = xp.asarray(1, device=device, dtype=dtype)
+    eta = xp.asarray(0, device=device, dtype=dtype)
+    alpha = xp.asarray(1, device=device, dtype=dtype)
     shape = KressShape()
-    direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
+    direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
 
     density = scattering_dirichlet(
@@ -28,8 +28,8 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
     field_data = plot_near_field_prepare(
         density,
         incident_field,
-        xlim=(-6.0, 6.0),
-        ylim=(-6.0, 6.0),
+        xlim=(-6, 6),
+        ylim=(-6, 6),
         k=k,
         shape=shape,
         n=n,
@@ -43,7 +43,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         ax_utot_abs=ax[2],
     )
     fig.savefig("example_3_1.png")
-    direction = xp.asarray((1.0, 0), device=device, dtype=dtype)
+    direction = xp.asarray((1, 0), device=device, dtype=dtype)
     return far_field(
         density,
         direction,

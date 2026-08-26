@@ -17,7 +17,7 @@ def A1(
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> Array:
     r"""
     Kernel factor $A_1(t, \tau)$ for the double-layer potential.
@@ -78,7 +78,7 @@ def slp_kernel_split(
     k: Array,
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Split single-layer kernel into log-singular and analytic parts.
@@ -136,7 +136,7 @@ def dlp_kernel_split(
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Split double-layer kernel into log-singular and analytic parts.
@@ -201,7 +201,7 @@ def dlp_adjoint_kernel_split(
     x: Callable[[Array], Array],
     dx: Callable[[Array], Array],
     ddx: Callable[[Array], Array],
-    eps: float = 0.0,
+    eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
     Split the adjoint double-layer kernel into log-singular and analytic parts.
