@@ -23,7 +23,7 @@ def remove_trailing_exponent_zeros(s: str, /) -> str:
     return s.replace("E+0", "E+").replace("E-0", "E-").replace("e+0", "e+").replace("e-0", "e-")
 
 
-@pytest.mark.parametrize("n", [8, 16, 32])
+@pytest.mark.parametrize("n", [8, 16, 32, 64])
 def test_adjoint_central_derivative(
     xp: Any,
     shape: Shape,
