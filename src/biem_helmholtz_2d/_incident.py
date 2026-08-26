@@ -29,7 +29,7 @@ def plane_wave(k: Array, direction: Array, /) -> Callable[[Array], Array]:
     >>> pw = plane_wave(k, np.asarray([1, 0]))
     >>> x = np.asarray([[0, 0], [1, 2]])
     >>> pw(x)
-    array([1. +0.j       , 0.54030231+0.84147098j])
+    array([1.        +0.j        , 0.54030231+0.84147098j])
 
     """
     xp = array_namespace(k, direction)
@@ -69,8 +69,18 @@ def plane_wave_grad(k: Array, direction: Array, /) -> Callable[[Array], Array]:
     >>> pwg = plane_wave_grad(k, np.asarray([1, 0]))
     >>> x = np.asarray([[0, 0], [1, 2]])
     >>> pwg(x)
-    array([[0.        +1.j        , 0.        +0.j        ],
-           [0.84147098+0.54030231j, 0.        +0.j        ]])
+    array([[ 0.        +1.j        ,  0.        +0.j        ],
+           [-0.84147098+0.54030231j,  0.        +0.j        ]])
+    >>> eps = 1e-5
+    >>> pw = plane_wave(k, np.asarray([1, 0]))
+    >>> pw_plus = pw(x[:, None, :] + eps * np.asarray([[1, 0], [0, 1]]))
+    >>> pw_minus = pw(x[:, None, :] - eps * np.asarray([[1, 0], [0, 1]]))
+    >>> pwg_cd = (pw_plus - pw_minus) / (2 * eps)
+    >>> pwg_cd
+    array([[ 0.        +1.j        ,  0.        +0.j        ],
+           [-0.84147098+0.54030231j,  0.        +0.j        ]])
+    >>> np.allclose(pwg(x), pwg_cd)
+    True
 
     """
     xp = array_namespace(k, direction)

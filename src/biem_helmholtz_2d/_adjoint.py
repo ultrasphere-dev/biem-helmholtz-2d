@@ -158,7 +158,7 @@ def objective_derivative(
     ...     phi=phi, grad_phi_j=gj, dr_j=xp.asarray(0),
     ...     dr_g=dr_g, h_shape=_ZeroShape(),
     ... )
-    np.float64(0)
+    np.float64(0.0)
 
     """
     from array_api_shape_check import check_shapes
