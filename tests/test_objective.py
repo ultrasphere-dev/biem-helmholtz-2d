@@ -29,8 +29,8 @@ def test_grad_phi_central_derivative(
     """
     n = 8
     k_arr = xp.asarray(1, device=device, dtype=dtype)
-    a = xp.asarray(1, device=device, dtype=dtype)
-    e = xp.asarray(0, device=device, dtype=dtype)
+    alpha = xp.asarray(1, device=device, dtype=dtype)
+    eta = xp.asarray(1, device=device, dtype=dtype)
     x0 = xp.asarray([3, 3], device=device, dtype=dtype)
     t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     wt = w[0]
@@ -41,16 +41,16 @@ def test_grad_phi_central_derivative(
         k=k_arr,
         shape=shape,
         incident_field=incident_field,
-        alpha=a,
-        eta=e,
+        alpha=alpha,
+        eta=eta,
         n=n,
     )
-    u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
+    u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
 
     target_arr = xp.asarray(target_val, dtype=xp.result_type(dtype, 1j), device=device)
 
     grad_phi_j = grad_phi_abs2_scattered_field(
-        x0[None], u, shape=shape, k=k_arr, alpha=a, eta=e, target=target_arr
+        x0[None], u, shape=shape, k=k_arr, alpha=alpha, eta=eta, target=target_arr
     )
 
     def v_func(t_in: Array) -> Array:
@@ -63,7 +63,7 @@ def test_grad_phi_central_derivative(
     eps = 1e-5
 
     def j_of_phi(phi_pert: Callable[[Array], Array]) -> Array:
-        up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=a, eta=e)
+        up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
         return xp.sum(xp.abs(up - target_arr) ** 2)
 
     class _PerturbedDensity:

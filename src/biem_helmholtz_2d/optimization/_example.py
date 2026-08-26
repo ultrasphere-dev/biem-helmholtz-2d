@@ -218,7 +218,7 @@ def example_optimization(
         jac=jac,
         constraints=constraint,
         callback=callback,
-        options={"verbose": 1, "maxiter": n_steps},
+        options={"verbose": 3, "maxiter": n_steps},
     )
 
     cos_coefs_opt, sin_coefs_opt = unpack(result.x)

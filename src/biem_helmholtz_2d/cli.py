@@ -34,15 +34,20 @@ def optimize() -> None:
     xp = np
     dtype = np.float64
     device = None
-    for alpha_reg in [0, 1e-3, 1e-6]:
+    for alpha_reg in [
+        0,
+        1,
+        1e-2,
+        1e-4,
+    ]:
         example_optimization(
-            k=2,
-            n=32,
+            k=4,
+            n=50,
             alpha=1,
             eta=1,
-            n_modes=16,
-            n_steps=2,
-            target_point=(3, 3),
+            n_modes=30,
+            n_steps=50,
+            target_point=(-2, 3),
             desired_total_field=0,
             xp=xp,
             dtype=dtype,
