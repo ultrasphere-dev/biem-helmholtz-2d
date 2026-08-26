@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import json
 import pathlib
-from datetime import datetime
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
+import orjson
 from array_api.latest import Array, ArrayNamespace
 from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from scipy.optimize import NonlinearConstraint, minimize
 
 from biem_helmholtz_2d._acoustic import (
+    FieldData,
     near_field,
     plot_near_field,
     plot_near_field_prepare,
@@ -28,10 +31,11 @@ from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 def example_optimization(
     *,
+    path: Path,
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
-    n_modes: int = 30,
+    n_modes: int = 20,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
     desired_total_field: complex = 0j,
@@ -44,8 +48,13 @@ def example_optimization(
     $u_{\mathrm{total}} = u_{\mathrm{scat}} + u_{\mathrm{inc}}$.
     The constant Fourier coefficient is fixed to $1$.
 
+    Saves plot-ready data as JSON files in ``path``. Use
+    :func:`example_optimization_plot` to generate figures.
+
     Parameters
     ----------
+    path : Path
+        Directory to save JSON files.
     xp : ArrayNamespace
         Array API namespace.
     dtype : Any
@@ -70,8 +79,9 @@ def example_optimization(
         Desired total field value $c$ at $x_0$.
 
     """
+    path.mkdir(parents=True, exist_ok=True)
     n = n_modes + 20
-    k = xp.asarray(4.0, device=device, dtype=dtype)
+    k = xp.asarray(2.0, device=device, dtype=dtype)
     eta = xp.asarray(0.0, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
     point = xp.asarray([-2.0, 3.0], device=device, dtype=dtype)
@@ -181,11 +191,6 @@ def example_optimization(
 
     constraint = NonlinearConstraint(constraint_fun, -np.inf, 1.0, jac=constraint_jac)
 
-    path = pathlib.Path(
-        f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}_k{float(k)}_n{n}_ar{alpha_reg}_kr{k_reg}"
-    )
-    path.mkdir(parents=True, exist_ok=True)
-
     val_hist = []
 
     def callback(intermediate_result: Any) -> None:
@@ -204,28 +209,32 @@ def example_optimization(
     cos_coefs_opt, sin_coefs_opt = unpack(result.x)
     shape_opt = ParameterShape(cos_coefs=cos_coefs_opt, sin_coefs=sin_coefs_opt)
 
-    fig, ax = plt.subplots()
-    ax.plot(val_hist)
-    ax.set_yscale("log")
-    ax.set_xlabel("Iteration")
-    ax.set_ylabel("Objective value")
-    ax.set_title(
-        f"Optimization history (k={float(k)}, n={n}, alpha_reg={alpha_reg}, k_reg={k_reg})"
-    )
-    fig.tight_layout()
-    fig.savefig(path / "optimization_history.png")
+    # --- Prepare plot-ready data and save as JSON ---
 
-    fig, ax = plt.subplots()
     t_plot = np.linspace(0, 2 * np.pi, 10000)
     t_arr = xp.asarray(t_plot, dtype=dtype, device=device)
     x_plot = np.asarray(shape_opt.x(t_arr), device="cpu")
-    ax.plot(x_plot[:, 0], x_plot[:, 1])
-    ax.set_aspect("equal")
-    ax.set_title("Optimized shape")
-    fig.tight_layout()
-    fig.savefig(path / "optimized_shape.png")
 
-    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+    # Optimization history
+    (path / "optimization_history.json").write_bytes(
+        orjson.dumps({
+            "val_hist": val_hist,
+            "k": float(k),
+            "n": n,
+            "alpha_reg": alpha_reg,
+            "k_reg": k_reg,
+        })
+    )
+
+    # Optimized shape
+    (path / "optimized_shape.json").write_bytes(
+        orjson.dumps({
+            "x": x_plot[:, 0],
+            "y": x_plot[:, 1],
+        })
+    )
+
+    # Near-field data
     density_opt = scattering_dirichlet(
         k=k, shape=shape_opt, incident_field=incident_field, alpha=alpha, eta=eta, n=n
     )
@@ -243,17 +252,82 @@ def example_optimization(
         isin_shape_n_quad=500,
         isin_shape_tol=1e-5,
     )
+    field_serializable: dict[str, dict[str, Any]] = {}
+    for (field_name, component), entry in field_data.items():
+        key = f"{field_name}_{component}"
+        field_serializable[key] = {
+            "data": np.asarray(entry["data"]),
+            "vmax": entry["vmax"],
+            "vmin": entry["vmin"],
+            "extent": list(entry["extent"]),
+        }
+    (path / "optimized_near_field.json").write_bytes(
+        orjson.dumps(
+            {
+                "field": field_serializable,
+                "point_x": float(point[0]),
+                "point_y": float(point[1]),
+            },
+            option=orjson.OPT_SERIALIZE_NUMPY,
+        )
+    )
+
+
+def example_optimization_plot(path: pathlib.Path) -> None:
+    """
+    Generate plots from JSON data saved by :func:`example_optimization`.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        Directory containing ``optimization_history.json``,
+        ``optimized_shape.json``, and ``optimized_near_field.json``.
+
+    """
+    # Load data
+    history = json.loads((path / "optimization_history.json").read_text())
+    shape_data = json.loads((path / "optimized_shape.json").read_text())
+    field_data = json.loads((path / "optimized_near_field.json").read_text())
+
+    # Optimization history plot
+    fig, ax = plt.subplots()
+    ax.plot(history["val_hist"])
+    ax.set_yscale("log")
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Objective value")
+    ax.set_title(
+        f"Optimization history "
+        f"(k={history['k']}, n={history['n']}, "
+        f"alpha_reg={history['alpha_reg']}, k_reg={history['k_reg']})"
+    )
+    fig.tight_layout()
+    fig.savefig(path / "optimization_history.png")
+    plt.close(fig)
+
+    # Optimized shape plot
+    fig, ax = plt.subplots()
+    ax.plot(shape_data["x"], shape_data["y"])
+    ax.set_aspect("equal")
+    ax.set_title("Optimized shape")
+    fig.tight_layout()
+    fig.savefig(path / "optimized_shape.png")
+    plt.close(fig)
+
+    # Near-field plot
+    field_serializable = field_data["field"]
+    point_x = field_data["point_x"]
+    point_y = field_data["point_y"]
+    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
     plot_near_field(
-        field_data,
+        _reconstruct_field_data(field_serializable),
         ax_utot_re=ax[0],
         ax_utot_im=ax[1],
         ax_utot_abs=ax[2],
     )
-    # add cross at the point
     for a in ax:
         a.plot(
-            point[0],
-            point[1],
+            point_x,
+            point_y,
             "X",
             markersize=25,
             markerfacecolor="black",
@@ -264,3 +338,20 @@ def example_optimization(
         a.legend()
     fig.tight_layout()
     fig.savefig(path / "optimized_near_field.png")
+    plt.close(fig)
+
+
+def _reconstruct_field_data(
+    field_serializable: dict[str, dict[str, Any]],
+) -> FieldData:
+    """Reconstruct :class:`FieldData` from its JSON-serializable representation."""
+    result: dict[tuple[str, str], dict[str, Any]] = {}
+    for key, entry in field_serializable.items():
+        field_name, component = key.split("_", 1)
+        result[field_name, component] = {
+            "data": np.array(entry["data"]),
+            "vmax": entry["vmax"],
+            "vmin": entry["vmin"],
+            "extent": tuple(entry["extent"]),
+        }
+    return cast(FieldData, result)

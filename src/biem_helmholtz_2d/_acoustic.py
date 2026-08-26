@@ -100,17 +100,17 @@ def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Arr
     return xp.abs(winding_number) > tol
 
 
-_FieldKind = Literal["uin", "uscat", "utot"]
-_FieldComponent = Literal["re", "im", "abs"]
-_FieldEntry = dict[str, Any]
-_FieldData = dict[tuple[_FieldKind, _FieldComponent], _FieldEntry]
+FieldKind = Literal["uin", "uscat", "utot"]
+FieldComponent = Literal["re", "im", "abs"]
+FieldEntry = dict[str, Any]
+FieldData = dict[tuple[FieldKind, FieldComponent], FieldEntry]
 
-_FIELD_NAMES: dict[_FieldKind, str] = {
+_FIELD_NAMES: dict[FieldKind, str] = {
     "uin": "Incident",
     "uscat": "Scattered",
     "utot": "Total",
 }
-_COMPONENT_NAMES: dict[_FieldComponent, str] = {
+_COMPONENT_NAMES: dict[FieldComponent, str] = {
     "re": "real part",
     "im": "imaginary part",
     "abs": "amplitude",
@@ -132,7 +132,7 @@ def plot_near_field_prepare(
     isin_shape_n_quad: int = 500,
     n_plot: int = 100,
     isin_shape_tol: float = 1e-5,
-) -> _FieldData:
+) -> FieldData:
     r"""
     Precompute near-field data on a grid for plotting.
 
@@ -169,7 +169,7 @@ def plot_near_field_prepare(
 
     Returns
     -------
-    _FieldData
+    FieldData
         Dictionary keyed by ``(field, component)`` tuples where
         ``field`` is one of ``"uin"``, ``"uscat"``, ``"utot"``
         and ``component`` is one of ``"re"``, ``"im"``, ``"abs"``.
@@ -194,7 +194,7 @@ def plot_near_field_prepare(
 
     extent = (xlim[0], xlim[1], ylim[0], ylim[1])
 
-    result: _FieldData = {}
+    result: FieldData = {}
     for field_name, field_val in (("uin", uin), ("uscat", uscat), ("utot", utot)):
         valid_reim = xp.abs(
             xp.concat([
@@ -228,7 +228,7 @@ def plot_near_field_prepare(
 
 
 def plot_near_field(
-    field_data: _FieldData,
+    field_data: FieldData,
     /,
     *,
     ax_uin_re: Axes | None = None,
@@ -246,7 +246,7 @@ def plot_near_field(
 
     Parameters
     ----------
-    field_data : _FieldData
+    field_data : FieldData
         Output of :func:`plot_near_field_prepare`.
     ax_uin_re : Axes | None
         Axes for incident field real part.
@@ -268,7 +268,7 @@ def plot_near_field(
         Axes for total field amplitude.
 
     """
-    axes: list[tuple[tuple[_FieldKind, _FieldComponent], Axes | None]] = [
+    axes: list[tuple[tuple[FieldKind, FieldComponent], Axes | None]] = [
         (("uin", "re"), ax_uin_re),
         (("uin", "im"), ax_uin_im),
         (("uin", "abs"), ax_uin_abs),
