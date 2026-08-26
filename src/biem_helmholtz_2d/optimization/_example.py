@@ -311,7 +311,7 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_ylabel("Objective value")
     ax.set_title(f"Optimization history (alpha={history['alpha_reg']})")
     fig.tight_layout()
-    fig.savefig(path / "optimization_history.svg")
+    fig.savefig(path / f"optimization_history_{alpha}.svg")
     plt.close(fig)
 
     # Magnitude of coefficients plot
