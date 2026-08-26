@@ -60,12 +60,6 @@ def optimize() -> None:
 
 
 _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_near_field.json")
-_PNG_FILES = (
-    "optimization_history.png",
-    "optimized_shape.png",
-    "optimized_near_field.png",
-    "optimized_coefficients.png",
-)
 
 
 @app.command()
@@ -81,8 +75,8 @@ def plot() -> None:
         if not subdir.is_dir():
             continue
         has_all_json = all((subdir / j).exists() for j in _JSON_FILES)
-        has_all_png = all((subdir / p).exists() for p in _PNG_FILES)
-        if has_all_json and not has_all_png:
+        has_any_svg = any(subdir.rglob("*.svg"))
+        if has_all_json and not has_any_svg:
             unplotted.append(subdir)
 
     if not unplotted:

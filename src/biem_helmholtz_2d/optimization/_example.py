@@ -301,6 +301,7 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     history = json.loads((path / "optimization_history.json").read_text())
     shape_data = json.loads((path / "optimized_shape.json").read_text())
     field_data = json.loads((path / "optimized_near_field.json").read_text())
+    alpha = history["alpha_reg"]
 
     # Optimization history plot
     fig, ax = plt.subplots()
@@ -310,11 +311,11 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_ylabel("Objective value")
     ax.set_title(f"Optimization history (alpha={history['alpha_reg']})")
     fig.tight_layout()
-    fig.savefig(path / "optimization_history.png")
+    fig.savefig(path / "optimization_history.svg")
     plt.close(fig)
 
     # Magnitude of coefficients plot
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(4, 3))
     sin_coefs = np.asarray(history["final_parameters"]["sin_coefs"])
     cos_coefs = np.asarray(history["final_parameters"]["cos_coefs"])[1:]
     n_modes = len(sin_coefs)
@@ -327,7 +328,7 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_title("Optimized Fourier coefficients")
     ax.legend()
     fig.tight_layout()
-    fig.savefig(path / "optimized_coefficients.png")
+    fig.savefig(path / f"optimized_coefficients_{alpha}.svg")
     plt.close(fig)
 
     # Optimized shape plot
@@ -336,11 +337,11 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_aspect("equal")
     ax.set_title("Optimized shape")
     fig.tight_layout()
-    fig.savefig(path / "optimized_shape.png")
+    fig.savefig(path / f"optimized_shape_{alpha}.svg")
     plt.close(fig)
 
     # Near-field plot
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4))
     plot_near_field(
         field_data,
         ax_utot_re=ax[0],
@@ -360,5 +361,5 @@ def example_optimization_plot(path: pathlib.Path) -> None:
         )
         a.legend()
     fig.tight_layout()
-    fig.savefig(path / "optimized_near_field.png")
+    fig.savefig(path / f"optimized_near_field_{alpha}.svg")
     plt.close(fig)
