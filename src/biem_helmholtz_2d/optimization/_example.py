@@ -308,11 +308,7 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     ax.set_yscale("log")
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Objective value")
-    ax.set_title(
-        f"Optimization history "
-        f"(k={history['k']}, n={history['n']}, "
-        f"alpha_reg={history['alpha_reg']}, k_reg={history['k_reg']})"
-    )
+    ax.set_title(f"Optimization history (alpha={history['alpha_reg']})")
     fig.tight_layout()
     fig.savefig(path / "optimization_history.png")
     plt.close(fig)
@@ -327,12 +323,12 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     plt.close(fig)
 
     # Near-field plot
-    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
     plot_near_field(
         field_data,
         ax_utot_re=ax[0],
-        ax_utot_im=ax[1],
-        ax_utot_abs=ax[2],
+        ax_utot_im=None,
+        ax_utot_abs=ax[1],
     )
     for a in ax:
         a.plot(
