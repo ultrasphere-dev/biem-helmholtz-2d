@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import pathlib
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 import orjson
@@ -13,7 +13,6 @@ from matplotlib import pyplot as plt
 from scipy.optimize import NonlinearConstraint, minimize
 
 from biem_helmholtz_2d._acoustic import (
-    FieldData,
     near_field,
     plot_near_field,
     plot_near_field_prepare,
@@ -35,11 +34,16 @@ def example_optimization(
     xp: ArrayNamespace,
     dtype: Any,
     device: Any,
+    k: complex,
+    alpha: complex,
+    eta: complex,
+    n: int,
     n_steps: int = 10,
     n_modes: int = 20,
     alpha_reg: float = 0.1,
     k_reg: int = 3,
     desired_total_field: complex = 0j,
+    target_point: tuple[float, float] = (-2, 3),
 ) -> None:
     r"""
     Example optimization using adjoint method with trust-constr.
@@ -56,6 +60,8 @@ def example_optimization(
     ----------
     path : Path
         Directory to save JSON files.
+    n : int
+        Maximum order minus $1$.
     xp : ArrayNamespace
         Array API namespace.
     dtype : Any
@@ -75,19 +81,25 @@ def example_optimization(
         + \sum_{m=1}^{\infty} (1 + \alpha m^2)^k
             \bigl(a_m(\phi) a_m(\psi) + b_m(\phi) b_m(\psi)\bigr).
         $$
-
     k_reg : int
         Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
     desired_total_field : complex
         Desired total field value $c$ at $x_0$.
+    k : complex
+        The wave number.
+    alpha : complex
+        The coupling parameter for the double-layer potential.
+    eta : complex
+        The coupling parameter for the single-layer potential.
+    target_point : tuple[float, float]
+        The point $x_0$ at which the total field is minimized.
 
     """
     path.mkdir(parents=True, exist_ok=True)
-    n = n_modes + 20
-    k = xp.asarray(2, device=device, dtype=dtype)
-    eta = xp.asarray(1, device=device, dtype=dtype)
-    alpha = xp.asarray(1, device=device, dtype=dtype)
-    point = xp.asarray([-2, 3], device=device, dtype=dtype)
+    k = xp.asarray(k, device=device, dtype=dtype)
+    eta = xp.asarray(eta, device=device, dtype=dtype)
+    alpha = xp.asarray(alpha, device=device, dtype=dtype)
+    point = xp.asarray(target_point, device=device, dtype=dtype)
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
@@ -212,8 +224,6 @@ def example_optimization(
     cos_coefs_opt, sin_coefs_opt = unpack(result.x)
     shape_opt = ParameterShape(cos_coefs=cos_coefs_opt, sin_coefs=sin_coefs_opt)
 
-    # --- Prepare plot-ready data and save as JSON ---
-
     t_plot = np.linspace(0, 2 * np.pi, 10000)
     t_arr = xp.asarray(t_plot, dtype=dtype, device=device)
     x_plot = np.asarray(shape_opt.x(t_arr), device="cpu")
@@ -222,21 +232,35 @@ def example_optimization(
     (path / "optimization_history.json").write_bytes(
         orjson.dumps({
             "val_hist": val_hist,
-            "k": float(k),
+            "k": {"real": float(k.real), "imag": float(k.imag)},
             "n": n,
             "alpha_reg": alpha_reg,
             "k_reg": k_reg,
             "n_modes": n_modes,
             "n_steps": n_steps,
+            "target_point": target_point,
+            "desired_total_field": {
+                "real": float(desired_total_field.real),
+                "imag": float(desired_total_field.imag),
+            },
+            "alpha": {"real": float(alpha.real), "imag": float(alpha.imag)},
+            "eta": {"real": float(eta.real), "imag": float(eta.imag)},
+            "final_parameters": {
+                "cos_coefs": cos_coefs_opt.tolist(),
+                "sin_coefs": sin_coefs_opt.tolist(),
+            },
         })
     )
 
     # Optimized shape
     (path / "optimized_shape.json").write_bytes(
-        orjson.dumps({
-            "x": x_plot[:, 0],
-            "y": x_plot[:, 1],
-        })
+        orjson.dumps(
+            {
+                "x": xp.ascontiguousarray(x_plot[:, 0]),
+                "y": xp.ascontiguousarray(x_plot[:, 1]),
+            },
+            option=orjson.OPT_SERIALIZE_NUMPY,
+        )
     )
 
     # Near-field data
@@ -257,24 +281,8 @@ def example_optimization(
         isin_shape_n_quad=500,
         isin_shape_tol=1e-5,
     )
-    field_serializable: dict[str, dict[str, Any]] = {}
-    for (field_name, component), entry in field_data.items():
-        key = f"{field_name}_{component}"
-        field_serializable[key] = {
-            "data": np.asarray(entry["data"]),
-            "vmax": entry["vmax"],
-            "vmin": entry["vmin"],
-            "extent": list(entry["extent"]),
-        }
     (path / "optimized_near_field.json").write_bytes(
-        orjson.dumps(
-            {
-                "field": field_serializable,
-                "point_x": float(point[0]),
-                "point_y": float(point[1]),
-            },
-            option=orjson.OPT_SERIALIZE_NUMPY,
-        )
+        orjson.dumps(field_data, option=orjson.OPT_SERIALIZE_NUMPY)
     )
 
 
@@ -319,24 +327,21 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     plt.close(fig)
 
     # Near-field plot
-    field_serializable = field_data["field"]
-    point_x = field_data["point_x"]
-    point_y = field_data["point_y"]
     fig, ax = plt.subplots(1, 3, figsize=(15, 5))
     plot_near_field(
-        _reconstruct_field_data(field_serializable),
+        field_data,
         ax_utot_re=ax[0],
         ax_utot_im=ax[1],
         ax_utot_abs=ax[2],
     )
     for a in ax:
         a.plot(
-            point_x,
-            point_y,
+            history["target_point"][0],
+            history["target_point"][1],
             "X",
-            markersize=25,
+            markersize=15,
             markerfacecolor="black",
-            markeredgewidth=3,
+            markeredgewidth=2,
             markeredgecolor="white",
             label="Point to minimize",
         )
@@ -344,19 +349,3 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     fig.tight_layout()
     fig.savefig(path / "optimized_near_field.png")
     plt.close(fig)
-
-
-def _reconstruct_field_data(
-    field_serializable: dict[str, dict[str, Any]],
-) -> FieldData:
-    """Reconstruct :class:`FieldData` from its JSON-serializable representation."""
-    result: dict[tuple[str, str], dict[str, Any]] = {}
-    for key, entry in field_serializable.items():
-        field_name, component = key.split("_", 1)
-        result[field_name, component] = {
-            "data": np.array(entry["data"]),
-            "vmax": entry["vmax"],
-            "vmin": entry["vmin"],
-            "extent": tuple(entry["extent"]),
-        }
-    return cast(FieldData, result)

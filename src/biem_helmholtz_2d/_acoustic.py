@@ -1,7 +1,8 @@
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Literal
 
+import numpy as np
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
@@ -102,8 +103,8 @@ def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Arr
 
 FieldKind = Literal["uin", "uscat", "utot"]
 FieldComponent = Literal["re", "im", "abs"]
-FieldEntry = dict[str, Any]
-FieldData = dict[tuple[FieldKind, FieldComponent], FieldEntry]
+FieldEntry = Mapping[str, Any]
+FieldData = Mapping[FieldKind, Mapping[FieldComponent, FieldEntry]]
 
 _FIELD_NAMES: dict[FieldKind, str] = {
     "uin": "Incident",
@@ -204,7 +205,7 @@ def plot_near_field_prepare(
         )
         vmax_reim = float(quantile(valid_reim, 0.99))
         vmax_abs = float(quantile(xp.abs(field_val[~xp.isnan(field_val)]), 0.99))
-
+        result[field_name] = {}  # type: ignore
         for component in ("re", "im", "abs"):
             if component == "re":
                 data = field_val.real
@@ -218,8 +219,8 @@ def plot_near_field_prepare(
                 data = xp.abs(field_val)
                 vmax = vmax_abs
                 vmin = 0
-            result[field_name, component] = {  # type: ignore
-                "data": data,
+            result[field_name][component] = {  # type: ignore
+                "data": xp.ascontiguousarray(data),
                 "vmax": vmax,
                 "vmin": vmin,
                 "extent": extent,
@@ -282,10 +283,10 @@ def plot_near_field(
     for key, ax in axes:
         if ax is None:
             continue
-        entry = field_data[key]
+        entry = field_data[key[0]][key[1]]
         cmap = "inferno" if key[1] == "abs" else "seismic"
         im = ax.imshow(
-            entry["data"].T,
+            np.asarray(entry["data"], dtype=float).T,
             extent=entry["extent"],
             origin="lower",
             cmap=cmap,

@@ -1,0 +1,13 @@
+{
+  "val_hist": [1.1873523889274942, 1.1873523889274942],
+  "k": { "real": 2.0, "imag": 0.0 },
+  "n": 32,
+  "alpha_reg": 0,
+  "k_reg": 3,
+  "n_modes": 16,
+  "n_steps": 2,
+  "target_point": [3, 3],
+  "desired_total_field": { "real": 0.0, "imag": 0.0 },
+  "alpha": { "real": 1.0, "imag": 0.0 },
+  "eta": { "real": 1.0, "imag": 0.0 }
+}

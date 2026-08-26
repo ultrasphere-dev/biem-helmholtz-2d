@@ -7,7 +7,7 @@ from rich.logging import RichHandler
 
 from biem_helmholtz_2d.optimization._example import example_optimization, example_optimization_plot
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False)
 
 LOG = getLogger(__name__)
 
@@ -36,6 +36,14 @@ def optimize() -> None:
     device = None
     for alpha_reg in [0, 1e-3, 1e-6]:
         example_optimization(
+            k=2,
+            n=32,
+            alpha=1,
+            eta=1,
+            n_modes=16,
+            n_steps=2,
+            target_point=(3, 3),
+            desired_total_field=0,
             xp=xp,
             dtype=dtype,
             device=device,
@@ -49,7 +57,7 @@ _PNG_FILES = ("optimization_history.png", "optimized_shape.png", "optimized_near
 
 
 @app.command()
-def plot_optimization() -> None:
+def plot() -> None:
     """Plot all optimization runs that have JSON data but missing PNG files."""
     optimization_dir = pathlib.Path("optimization")
     if not optimization_dir.is_dir():
@@ -57,12 +65,12 @@ def plot_optimization() -> None:
         return
 
     unplotted = []
-    for subdir in sorted(optimization_dir.iterdir()):
+    for subdir in sorted(optimization_dir.rglob("*")):
         if not subdir.is_dir():
             continue
         has_all_json = all((subdir / j).exists() for j in _JSON_FILES)
-        has_any_png = any((subdir / p).exists() for p in _PNG_FILES)
-        if has_all_json and not has_any_png:
+        has_all_png = all((subdir / p).exists() for p in _PNG_FILES)
+        if has_all_json and not has_all_png:
             unplotted.append(subdir)
 
     if not unplotted:
