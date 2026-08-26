@@ -82,7 +82,7 @@ def example_optimization(
     path.mkdir(parents=True, exist_ok=True)
     n = n_modes + 20
     k = xp.asarray(2.0, device=device, dtype=dtype)
-    eta = xp.asarray(0.0, device=device, dtype=dtype)
+    eta = xp.asarray(1, device=device, dtype=dtype)
     alpha = xp.asarray(1.0, device=device, dtype=dtype)
     point = xp.asarray([-2.0, 3.0], device=device, dtype=dtype)
     direction = xp.asarray([1.0, 0.0], device=device, dtype=dtype)
