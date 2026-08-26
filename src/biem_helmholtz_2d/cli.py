@@ -1,4 +1,5 @@
 import pathlib
+import warnings
 from datetime import datetime
 from logging import DEBUG, INFO, basicConfig, getLogger
 
@@ -28,6 +29,7 @@ def _main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
 @app.command()
 def optimize() -> None:
     """Compare optimization results with/without Hilbertian regularization."""
+    warnings.filterwarnings("ignore")
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     import numpy as np
 
@@ -41,13 +43,13 @@ def optimize() -> None:
         1e-4,
     ]:
         example_optimization(
-            k=4,
-            n=50,
+            k=5,
+            n=100,
             alpha=1,
             eta=1,
-            n_modes=30,
-            n_steps=50,
-            target_point=(-2, 3),
+            n_modes=20,
+            n_steps=20,
+            target_point=(-3, 3),
             desired_total_field=0,
             xp=xp,
             dtype=dtype,
