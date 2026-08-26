@@ -34,8 +34,14 @@ def optimize() -> None:
     xp = np
     dtype = np.float64
     device = None
-    example_optimization(xp=xp, dtype=dtype, device=device, alpha_reg=0, path=path / "alpha0")
-    example_optimization(xp=xp, dtype=dtype, device=device, path=path / "alpha")
+    for alpha_reg in [0, 1e-3, 1e-6]:
+        example_optimization(
+            xp=xp,
+            dtype=dtype,
+            device=device,
+            alpha_reg=alpha_reg,
+            path=path / f"alpha_reg_{alpha_reg}",
+        )
 
 
 _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_near_field.json")
