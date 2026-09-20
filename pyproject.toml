@@ -52,6 +52,7 @@ cli = [
 
 [dependency-groups]
 dev = [
+  "biem-helmholtz-sphere>=1.2.0",
   "pytest>=8,<9",
   "pytest-cov>=6,<7",
   "pytest-xdist>=3.8.0",
