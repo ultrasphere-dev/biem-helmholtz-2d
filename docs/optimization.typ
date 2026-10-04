@@ -35,78 +35,142 @@
     slp_x phi (x) := integral_Gamma_x G(x, y) phi(y) dd(s(y)), quad dlp_x phi (x) := integral_Gamma_x pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
   $
 ]
+
+#definition[Multi-scatterer configuration][
+  Let $M in NN$ be the number of scatterers. Let $x_j in c2pi^k (RR^2)$ for $j = 1, dots, M$, with $Gamma_j := Gamma_(x_j) := {x_j(t) | t in [0, 2pi)}$. Assume the scatterers are disjoint: $overline(Omega_(x_j)) cap overline(Omega_(x_l)) = empty$ for $j != l$.
+
+  Let $alpha_j, eta_j in KK$ be coupling parameters for each scatterer. Define the density vector $Phi := (phi_1, dots, phi_M) in c2pi^k (CC^M)$ and the incident field vector $G := (-uin |_(Gamma_1), dots, -uin |_(Gamma_M)) in c2pi^k (CC^M)$.
+
+  The scattered field is
+  $
+    u^s (x) := sum_(l = 1)^M (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l)) phi_l (x)
+  $
+]
+
+#theorem[Multi-scatterer BIE][
+  The combined field BIE for $M$ scatterers is the block system $A Phi = G$, where the block operator $A: c2pi^k (CC^M) -> c2pi^k (CC^M)$ has components
+
+  $
+    (A Phi)_j := (alpha_j / 2 + alpha_j dlp_(Gamma_j) - i eta_j slp_(Gamma_j)) phi_j
+    + sum_(l != j) (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l)) phi_l |_(Gamma_j)
+  $
+
+  for $j = 1, dots, M$. The diagonal blocks $A_(jj) := alpha_j / 2 + alpha_j dlp_(Gamma_j) - i eta_j slp_(Gamma_j)$ are the same as the single-scatterer operator. The off-diagonal blocks $A_(jl) := (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l))|_(Gamma_j)$ for $l != j$ are smooth integral operators since $Gamma_j$ and $Gamma_l$ are disjoint.
+]
+
 #definition[Frechet derivative][
   Let $X, Y$ $KK$-norm spaces.
   Let $O subset.eq X$ be open.
   Let $F: O -> Y$, $x in X$.
   A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
 ]
-#definition[Sesquilinear form][
-  $X, Y$: $KK$-norm spaces. $dp(x, y)$ is called a sesquilinear form if
-  it is linear in $x$ and conjugate-linear in $y$.
-  $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
+
+#definition[Sesquilinear form on product space][
+  Let $X, Y$ be $KK$-norm spaces. A mapping $dp: X times Y -> KK$ is called a sesquilinear form if it is linear in the first argument and conjugate-linear in the second.
+
+  For the product space $c2pi^k (CC^M) times c2pi^k (CC^M)$, we define the sesquilinear form
+  $
+    dp(Phi, Psi) := sum_(j = 1)^M integral_0^(2 pi) phi_j (t) overline(psi_j (t)) dd(t)
+  $
+  for $Phi = (phi_1, dots, phi_M)$ and $Psi = (psi_1, dots, psi_M)$. This form is non-degenerate: $dp(Phi, Psi) = 0$ for all $Psi$ implies $Phi = 0$, and vice versa.
 ]
-#theorem[Adjoint method @matsushima_2023][
-  Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
-  Let $k >= 2$.
-  Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
-  Let $J: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
 
+#definition[Adjoint operator on product space][
+  Let $A: c2pi^k (CC^M) -> c2pi^k (CC^M)$ be a bounded linear operator. The adjoint operator $A^*: c2pi^k (CC^M) -> c2pi^k (CC^M)$ with respect to the sesquilinear form $dp(dot, dot)$ satisfies
   $
-    (I/2 + dlp_x - i eta slp_x) phi_x = g_x quad t in [0, 2pi)
+    dp(A Phi, Psi) = dp(Phi, A^* Psi) quad forall Phi, Psi in c2pi^k (CC^M)
   $
 
-  Let $jr(x) := J(x, phi_x)$.
-  Assume there exists $grad_phi J(x, phi_x) in c2pi (CC)$ such that for any $h in c2pi (CC), D_phi J (x, phi_x) [h] = Re dp(grad_phi J (x, phi_x), h)$.
-  Then $D_x jr(x) [h]$ is given by
+  For the multi-scatterer BIE operator $A$, the adjoint $A^*$ is the block operator with components
+  $
+    (A^* Psi)_j := (alpha_j / 2 + alpha_j dlp_(Gamma_j)^* + i eta_j slp_(Gamma_j)^*) psi_j
+    + sum_(l != j) (alpha_l dlp_(Gamma_l)^* + i eta_l slp_(Gamma_l)^*) psi_l |_(Gamma_j)
+  $
+
+  where $dlp_(Gamma)^*$ and $slp_(Gamma)^*$ are the adjoints of the single-scatterer operators with respect to the $L^2$ inner product on $Gamma$.
+]
+
+#theorem[Adjoint method for multiple scatterers @matsushima_2023][
+  Let $dp(dot, dot)$ be the sesquilinear form on $c2pi^k (CC^M) times c2pi^k (CC^M)$ defined above. Let $k >= 2$.
+
+  Let $X := (x_1, dots, x_M) in c2pi^k (RR^2)^M$ be the collection of scatterer boundaries. Let $J: c2pi^k (RR^2)^M times c2pi^k (CC^M) -> RR$ be Frechet differentiable. Let density $Phi_X in c2pi^k (CC^M)$ satisfy the boundary integral equation
 
   $
-    D_x jr(x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h])
+    A_X Phi_X = G_X
   $
-  where $psi_x in c2pi (CC)$ satisfies the following adjoint equation:
+
+  where $A_X$ is the multi-scatterer BIE operator and $G_X := (-uin |_(Gamma_(x_1)), dots, -uin |_(Gamma_(x_M)))$.
+
+  Let $jr(X) := J(X, Phi_X)$. Assume there exists $grad_Phi J(X, Phi_X) in c2pi^k (CC^M)$ such that for any $H in c2pi^k (CC^M)$,
   $
-    (I/2 + dlp_x - i eta slp_x)^* psi_x = - grad_phi J (x, phi_x)
+    D_Phi J (X, Phi_X) [H] = Re dp(grad_Phi J (X, Phi_X), H)
+  $
+
+  Then $D_X jr(X) [H]$ for a perturbation $H = (h_1, dots, h_M) in c2pi^k (RR^2)^M$ is given by
+
+  $
+    D_X jr(X) [H] = D_X J(X, Phi_X) [H] + Re dp(Psi_X, D_X A_X [H] Phi_X - D_X G_X [H])
+  $
+
+  where $Psi_X in c2pi^k (CC^M)$ satisfies the adjoint equation
+  $
+    A_X^* Psi_X = - grad_Phi J (X, Phi_X)
   $
 ]
+
 #proof[
-  Let $L: c2pi^k (RR^2) times c2pi (CC) times c2pi (CC) -> RR$ defined by
+  Define the Lagrangian $L: c2pi^k (RR^2)^M times c2pi^k (CC^M) times c2pi^k (CC^M) -> RR$ by
   $
-    L(x, phi, psi) := J(x, phi) + Re dp(psi, (I/2 + dlp_x - i eta slp_x) phi - g_x)
+    L(X, Phi, Psi) := J(X, Phi) + Re dp(Psi, A_X Phi - G_X)
   $
+
   Then
   $
-    D_x jr(x) [h] & = D_x L(x, phi_x, psi_x) [h] + D_phi L(x, phi_x, psi_x) [D_x phi_x [h]] + D_psi L(x, phi_x, psi_x) [D_x psi_x [h]]
+    D_X jr(X) [H] = D_X L(X, Phi_X, Psi_X) [H] + D_Phi L(X, Phi_X, Psi_X) [D_X Phi_X [H]] + D_Psi L(X, Phi_X, Psi_X) [D_X Psi_X [H]]
   $
+
   The first term is
   $
-    D_x L(x, phi_x, psi_x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h]) \
+    D_X L(X, Phi_X, Psi_X) [H] = D_X J(X, Phi_X) [H] + Re dp(Psi_X, D_X A_X [H] Phi_X - D_X G_X [H])
   $
-  The last two terms vanish since for any $v in c2pi$,
-  $
-    D_phi L(x, phi, psi_x) [v] & = D_phi J (x, phi) [v] + Re dp(psi_x, (I/2 + dlp_x - i eta slp_x) v) \
-                               & = Re dp((I/2 + dlp_x - i eta slp_x)^* psi_x + grad_phi J (x, phi), v) = Re dp(0, v) = 0
-  $
-  and for any $w in c2pi$,
-  $
-    D_psi L(x, phi_x, psi) [w] = Re dp(w, (I/2 + dlp_x - i eta slp_x) phi_x - g_x) = Re dp(w, 0) = 0
-  $
-]
-#remark[
-  Typically $g_x := - uin compose x$, $J (x, phi) := J(x, (dlp_x - i eta slp_x) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on shape and scattered field, not density.
 
-  In this case, $D_x g_x (t) [h] = - grad uin(x(t)) dot h(t)$, $grad_phi J (x, phi) = (dlp_x - i eta slp_x)^* grad_u J (x, (dlp_x - i eta slp_x) phi)$, since $dp(grad_phi J, h) = dp(grad_u J, (dlp_x - i eta slp_x) h) = dp((dlp_x - i eta slp_x)^* grad_u J, h)$
+  The last two terms vanish since for any $V in c2pi^k (CC^M)$,
+  $
+    D_Phi L(X, Phi, Psi_X) [V] = D_Phi J (X, Phi) [V] + Re dp(Psi_X, A_X V)
+    = Re dp(A_X^* Psi_X + grad_Phi J (X, Phi), V) = Re dp(0, V) = 0
+  $
+
+  and for any $W in c2pi^k (CC^M)$,
+  $
+    D_Psi L(X, Phi_X, Psi) [W] = Re dp(W, A_X Phi_X - G_X) = Re dp(W, 0) = 0
+  $
 ]
 
 #remark[
-  In the proof above, the step $D_phi L(x, phi_x, psi_x)[D_x phi_x[h]] = 0$ relies on the fact that the shape-induced variation $D_x phi_x[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
+  The term $D_X A_X [H] Phi_X$ represents the shape derivative of the block operator applied to the density. For the multi-scatterer case,
+
+  $
+    (D_X A_X [H] Phi)_j = sum_(l = 1)^M D_X A_(jl) [h_l] phi_l
+  $
+
+  where $D_X A_(jl) [h_l]$ is the shape derivative of the $(j, l)$ block operator with respect to perturbation of the $l$-th scatterer boundary. For $j = l$, this is the singular shape derivative of the self-interaction operator. For $j != l$, this is the smooth shape derivative of the interaction operator.
 ]
-#algorithm[
-  Assume we have implementation of $J, D_x J, D_phi J, x, x', x'', h, h', h'', slp_x, dlp_x, D_x slp_x, D_x dlp_x, g_x, D_x g_x$.
-  + Compute $phi_x$ by solving the boundary integral equation
-  + Compute $D_phi J$, then compute $psi_x$ by solving the adjoint equation
-  + Compute the Riesz representative $hdj(x)$ of $D_x jr(x)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
-  + Update the shape: $x_(n + 1) = x_n + lambda hdh$ where $hdh := - hdj(x) / norm(hdj(x))_H$
+
+#remark[
+  Typically $G_X := (-uin compose x_1, dots, -uin compose x_M)$ and $J (X, Phi) := J(X, u^s(Phi))$ where $u^s(Phi)$ is the scattered field and $J$ is the objective functional based on shape and scattered field, not density.
+
+  In this case, $D_X G_X [H] = (-grad uin(x_1) dot h_1, dots, -grad uin(x_M) dot h_M)$, and the gradient $grad_Phi J$ is computed via the chain rule through the scattered field evaluation.
 ]
+
+#algorithm[Multi-scatterer optimization][
+  Assume we have implementation of $J, D_X J, D_Phi J, X, X', X'', H, H', H'', A_X, A_X^*, D_X A_X, G_X, D_X G_X$.
+  + Solve the forward BIE: $A_X Phi_X = G_X$
+  + Compute $D_Phi J$, then solve the adjoint equation: $A_X^* Psi_X = - grad_Phi J (X, Phi_X)$
+  + Compute the shape derivative: $D_X jr(X) [H] = D_X J(X, Phi_X) [H] + Re dp(Psi_X, D_X A_X [H] Phi_X - D_X G_X [H])$
+  + Compute the Riesz representative $hdj(X)$ of $D_X jr(X)$ to obtain the gradient for each scatterer
+  + Update the shapes: $(x_j)_(n + 1) = (x_j)_n + lambda (hdh_j)$ where $hdh_j := - hdj_j(X) / norm(hdj_j(X))_H$
+]
+
 #definition[Hilbertian Regularization][
   Let $X$ be a norm space.
   Let $J: X -> RR$ be Frechet differentiable at $x in X$.
@@ -121,9 +185,11 @@
     hdh := - hdj(x)/norm(hdj(x))_H
   $
 ]
+
 #theorem[
   The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
 ]
+
 #proof[
   By the Cauchy–Schwarz inequality,
   $
@@ -135,6 +201,7 @@
     D J (x) [hdh] = D J (x) [-hdj(x)/norm(hdj(x))_H] = -norm(hdj(x))_H = inf_(norm(h)_H = 1) D J (x) [h]
   $
 ]
+
 #let h2pi = $H_(2 pi)$
 #definition[
   Let $alpha > 0$.
@@ -145,6 +212,18 @@
 ]
 
 $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
+
+#definition[Hilbert space for multiple scatterers][
+  For $M$ scatterers, we use the product Hilbert space $H^M := h2pi^k (RR)^M$ with inner product
+  $
+    ip(Phi, Psi)_(H^M) := sum_(j = 1)^M ip(phi_j, psi_j)_h2pi^k
+  $
+  for $Phi = (phi_1, dots, phi_M)$ and $Psi = (psi_1, dots, psi_M)$. The norm is
+  $
+    norm(Phi)_(H^M)^2 = sum_(j = 1)^M norm(phi_j)_(h2pi^k)^2
+  $
+]
+
 #let hdr = $h^((R_N))$
 #let hdk = $h^((h2pi^k))$
 #definition[
@@ -153,80 +232,95 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 ]
 
 #theorem[
-  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ can be computed by
+  The coefficients ${c_(j,m)}_(m = 0)^(N - 1) union {d_(j,m)}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ for the $j$-th scatterer can be computed by
 
   $
-    c'_m := (D_x J (x) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_x J (x) [sin(m t)]) / (1 + alpha m^2)^k
+    c'_(j,m) := (D_(x_j) J (X) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_(j,m) := (D_(x_j) J (X) [sin(m t)]) / (1 + alpha m^2)^k
   $
 
   $
-    S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
+    S_j := 1/2 c'_(j,0)^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_(j,m)^2 + d'_(j,m)^2), quad c_(j,m) := c'_(j,m) / sqrt(S_j), quad d_(j,m) := d'_(j,m) / sqrt(S_j)
   $
-  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(x)$.
+
+  where $c'_(j,m), d'_(j,m)$ are the Fourier coefficients of the unnormalized Riesz representation $hdj_j(X)$ for the $j$-th scatterer.
 ]
 
 #theorem[Error estimate][
-  Let $g := hdj(x)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_N$ its truncation in $R_N$. If $g in h2pi^(k + s)(RR)$ for some $s > 0$, then
+  Let $g_j := hdj_j(X)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_(j,N)$ its truncation in $R_N$. If $g_j in h2pi^(k + s)(RR)$ for some $s > 0$, then
   $
-    norm(g - g_N)_(h2pi^k) <= (1 + alpha N^2)^(-s/2) norm(g)_(h2pi^(k + s))
+    norm(g_j - g_(j,N))_(h2pi^k) <= (1 + alpha N^2)^(-s/2) norm(g_j)_(h2pi^(k + s))
   $
 ]
+
 #proof[
-  Let $c'_m, d'_m$ be the Fourier coefficients of $g$ as defined above.
+  Let $c'_(j,m), d'_(j,m)$ be the Fourier coefficients of $g_j$ as defined above.
   The squared norm of the truncation error is the tail of the series:
   $
-    norm(g - g_N)_(h2pi^k)^2 & = sum_(m = N)^infinity (1 + alpha m^2)^k ((c'_m)^2 + (d'_m)^2) \
-                             & = sum_(m = N)^infinity (1 + alpha m^2)^(-s) (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
-                             & <= (1 + alpha N^2)^(-s) sum_(m = N)^infinity (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
-                             & <= (1 + alpha N^2)^(-s) norm(g)_(h2pi^(k + s))^2
+    norm(g_j - g_(j,N))_(h2pi^k)^2 & = sum_(m = N)^infinity (1 + alpha m^2)^k ((c'_(j,m))^2 + (d'_(j,m))^2) \
+                                   & = sum_(m = N)^infinity (1 + alpha m^2)^(-s) (1 + alpha m^2)^(k + s) ((c'_(j,m))^2 + (d'_(j,m))^2) \
+                                   & <= (1 + alpha N^2)^(-s) sum_(m = N)^infinity (1 + alpha m^2)^(k + s) ((c'_(j,m))^2 + (d'_(j,m))^2) \
+                                   & <= (1 + alpha N^2)^(-s) norm(g_j)_(h2pi^(k + s))^2
   $
   Taking square roots yields the claimed bound.
 ]
+
 #let ju = $tilde(J)$
-#theorem[Riesz representation for point evaluation][
-  Let $x_0 in RR^2 without overline(Omega_x)$.
-  Let $ju in C^1 (RR^2, RR)$
-  Let $J(x, phi) := ju(Re u_phi (x), Im u_phi (x)), u_phi (x) := ((alpha dlp_x - i eta slp_x) phi)$.
-  (If $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.)
-  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $phi$ under the sesquilinear form
+#theorem[Riesz representation for point evaluation with multiple scatterers][
+  Let $x_0 in RR^2 without bigcup_(j = 1)^M overline(Omega_(x_j))$.
+  Let $ju in C^1 (RR^2, RR)$.
+  Let $J(X, Phi) := ju(Re u^s_Phi (x_0), Im u^s_Phi (x_0))$, where
   $
-    dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
+    u^s_Phi (x) := sum_(l = 1)^M (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l)) phi_l (x)
   $
+
+  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $Phi$ under the sesquilinear form
+  $
+    dp(Phi, Psi) := sum_(j = 1)^M integral_0^(2 pi) phi_j(t) overline(psi_j(t)) dd(t)
+  $
+
   is given by
   $
-    grad_phi J(x, phi)(tau) =
-    (pdv(ju, x_1) + i pdv(ju, x_2)) (u_phi (x_0)) overline(K(x_0, tau)),
+    (grad_Phi J(X, Phi))_j (tau) =
+    (pdv(ju, x_1) + i pdv(ju, x_2)) (u^s_Phi (x_0)) overline(K_j(x_0, tau))
   $
+
   where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
   $
-    K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau),
+    K_j(x_0, tau) := alpha_j tilde(D)_j(x_0, tau) - i eta_j tilde(S)_j(x_0, tau)
   $
+
   with
   $
-    tilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
-    tilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
+    tilde(S)_j(x_0, tau) := G(x_0, x_j(tau)) abs(x_j'(tau)),
+    tilde(D)_j(x_0, tau) := n_j(tau) dot grad_y G(x_0, x_j(tau)) abs(x_j'(tau))
   $
-  the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
+
+  the kernels of $sl_(Gamma_j)$, $dl_(Gamma_j)$ with jacobian multiplied, evaluated at $x_0$.
 ]
+
 #proof[
-  Let $u := u_phi (x_0)$ and $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
+  Let $u := u^s_Phi (x_0)$ and $K_j(x_0, tau) := alpha_j tilde(D)_j(x_0, tau) - i eta_j tilde(S)_j(x_0, tau)$.
   Since
   $
-    D_phi J(x, phi)[h] = D ju(u) [(alpha dlp_x - i eta slp_x) h (x_0)]
+    D_Phi J(X, Phi)[H] = D ju(u) [sum_(l = 1)^M (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l)) h_l (x_0)]
   $
+
   and expanding the evaluation operators gives
   $
-    (alpha dlp_x - i eta slp_x) h (x_0)
-    = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau),
+    sum_(l = 1)^M (alpha_l dlp_(Gamma_l) - i eta_l slp_(Gamma_l)) h_l (x_0)
+    = sum_(l = 1)^M integral_0^(2 pi) K_l(x_0, tau) h_l(tau) dd(tau)
   $
+
   using that $ju$ is real-valued, hence $D ju$ is real-linear,
   $
-    D_phi J(x, phi)[h] & = pdv(ju, x_1)(u) Re integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) + pdv(ju, x_2)(u) Im integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) \
-                       & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u) K(x_0, tau) h(tau) dd(tau) \
-                       & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u) overline(K(x_0, tau)) overline(h(tau)) dd(tau),
+    D_Phi J(X, Phi)[H] & = pdv(ju, x_1)(u) Re sum_(l = 1)^M integral_0^(2 pi) K_l(x_0, tau) h_l(tau) dd(tau) \
+                       & quad + pdv(ju, x_2)(u) Im sum_(l = 1)^M integral_0^(2 pi) K_l(x_0, tau) h_l(tau) dd(tau) \
+                       & = Re sum_(l = 1)^M integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u) K_l(x_0, tau) h_l(tau) dd(tau) \
+                       & = Re sum_(l = 1)^M integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u) overline(K_l(x_0, tau)) overline(h_l(tau)) dd(tau)
   $
+
   where the last equality uses $Re(z) = Re(overline(z))$.
-  Comparing with $Re dp(grad_phi J, h)$ gives the claimed representation.
+  Comparing with $Re dp(grad_Phi J, H) = Re sum_(j = 1)^M integral_0^(2 pi) (grad_Phi J)_j (t) overline(h_j(t)) dd(t)$ gives the claimed representation.
 ]
 
 #bibliography("main.bib")

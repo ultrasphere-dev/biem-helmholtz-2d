@@ -202,6 +202,6 @@ def test_circle_sol_matches_theorem(
     }
     density = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
     eval_points = xp.random.random_uniform(shape=(3,), device=device, dtype=dtype) * 2 * math.pi
-    actual = density(eval_points)
+    actual = xp.squeeze(density(eval_points), axis=-1)
     expected = xp.exp(1j * m * eval_points)
     assert xp.all(xpx.isclose(actual, expected))
