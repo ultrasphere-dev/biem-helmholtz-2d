@@ -1,7 +1,7 @@
 from typing import Any
 
 from array_api.latest import Array, ArrayNamespace
-from ie_circle import KressShape, ShapeList
+from ie_circle import KressShape
 from matplotlib import pyplot as plt
 
 from ._acoustic import far_field, plot_near_field, plot_near_field_prepare, scattering_dirichlet
@@ -10,15 +10,15 @@ from ._incident import plane_wave
 
 def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Array:
     k = xp.asarray(1, device=device, dtype=dtype)
-    eta = xp.asarray([0], device=device, dtype=dtype)
-    alpha = xp.asarray([1], device=device, dtype=dtype)
-    shapes = ShapeList([KressShape()])
+    eta = xp.asarray(0, device=device, dtype=dtype)
+    alpha = xp.asarray(1, device=device, dtype=dtype)
+    shape = KressShape()
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
 
     density = scattering_dirichlet(
         k=k,
-        shapes=shapes,
+        shape=shape,
         incident_field=incident_field,
         eta=eta,
         alpha=alpha,
@@ -31,7 +31,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         xlim=(-6, 6),
         ylim=(-6, 6),
         k=k,
-        shapes=shapes,
+        shape=shape,
         n=n,
         alpha=alpha,
         eta=eta,
@@ -48,7 +48,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         density,
         direction,
         k=k,
-        shapes=shapes,
+        shape=shape,
         n=n,
         alpha=alpha,
         eta=eta,

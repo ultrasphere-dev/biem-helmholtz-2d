@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 import pytest
 from array_api.latest import Array
-from ie_circle import Shape, ShapeList, trapezoidal_quadrature
+from ie_circle import Shape, trapezoidal_quadrature
 
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
 from biem_helmholtz_2d._adjoint import objective_derivative
@@ -47,23 +47,15 @@ def test_adjoint_central_derivative(
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
 
-    alpha_arr = xp.asarray([1], device=device, dtype=dtype)
-    eta_arr = xp.asarray([1], device=device, dtype=dtype)
-    phi_multi = scattering_dirichlet(
+    phi = scattering_dirichlet(
         k=k_arr,
-        shapes=ShapeList([shape]),
+        shape=shape,
         incident_field=incident_field,
-        alpha=alpha_arr,
-        eta=eta_arr,
+        alpha=alpha,
+        eta=eta,
         n=n,
     )
-
-    def phi(t: Array) -> Array:
-        return phi_multi(t)[..., 0]
-
-    u_scat = near_field(
-        phi_multi, x0[None], k=k_arr, shapes=ShapeList([shape]), n=n, alpha=alpha_arr, eta=eta_arr
-    )
+    u_scat = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
     zero = xp.asarray(0, dtype=dtype, device=device)
     grad_phi_j = grad_phi_abs2_scattered_field(
         x0[None], u_scat, shape=shape, k=k_arr, alpha=alpha, eta=eta, target=zero
@@ -96,35 +88,29 @@ def test_adjoint_central_derivative(
     dr_A_phi = xp.squeeze(alpha * dd - 1j * eta * ds)
     dr_j_val = 2 * xp.real(xp.conj(u_scat) * dr_A_phi).squeeze()
 
-    # For single scatterer test, wrap grad_phi_j to return (Q, 1)
-    def grad_phi_j_multi(t_in: Array) -> Array:
-        return grad_phi_j(t_in)[..., None]
-
     dr_adj = objective_derivative(
         k=k_arr,
-        shapes=ShapeList([shape]),
-        alpha=alpha_arr,
-        eta=eta_arr,
+        shape=shape,
+        alpha=alpha,
+        eta=eta,
         n=n,
-        phi=phi_multi,
-        grad_phi_j=grad_phi_j_multi,
+        phi=phi,
+        grad_phi_j=grad_phi_j,
         dr_j=dr_j_val,
-        dr_g=dr_g_vals[..., None, :],  # (Q,) -> (Q, 1)
-        h_shapes=ShapeList([shape_h]),
+        dr_g=dr_g_vals,
+        h_shape=shape_h,
     )
 
     def objective(s: Shape) -> Array:
         pp = scattering_dirichlet(
             k=k_arr,
-            shapes=ShapeList([s]),
+            shape=s,
             incident_field=incident_field,
-            alpha=alpha_arr,
-            eta=eta_arr,
+            alpha=alpha,
+            eta=eta,
             n=n,
         )
-        up = near_field(
-            pp, x0[None], k=k_arr, shapes=ShapeList([s]), n=n, alpha=alpha_arr, eta=eta_arr
-        )
+        up = near_field(pp, x0[None], k=k_arr, shape=s, n=n, alpha=alpha, eta=eta)
         return xp.sum(xp.abs(up) ** 2)
 
     rows: list[dict[str, object]] = []

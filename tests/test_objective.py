@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from array_api.latest import Array
-from ie_circle import Shape, ShapeList, trapezoidal_quadrature
+from ie_circle import Shape, trapezoidal_quadrature
 
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
 from biem_helmholtz_2d._incident import plane_wave
@@ -37,23 +37,15 @@ def test_grad_phi_central_derivative(
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
 
-    alpha_arr = xp.asarray([1], device=device, dtype=dtype)
-    eta_arr = xp.asarray([1], device=device, dtype=dtype)
-    phi_multi = scattering_dirichlet(
+    phi = scattering_dirichlet(
         k=k_arr,
-        shapes=ShapeList([shape]),
+        shape=shape,
         incident_field=incident_field,
-        alpha=alpha_arr,
-        eta=eta_arr,
+        alpha=alpha,
+        eta=eta,
         n=n,
     )
-
-    def phi(t: Array) -> Array:
-        return phi_multi(t)[..., 0]
-
-    u = near_field(
-        phi_multi, x0[None], k=k_arr, shapes=ShapeList([shape]), n=n, alpha=alpha_arr, eta=eta_arr
-    )
+    u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
 
     target_arr = xp.asarray(target_val, dtype=xp.result_type(dtype, 1j), device=device)
 
@@ -71,15 +63,7 @@ def test_grad_phi_central_derivative(
     eps = 1e-5
 
     def j_of_phi(phi_pert: Callable[[Array], Array]) -> Array:
-        up = near_field(
-            phi_pert,
-            x0[None],
-            k=k_arr,
-            shapes=ShapeList([shape]),
-            n=n,
-            alpha=alpha_arr,
-            eta=eta_arr,
-        )
+        up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
         return xp.sum(xp.abs(up - target_arr) ** 2)
 
     class _PerturbedDensity:
@@ -87,7 +71,7 @@ def test_grad_phi_central_derivative(
             self._eps = eps_pert
 
         def __call__(self, t_in: Array) -> Array:
-            return (phi(t_in) + self._eps * v_func(t_in))[..., None]
+            return phi(t_in) + self._eps * v_func(t_in)
 
     j_plus = j_of_phi(_PerturbedDensity(eps))
     j_minus = j_of_phi(_PerturbedDensity(-eps))
