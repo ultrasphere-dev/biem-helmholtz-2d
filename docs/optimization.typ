@@ -30,6 +30,18 @@
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[
+  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected analytic boundaries $(Gamma_i)_(i in I)$.
+  Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
+  Let $k > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
+  $
+  cases(
+    (laplacian + k^2) u = 0 "in" RR^2 without overline(Omega),
+    u = -uin "on" Gamma,
+    "SRC" "on" SS^1
+  )
+  $
+]
+#definition[
   Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $x in c2pi^k (RR^2)$, $Gamma_x := {x(t) | t in [0, 2pi)}$.
   $
     slp_x phi (x) := integral_Gamma_x G(x, y) phi(y) dd(s(y)), quad dlp_x phi (x) := integral_Gamma_x pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
