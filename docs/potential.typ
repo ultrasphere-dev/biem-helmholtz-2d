@@ -18,6 +18,12 @@
 #let tlp = $cal(T)$
 #let sl = $op("SL")$
 #let dl = $op("DL")$
+#let slpo = $caron(slp)$
+#let dlpo = $caron(dlp)$
+#let dlpao = $caron(dlpa)$
+#let tlpo = $caron(tlp)$
+#let slo = $caron(sl)$
+#let dlo = $caron(dl)$
 #let uin = $u_"in"$
 #let dp(x, y) = $lr(chevron.l #x, #y chevron.r)$
 #let ip(x, y) = $lr(( #x, #y ))$
@@ -41,18 +47,6 @@
   For $k >= 1$ this is wrong.
 ]
 
-#definition[
-  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_i)_(i in I)$.
-  Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
-  Let $k > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
-  $
-  cases(
-    (laplacian + k^2) u = 0 "in" outomega,
-    u = -uin "on" Gamma,
-    "SRC" "on" SS^1
-  )
-  $
-]
 
 #definition[
   Let
@@ -61,14 +55,36 @@
   $
   Let $Omega$ be a bounded open set which has connected $C^2$ boundary $Gamma$. Let
   $
-     slp: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
-     dlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
-    dlpa_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
-     tlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y) \
-     sl : C(Gamma) -> C(outomega), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
-     dl_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y)
+     slpo: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
+     dlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
+    dlpao_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
+     tlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y) \
+     slo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
+     dlo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y)
   $
 ]
+
+
+#theorem[
+  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_i)_(i in I)$.
+  Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
+  Let $k > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
+  $
+  cases(
+    (laplacian + k^2) u = 0 "in" outomega,
+    u = -uin "on" Gamma,
+    "SRC" "on" SS^1
+  ).
+  $
+  Then there exists $phi in C(Gamma)$ such that
+  $
+  cases(
+    (I/2 + dlpo_Gamma - i eta slpo_Gamma) phi(xi) = f(xi) := - uin(xi) &(xi in Gamma),
+    u(x) = (dlo_Gamma - i eta slo_Gamma) phi(x) &(x in RR^d without overline(Omega))
+  )
+  $
+]
+
 #definition[
   Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $x in c2pi^k (RR^2)$, $Gamma_x := {x(t) | t in [0, 2pi)}$.
   Let
