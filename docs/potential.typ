@@ -27,6 +27,7 @@
 #let jr = $hat(J)$
 #let hdj = $grad^((H)) J$
 #let hdh = $h^((H))$
+#let outomega = $RR^2 without overline(Omega)$
 = Layer potentials
 
 #theorem[Weakly singular kernels ][
@@ -41,15 +42,31 @@
 ]
 
 #definition[
-  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected analytic boundaries $(Gamma_i)_(i in I)$.
+  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_i)_(i in I)$.
   Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
   Let $k > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
   $
   cases(
-    (laplacian + k^2) u = 0 "in" RR^2 without overline(Omega),
+    (laplacian + k^2) u = 0 "in" outomega,
     u = -uin "on" Gamma,
     "SRC" "on" SS^1
   )
+  $
+]
+
+#definition[
+  Let
+  $
+    G(x, y) := i/4 hk1_0 (k abs(x - y)).
+  $
+  Let $Omega$ be a bounded open set which has connected $C^2$ boundary $Gamma$. Let
+  $
+     slp: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
+     dlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
+    dlpa_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
+     tlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y) \
+     sl : C(Gamma) -> C(outomega), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
+     dl_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y)
   $
 ]
 #definition[
@@ -81,17 +98,6 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 #definition[Counterclockwise outward vectors][
   $
     n(t) := (n^*(t))/ abs(x'(t)), quad n^*(t) := (x'_2(t), -x'_1(t))
-  $
-]
-#definition[
-  $
-    G(x, y) := i/4 hk1_0 (k abs(x - y))
-  $
-  $
-     slp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
-     dlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
-    dlpa_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
-     tlp_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y)
   $
 ]
 #theorem[@zhang_superconvergence_2010][
