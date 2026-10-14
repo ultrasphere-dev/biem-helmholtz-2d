@@ -51,16 +51,16 @@
 #definition[
   Let
   $
-    G(x, y) := i/4 hk1_0 (k abs(x - y)).
+    G(xi, chi) := i/4 hk1_0 (k abs(xi - chi)).
   $
   Let $Omega$ be a bounded open set which has connected $C^2$ boundary $Gamma$. Let
   $
-     slpo: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(x, y) phi(y) dd(y) \
-     dlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y) \
-    dlpao_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(x) dot grad_x G(x, y) phi(y) dd(y) \
-     tlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) phi(y) dd(y) \
-     slo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma G(x, y) phi(y) dd(y) \
-     dlo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma n(y) dot grad_y G(x, y) phi(y) dd(y)
+     slpo: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma G(xi, chi) phi(chi) dd(chi) \
+     dlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(chi) dot grad_chi G(xi, chi) phi(chi) dd(chi) \
+    dlpao_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral_Gamma n(xi) dot grad_xi G(xi, chi) phi(chi) dd(chi) \
+     tlpo_Gamma: C(Gamma) -> C(Gamma), phi & |-> integral.dash_Gamma sum_(i,j) n_i (xi) n_j (chi) pdv(G, xi_i, chi_j)(xi, chi) phi(chi) dd(chi) \
+     slo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma G(xi, chi) phi(chi) dd(chi) \
+     dlo_Gamma : C(Gamma) -> C(outomega), phi &|-> integral_Gamma n(chi) dot grad_chi G(xi, chi) phi(chi) dd(chi)
   $
 ]
 
@@ -80,7 +80,7 @@
   $
   cases(
     (I/2 + dlpo_Gamma - i eta slpo_Gamma) phi(xi) = f(xi) := - uin(xi) &(xi in Gamma),
-    u(x) = (dlo_Gamma - i eta slo_Gamma) phi(x) &(x in RR^d without overline(Omega))
+    u(xi) = (dlo_Gamma - i eta slo_Gamma) phi(xi) &(xi in RR^d without overline(Omega))
   )
   $
 ]
