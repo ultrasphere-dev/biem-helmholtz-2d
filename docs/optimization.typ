@@ -43,8 +43,19 @@
 ]
 #definition[
   Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $x in c2pi^k (RR^2)$, $Gamma_x := {x(t) | t in [0, 2pi)}$.
+  Let
   $
-    slp_x phi (x) := integral_Gamma_x G(x, y) phi(y) dd(s(y)), quad dlp_x phi (x) := integral_Gamma_x pdv(G(x, y), n(y)) phi(y) dd(s(y)), quad G(x, y) := i/4 hk1_0 (k abs(x - y))
+    G(x, y) := i/4 hk1_0 (k abs(x - y)),
+  $
+  $
+    slp_x&: c2pi -> c2pi,  phi |-> t |-> integral_0^(2 pi) G(x(t), x(tau)) phi(tau) abs(x'(tau)) dd(tau), \
+    dlp_x&: c2pi -> c2pi, phi |-> t |-> integral_0^(2 pi) grad_1 G(x(t), x(tau)) dot (x'_2 (tau), -x'_1 (tau)) phi(y) dd(s(y)).
+  $
+]
+#theorem[
+  Let $g_x (t) := -uin(x(t))$, then
+  $
+  forall eta > 0. exists phi in c2pi. (I/2 + dlp_x - i eta slp_x) phi = g_x and forall x in RR^d without overline(Omega). u(x) = (dl_x - i eta sl_x) phi(x)
   $
 ]
 #definition[Frechet derivative][
