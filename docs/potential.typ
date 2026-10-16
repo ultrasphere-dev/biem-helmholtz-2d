@@ -290,59 +290,75 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
 ]
 #theorem[Adjoint method @matsushima_2023][
   Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC)^2$.
-  Denote $A^*$ the adjoint operator of $A$ with respect to $dp(dot, dot)$.
+  A superscript star denotes the adjoint with respect to $dp(dot, dot)$.
   Let $k >= 2$.
-  Let $I$, $(x_a)_(a in I)$, $(psi_x_a)_(a in I)$ be those in @bie.
-  Let $J: B^I times c2pi (CC)^I -> RR$ Frechet differentiable.
-  Let $jr(x) := J((x_a)_(a in I), (psi_x_a)_(a in I))$.
-  Assume there exists $grad_phi J(x, phi_x) in c2pi (CC)$ such that for any $h in c2pi (CC), D_phi J (x, phi_x) [h] = Re dp(grad_phi J (x, phi_x), h)$.
-  Then $D_x jr(x) [h]$ is given by
+  Let $I$, $x := (x_a)_(a in I)$, $psi_x := (psi_(x_a))_(a in I)$ be those in @bie.
+  Let $J: B^I times c2pi (CC)^I -> RR$ be Frechet differentiable.
+  Let $jr(x) := J(x, psi_x)$.
+  Assume that for every $a in I$ there exists $grad_(psi_a) J(x, psi_x) in c2pi(CC)$ such that for any $v_a in c2pi(CC)$,
   $
-    D_x jr(x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h])
+    D_(psi_a) J(x, psi_x)[v_a]
+      = Re dp(grad_(psi_a) J(x, psi_x), v_a).
   $
-  where $psi_x in c2pi (CC)$ satisfies the following adjoint equation:
+  Then, for every $a in I$,
   $
-    (I/2 + dlp_x - i eta slp_x)^* psi_x = - grad_phi J (x, phi_x)
+    D_(x_a) jr(x)[h_a]
+      & = D_(x_a) J(x, psi_x)[h_a] \
+      & + Re dp(lambda_a,
+          (D_(x_a) dlp_(x_a)[h_a] - i eta D_(x_a) slp_(x_a)[h_a]) psi_(x_a) - D_(x_a) g_(x_a)[h_a]) \
+      &  + Re dp(lambda_a, sum_(b in I, b != a) D_(x_a) [((dl_(x_b) - i eta sl_(x_b)) psi_(x_b)) compose x_a][h_a]) \
+      & + Re sum_(b in I, b != a) dp(lambda_b,
+          ((D_(x_a) dl_(x_a)[h_a] - i eta D_(x_a) sl_(x_a)[h_a]) psi_(x_a)) compose x_b).
+  $
+  Here $(lambda_a)_(a in I) in c2pi(CC)^I$ satisfies the adjoint equations,
+  $
+    (I/2 + dlp_(x_a) - i eta slp_(x_a))^* lambda_a
+      + sum_(b in I, b != a) [((dl_(x_a) - i eta sl_(x_a)) dot) compose x_b]^* lambda_b
+      = - grad_(psi_a) J(x, psi_x) quad (a in I).
   $
 ]
 #proof[
-  Let $L: c2pi^k (RR^2) times c2pi (CC) times c2pi (CC) -> RR$ defined by
+  Define
   $
-    L(x, phi, psi) := J(x, phi) + Re dp(psi, (I/2 + dlp_x - i eta slp_x) phi - g_x)
+    L((x_a)_(a in I), (psi_a)_(a in I), (lambda_a)_(a in I))
+      := J((x_a)_(a in I), (psi_a)_(a in I)) \
+      + Re sum_(a in I) dp(lambda_a,
+          (I/2 + dlp_(x_a) - i eta slp_(x_a)) psi_a
+          + sum_(b in I, b != a) ((dl_(x_b) - i eta sl_(x_b)) psi_b) compose x_a
+          - g_(x_a)).
   $
-  Then
+  Differentiation with respect to $x_a$ gives the displayed formula for every $a in I$ and $v_a in c2pi(CC)$,
   $
-    D_x jr(x) [h] & = D_x L(x, phi_x, psi_x) [h] + D_phi L(x, phi_x, psi_x) [D_x phi_x [h]] + D_psi L(x, phi_x, psi_x) [D_x psi_x [h]]
+    D_(psi_a) L[v_a]
+      &= Re dp(
+          grad_(psi_a) J(x, psi_x)
+          + (I/2 + dlp_(x_a) - i eta slp_(x_a))^* lambda_a, v_a) \
+          &quad + Re dp(sum_(b in I, b != a) [((dl_(x_a) - i eta sl_(x_a)) dot) compose x_b]^* lambda_b,
+          v_a) \
+          &= 0
   $
-  The first term is
+  For every $a in I$ and $w_a in c2pi(CC)$, differentiation with respect to $lambda_a$ gives
   $
-    D_x L(x, phi_x, psi_x) [h] & = D_x J(x, phi_x) [h] + Re dp(psi_x, D_x dlp_x [h] phi_x - i eta D_x slp_x [h] phi_x - D_x g_x [h]) \
-  $
-  The last two terms vanish since for any $v in c2pi$,
-  $
-    D_phi L(x, phi, psi_x) [v] & = D_phi J (x, phi) [v] + Re dp(psi_x, (I/2 + dlp_x - i eta slp_x) v) \
-                               & = Re dp((I/2 + dlp_x - i eta slp_x)^* psi_x + grad_phi J (x, phi), v) = Re dp(0, v) = 0
-  $
-  and for any $w in c2pi$,
-  $
-    D_psi L(x, phi_x, psi) [w] = Re dp(w, (I/2 + dlp_x - i eta slp_x) phi_x - g_x) = Re dp(w, 0) = 0
+    D_(lambda_a) L[w_a]
+      = Re dp(w_a,
+          (I/2 + dlp_(x_a) - i eta slp_(x_a)) psi_(x_a)
+          + sum_(b in I, b != a) ((dl_(x_b) - i eta sl_(x_b)) psi_(x_b)) compose x_a
+          - g_(x_a)) = 0.
   $
 ]
 #remark[
-  Typically $g_x := - uin compose x$, $J (x, phi) := J(x, (dlp_x - i eta slp_x) phi)$ is used, where $uin$ is the incident wave and $J$ is the objective functional based on shape and scattered field, not density.
-
-  In this case, $D_x g_x (t) [h] = - grad uin(x(t)) dot h(t)$, $grad_phi J (x, phi) = (dlp_x - i eta slp_x)^* grad_u J (x, (dlp_x - i eta slp_x) phi)$, since $dp(grad_phi J, h) = dp(grad_u J, (dlp_x - i eta slp_x) h) = dp((dlp_x - i eta slp_x)^* grad_u J, h)$
-]
-
-#remark[
-  In the proof above, the step $D_phi L(x, phi_x, psi_x)[D_x phi_x[h]] = 0$ relies on the fact that the shape-induced variation $D_x phi_x[h]$ belongs to $c2pi(CC)$, the test space for which the adjoint equation holds. Here this is trivially satisfied since the boundary spaces map onto themselves smoothly; in more general Sobolev settings, verifying that variations remain valid test functions is a necessary step.
+  Typically $g_(x_a) := - uin compose x_a$, and the scattered field is
+  $
+    u := sum_(a in I) (dl_(x_a) - i eta sl_(x_a)) psi_(x_a).
+  $
+  In this case, $D_(x_a) g_(x_a)(t)[h_a] = - grad uin(x_a(t)) dot h_a(t)$. The density-gradient component with index $a$ is obtained by applying the adjoint of $(dl_(x_a) - i eta sl_(x_a))$ to $grad_u J$.
 ]
 #algorithm[
-  Assume we have implementation of $J, D_x J, D_phi J, x, x', x'', h, h', h'', slp_x, dlp_x, D_x slp_x, D_x dlp_x, g_x, D_x g_x$.
-  + Compute $phi_x$ by solving the boundary integral equation
-  + Compute $D_phi J$, then compute $psi_x$ by solving the adjoint equation
-  + Compute the Riesz representative $hdj(x)$ of $D_x jr(x)$ to obtain the gradient (e.g. via the spectral coefficients $c'_m, d'_m$)
-  + Update the shape: $x_(n + 1) = x_n + lambda hdh$ where $hdh := - hdj(x) / norm(hdj(x))_H$
+  Assume the boundary operators and their shape derivatives are implemented for all pairs of scatterers.
+  + Compute $(psi_(x_a))_(a in I)$ by solving the coupled boundary integral equations
+  + Compute $(grad_(psi_a) J)_(a in I)$, then compute $(lambda_a)_(a in I)$ by solving the coupled adjoint equations
+  + Compute the Riesz representative of $D_(x_a) jr(x)$ for every $a in I$
+  + Update every $x_a$ using the resulting regularized descent direction
 ]
 #definition[Hilbertian Regularization][
   Let $X$ be a norm space.
@@ -375,8 +391,8 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
 #let h2pi = $H_(2 pi)$
 #definition[
   Let $alpha > 0$.
-  Let $a_m (phi) := 1/pi integral_0^(2 pi) phi(t) cos(m t) dd(t)$, $b_m (phi) := 1/pi integral_0^(2 pi) phi(t) sin(m t) dd(t)$.
-  Let $ip(phi, psi)_h2pi^k := 1/2 a_0 (phi) a_0 (psi) + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m (phi) a_m (psi) + b_m (phi) b_m (psi))$.
+  Let $a_m (f) := 1/pi integral_0^(2 pi) f(t) cos(m t) dd(t)$, $b_m (f) := 1/pi integral_0^(2 pi) f(t) sin(m t) dd(t)$.
+  Let $ip(f, g)_h2pi^k := 1/2 a_0 (f) a_0 (g) + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m (f) a_m (g) + b_m (f) b_m (g))$.
   Let $h2pi^k (RR) := {a_0 / 2 + sum_(m = 1)^infinity (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR, a_0^2 + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m^2 + b_m^2) < infinity}$.
   $(h2pi^k (RR), ip(dot, dot)_h2pi^k)$ is a Hilbert space.
 ]
@@ -423,16 +439,16 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 #theorem[Riesz representation for point evaluation][
   Let $x_0 in RR^2 without overline(Omega_x)$.
   Let $ju in C^1 (RR^2, RR)$
-  Let $J(x, phi) := ju(Re u_phi (x), Im u_phi (x)), u_phi (x) := ((alpha dlp_x - i eta slp_x) phi)$.
+  Let $J(x, psi) := ju(Re u_psi (x), Im u_psi (x)), u_psi (x) := ((alpha dlp_x - i eta slp_x) psi)$.
   (If $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.)
-  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $phi$ under the sesquilinear form
+  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $psi$ under the sesquilinear form
   $
     dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
   $
   is given by
   $
-    grad_phi J(x, phi)(tau) =
-    (pdv(ju, x_1) + i pdv(ju, x_2)) (u_phi (x_0)) overline(K(x_0, tau)),
+    grad_psi J(x, psi)(tau) =
+    (pdv(ju, x_1) + i pdv(ju, x_2)) (u_psi (x_0)) overline(K(x_0, tau)),
   $
   where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
   $
@@ -446,10 +462,10 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
-  Let $u := u_phi (x_0)$ and $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
+  Let $u := u_psi (x_0)$ and $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
   Since
   $
-    D_phi J(x, phi)[h] = D ju(u) [(alpha dlp_x - i eta slp_x) h (x_0)]
+    D_psi J(x, psi)[h] = D ju(u) [(alpha dlp_x - i eta slp_x) h (x_0)]
   $
   and expanding the evaluation operators gives
   $
@@ -458,12 +474,12 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   using that $ju$ is real-valued, hence $D ju$ is real-linear,
   $
-    D_phi J(x, phi)[h] & = pdv(ju, x_1)(u) Re integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) + pdv(ju, x_2)(u) Im integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) \
+    D_psi J(x, psi)[h] & = pdv(ju, x_1)(u) Re integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) + pdv(ju, x_2)(u) Im integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) \
                        & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u) K(x_0, tau) h(tau) dd(tau) \
                        & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u) overline(K(x_0, tau)) overline(h(tau)) dd(tau),
   $
   where the last equality uses $Re(z) = Re(overline(z))$.
-  Comparing with $Re dp(grad_phi J, h)$ gives the claimed representation.
+  Comparing with $Re dp(grad_psi J, h)$ gives the claimed representation.
 ]
 
 #bibliography("main.bib")
