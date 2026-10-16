@@ -79,14 +79,15 @@
   Then there exists $phi in C(Gamma)$ such that
   $
   cases(
-    (I/2 + dlpo_Gamma - i eta slpo_Gamma) phi(xi) = f(xi) := - uin(xi) &(xi in Gamma),
-    u(xi) = (dlo_Gamma - i eta slo_Gamma) phi(xi) &(xi in RR^d without overline(Omega))
+    (I/2 + dlpo_Gamma - i eta slpo_Gamma) phi(xi) = f(xi) := - uin(xi) &quad (xi in Gamma),
+    u(xi) = (dlo_Gamma - i eta slo_Gamma) phi(xi) &quad(xi in RR^d without overline(Omega))
   )
   $
 ]
 
 #definition[
-  Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$, $x in c2pi^k (RR^2)$, $Gamma_x := {x(t) | t in [0, 2pi)}$.
+  Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$.Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself.
+  Let $Gamma_x := {x(t) | t in [0, 2 pi)}$.
   Let
   $
     G(x, y) := i/4 hk1_0 (k abs(x - y)),
@@ -101,7 +102,7 @@
   $
 ]
 #theorem[
-  Let $g_x (t) := -uin(x(t))$, then
+  Let $g_x (t) := f(x(t)) = -uin(x(t))$, then
   $
   forall eta > 0. exists phi in c2pi. (I/2 + dlp_x - i eta slp_x) phi = g_x and forall x in RR^d without overline(Omega). u(x) = (dl_x - i eta sl_x) phi(x)
   $
@@ -113,7 +114,7 @@
   Let $F: O -> Y$, $x in X$.
   A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
 ]
-Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself. Let $Gamma := {x(t) | t in [0, 2 pi)}$.
+
 
 #definition[Counterclockwise outward vectors][
   $
