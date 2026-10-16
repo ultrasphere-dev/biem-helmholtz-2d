@@ -100,7 +100,7 @@
     dlpa_x&: c2pi -> c2pi, psi |-> dlpa_Gamma_x (psi compose x) compose x^(-1), \
     tlp_x&: c2pi -> c2pi, psi |-> tlp_Gamma_x (psi compose x) compose x^(-1), \
     sl_x&: c2pi -> c2pi, psi |-> slo_Gamma_x (psi compose x) compose x^(-1), \
-    dl_x&: c2pi -> c2pi, psi |-> dlo_Gamma_x (psi compose x) compose x^(-1)
+    dl_x&: c2pi -> c2pi, psi |-> dlo_Gamma_x (psi compose x) compose x^(-1).
   $
 ]
 #theorem[
@@ -116,18 +116,10 @@
   )
   $
 ]
-
-#definition[Frechet derivative][
-  Let $X, Y$ $KK$-norm spaces.
-  Let $O subset.eq X$ be open.
-  Let $F: O -> Y$, $x in X$.
-  A bounded linear operator $D F (x)$ is called the Frechet derivative of $F$ at $x$ if $lim_(h -> 0) (norm(F(x + h) - F(x) - D F (x) [h])_Y) / (norm(h)_X) = 0$.
-]
-
-
 #definition[Counterclockwise outward vectors][
+  Let $x in B$. Let
   $
-    n(t) := (n^*(t))/ abs(x'(t)), quad n^*(t) := (x'_2(t), -x'_1(t))
+    n_x (t) := (n_x^*(t))/ abs(x'(t)), quad n_x^*(t) := (x'_2(t), -x'_1(t)).
   $
 ]
 #theorem[@zhang_superconvergence_2010][
