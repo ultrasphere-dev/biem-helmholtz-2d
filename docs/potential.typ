@@ -285,12 +285,14 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[Sesquilinear form][
-  $X, Y$: $KK$-norm spaces. $dp(x, y)$ is called a sesquilinear form if
+  $X, Y$: $KK$-norm spaces.
+  $dp(x, y)$ is called a sesquilinear form if
   it is linear in $x$ and conjugate-linear in $y$.
-  $dp$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
+  $dp(dot, dot)$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
 ]
 #theorem[Adjoint method @matsushima_2023][
-  Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC), c2pi(CC)$. Let $A^*$ adjoint operator of $A$ with respect to $dp(dot, dot)$.
+  Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC)^2$.
+  Denote $A^*$ the adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
   Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
   Let $J: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
