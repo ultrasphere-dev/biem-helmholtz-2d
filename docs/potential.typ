@@ -439,7 +439,7 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 #theorem[Riesz representation for point evaluation][
   Let $x_0 in RR^2 without overline(Omega_x)$.
   Let $ju in C^1 (RR^2, RR)$
-  Let $J(x, psi) := ju(Re u_psi (x), Im u_psi (x)), u_psi (x) := ((alpha dlp_x - i eta slp_x) psi)$.
+  Let $J(x, psi) := ju(Re u_psi (x), Im u_psi (x))$.
 
   Then, the Riesz representation of the Frechet derivative of $J$ with respect to $psi$ under the sesquilinear form
   $
