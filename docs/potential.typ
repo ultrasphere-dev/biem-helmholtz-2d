@@ -292,9 +292,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
   Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC)^2$.
   Denote $A^*$ the adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
-  Let $I$, $(x_a)_(a in I)$, $(psi_a)_(a in I)$ be those in @bie.
+  Let $I$, $(x_a)_(a in I)$, $(psi_x_a)_(a in I)$ be those in @bie.
   Let $J: B^I times c2pi (CC)^I -> RR$ Frechet differentiable.
-  Let $jr(x) := J((x_a)_(a in I), (psi_a)_(a in I))$.
+  Let $jr(x) := J((x_a)_(a in I), (psi_x_a)_(a in I))$.
   Assume there exists $grad_phi J(x, phi_x) in c2pi (CC)$ such that for any $h in c2pi (CC), D_phi J (x, phi_x) [h] = Re dp(grad_phi J (x, phi_x), h)$.
   Then $D_x jr(x) [h]$ is given by
 
