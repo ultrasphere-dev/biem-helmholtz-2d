@@ -464,6 +464,7 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(x)$.
 ]
+Therefore, the regularized steepest descent direction $hdr$ can be used for stable shape optimization in this formulation.
 
 
 #bibliography("main.bib")
