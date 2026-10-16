@@ -115,7 +115,7 @@
   sum_(a in I) (dl_x_a - i eta sl_x_a)psi_a in outomega
   )
   $
-]
+] <bie>
 #definition[Counterclockwise outward vectors][
   Let $x in B$. Let
   $
@@ -242,10 +242,8 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
                  & ->_(tau -> t) ((h'_2(t) x''_1(t) - h'_1(t) x''_2(t)) + (x'_2(t) h''_1(t) - x'_1(t) h''_2(t))) / (2 abs(x'(t))^2)
   $
 ]
-#let sl = $op(cal("SL"))$
-#let dl = $op(cal("DL"))$
-#let slk = $op("SL")$
-#let dlk = $op("DL")$
+#let slk = $op("sl")$
+#let dlk = $op("dl")$
 #theorem[
   Let $slk, dlk$ kernels of $sl_Gamma, dl_Gamma$ respectively. Then,
   $
@@ -285,7 +283,7 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[Sesquilinear form][
-  $X, Y$: $KK$-norm spaces.
+  Let $X, Y$ be $KK$-norm spaces.
   $dp(x, y)$ is called a sesquilinear form if
   it is linear in $x$ and conjugate-linear in $y$.
   $dp(dot, dot)$ is called non-degenerate if $forall x in X. (forall y in Y. dp(x, y) = 0) ==> x = 0$ and $forall y in Y. (forall x in X. dp(x, y) = 0) ==> y = 0$.
@@ -294,14 +292,9 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
   Let $dp(dot, dot)$ any non-degenerate sesquilinear form on $c2pi(CC)^2$.
   Denote $A^*$ the adjoint operator of $A$ with respect to $dp(dot, dot)$.
   Let $k >= 2$.
-  Let $x in c2pi^k (RR^2), g: c2pi^k (RR^2) -> c2pi^k (CC)$.
-  Let $J: c2pi^k (RR^2) times c2pi (CC) -> RR$ Frechet differentiable. Let density $phi_x in c2pi^k$ satisfy the boundary integral equation
-
-  $
-    (I/2 + dlp_x - i eta slp_x) phi_x = g_x quad t in [0, 2pi)
-  $
-
-  Let $jr(x) := J(x, phi_x)$.
+  Let $I$, $(x_a)_(a in I)$, $(psi_a)_(a in I)$ be those in @bie.
+  Let $J: B^I times c2pi (CC)^I -> RR$ Frechet differentiable.
+  Let $jr(x) := J((x_a)_(a in I), (psi_a)_(a in I))$.
   Assume there exists $grad_phi J(x, phi_x) in c2pi (CC)$ such that for any $h in c2pi (CC), D_phi J (x, phi_x) [h] = Re dp(grad_phi J (x, phi_x), h)$.
   Then $D_x jr(x) [h]$ is given by
 
