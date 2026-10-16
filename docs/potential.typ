@@ -92,8 +92,12 @@
     G(x, y) := i/4 hk1_0 (k abs(x - y)),
   $
   $
-    slp_x&: c2pi -> c2pi,  phi |-> t |-> integral_0^(2 pi) G(x(t), x(tau)) phi(tau) abs(x'(tau)) dd(tau), \
-    dlp_x&: c2pi -> c2pi, phi |-> t |-> integral_0^(2 pi) grad_1 G(x(t), x(tau)) dot (x'_2 (tau), -x'_1 (tau)) phi(y) dd(s(y)).
+    slp_x&: c2pi -> c2pi, phi |-> slp_Gamma_x (phi compose x) compose x^(-1), \
+    dlp_x&: c2pi -> c2pi, phi |-> dlp_Gamma_x (phi compose x) compose x^(-1), \
+    dlpa_x&: c2pi -> c2pi, phi |-> dlpa_Gamma_x (phi compose x) compose x^(-1), \
+    tlp_x&: c2pi -> c2pi, phi |-> tlp_Gamma_x (phi compose x) compose x^(-1), \
+    sl_x&: c2pi -> c2pi, phi |-> slo_Gamma_x (phi compose x) compose x^(-1), \
+    dl_x&: c2pi -> c2pi, phi |-> dlo_Gamma_x (phi compose x) compose x^(-1)
   $
 ]
 #theorem[
@@ -118,9 +122,9 @@ Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in 
 ]
 #theorem[@zhang_superconvergence_2010][
   $
-                                      grad_y G(x, y) & = (i k)/4 (hk1_1 (k abs(x - y)))/(abs(x - y)) (x - y) \
-    sum_(i,j) n_i (x) n_j (y) pdv(G, x_i, y_j)(x, y) & = (i k)/4 hk1_0 (k abs(x - y)) (k n(x) dot (x - y) n(y) dot (x - y)) / (abs(x - y)^2) \
-                                                     & + (i k)/4 hk1_1 (k abs(x - y)) ((n(x) dot n(y))/(abs(x - y)) - 2 (n(x) dot (x - y) n(y) dot (x - y))/(abs(x - y)^3))
+                                      grad_chi G(xi, chi) & = (i k)/4 (hk1_1 (k abs(xi - chi)))/(abs(xi - chi)) (xi - chi) \
+    sum_(i,j) n_i (xi) n_j (chi) pdv(G, xi_i, chi_j)(xi, chi) & = (i k)/4 hk1_0 (k abs(xi - chi)) (k n(xi) dot (xi - chi) n(chi) dot (xi - chi)) / (abs(xi - chi)^2) \
+                                                     & + (i k)/4 hk1_1 (k abs(xi - chi)) ((n(xi) dot n(chi))/(abs(xi - chi)) - 2 (n(xi) dot (xi - chi) n(chi) dot (xi - chi))/(abs(xi - chi)^3))
   $
 ]
 #let ht1 = $cal(H)^((1))$
