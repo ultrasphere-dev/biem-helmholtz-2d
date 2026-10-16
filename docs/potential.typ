@@ -452,24 +452,18 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
   $
-    K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau),
+    K(x_0, tau) := dlk(x_0, tau) - i eta slk(x_0, tau),
   $
-  with
-  $
-    tilde(S)(x_0, tau) := G(x_0, x(tau)) abs(x'(tau)),
-    tilde(D)(x_0, tau) := n(tau) dot grad_y G(x_0, x(tau)) abs(x'(tau))
-  $
-  the kernels of $sl_x$, $dl_x$ with jacobian multiplied, evaluated at $x_0$.
 ]
 #proof[
-  Let $u := u_psi (x_0)$ and $K(x_0, tau) := alpha tilde(D)(x_0, tau) - i eta tilde(S)(x_0, tau)$.
+  Let $u := u_psi (x_0)$.
   Since
   $
-    D_psi J(x, psi)[h] = D ju(u) [(alpha dlp_x - i eta slp_x) h (x_0)]
+    D_psi J(x, psi)[h] = D ju(u) [(dlp_x - i eta slp_x) h (x_0)]
   $
   and expanding the evaluation operators gives
   $
-    (alpha dlp_x - i eta slp_x) h (x_0)
+    (dlp_x - i eta slp_x) h (x_0)
     = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau),
   $
   using that $ju$ is real-valued, hence $D ju$ is real-linear,
