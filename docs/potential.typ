@@ -106,12 +106,15 @@
 #theorem[
   Let $g_x (t) := f(x(t)) = -uin(x(t))$.
   Let $phi$ be a solution of @bie-original.
-  Let $phi := psi compose x$. Then
+  Let $I$ be a finite index set.
+  Let $(x_a)_(a in I) subset B$.
+  Let $(psi_a)_(a in I) := (psi compose x_a)$. Then
   $
   cases(
-  (I/2 + dlp_x - i eta slp_x) psi = g_x ,
-  sum_() in outomega
-  )$
+  (I/2 + dlp_x_a - i eta slp_x_a + sum_(b in I, b != a) dl_x_a - i eta sl_x_a) psi_a = g_x_a quad (a in I),
+  sum_(a in I) (dl_x_a - i eta sl_x_a)psi_a in outomega
+  )
+  $
 ]
 
 #definition[Frechet derivative][
