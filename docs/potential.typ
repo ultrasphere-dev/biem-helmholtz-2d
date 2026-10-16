@@ -68,7 +68,7 @@
 #theorem[
   Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_i)_(i in I)$.
   Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
-  Let $k > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
+  Let $k > 0$, let $eta > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
   $
   cases(
     (laplacian + k^2) u = 0 "in" outomega,
