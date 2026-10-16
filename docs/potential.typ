@@ -361,81 +361,6 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
   + Compute the Riesz representative of $D_(x_a) jr(x)$ for every $a in I$
   + Update every $x_a$ using the resulting regularized descent direction
 ]
-#definition[Hilbertian Regularization][
-  Let $X$ be a norm space.
-  Let $J: X -> RR$ be Frechet differentiable at $x in X$.
-  Let $H subset.eq X$ be a Hilbert space continuously embedded in $X$.
-  Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $x in X, h in H$,
-
-  $
-    ip(hdj(x), h)_H = D J (x) [h] quad forall h in H
-  $
-  The regularized steepest descent direction $hdh$ is defined as
-  $
-    hdh := - hdj(x)/norm(hdj(x))_H
-  $
-]
-#theorem[
-  The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
-]
-#proof[
-  By the Cauchy–Schwarz inequality,
-  $
-    D J (x) [h] = ip(hdj(x), h)_H >= -norm(hdj(x))_H norm(h)_H = -norm(hdj(x))_H
-  $
-  for any $norm(h)_H = 1$, with equality if and only if $h = -hdj(x) / norm(hdj(x))_H$.
-  Hence
-  $
-    D J (x) [hdh] = D J (x) [-hdj(x)/norm(hdj(x))_H] = -norm(hdj(x))_H = inf_(norm(h)_H = 1) D J (x) [h]
-  $
-]
-#let h2pi = $H_(2 pi)$
-#definition[
-  Let $alpha > 0$.
-  Let $a_m (f) := 1/pi integral_0^(2 pi) f(t) cos(m t) dd(t)$, $b_m (f) := 1/pi integral_0^(2 pi) f(t) sin(m t) dd(t)$.
-  Let $ip(f, g)_h2pi^k := 1/2 a_0 (f) a_0 (g) + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m (f) a_m (g) + b_m (f) b_m (g))$.
-  Let $h2pi^k (RR) := {a_0 / 2 + sum_(m = 1)^infinity (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR, a_0^2 + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m^2 + b_m^2) < infinity}$.
-  $(h2pi^k (RR), ip(dot, dot)_h2pi^k)$ is a Hilbert space.
-]
-
-$h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
-#let hdr = $h^((R_N))$
-#let hdk = $h^((h2pi^k))$
-#definition[
-  Let $R_N := {a_0 / 2 + sum_(m = 1)^(N - 1) (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR} subset.neq h2pi^k (RR)$.
-  $R_N$ is continuously embedded in $h2pi^k (RR)$.
-]
-
-#theorem[
-  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ can be computed by
-
-  $
-    c'_m := (D_x J (x) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_x J (x) [sin(m t)]) / (1 + alpha m^2)^k
-  $
-
-  $
-    S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
-  $
-  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(x)$.
-]
-
-#theorem[Error estimate][
-  Let $g := hdj(x)$ be the unnormalized Riesz representation in $h2pi^k(RR)$ and $g_N$ its truncation in $R_N$. If $g in h2pi^(k + s)(RR)$ for some $s > 0$, then
-  $
-    norm(g - g_N)_(h2pi^k) <= (1 + alpha N^2)^(-s/2) norm(g)_(h2pi^(k + s))
-  $
-]
-#proof[
-  Let $c'_m, d'_m$ be the Fourier coefficients of $g$ as defined above.
-  The squared norm of the truncation error is the tail of the series:
-  $
-    norm(g - g_N)_(h2pi^k)^2 & = sum_(m = N)^infinity (1 + alpha m^2)^k ((c'_m)^2 + (d'_m)^2) \
-                             & = sum_(m = N)^infinity (1 + alpha m^2)^(-s) (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
-                             & <= (1 + alpha N^2)^(-s) sum_(m = N)^infinity (1 + alpha m^2)^(k + s) ((c'_m)^2 + (d'_m)^2) \
-                             & <= (1 + alpha N^2)^(-s) norm(g)_(h2pi^(k + s))^2
-  $
-  Taking square roots yields the claimed bound.
-]
 #let ju = $tilde(J)$
 #theorem[Riesz representation for point evaluation][
   Let $I$, $x := (x_a)_(a in I)$, $psi_x := (psi_(x_a))_(a in I)$ be those in @bie.
@@ -481,5 +406,66 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   Comparing with $Re dp(grad_(psi_a) J, h_a)$ proves the result for every $a in I$.
 ]
+
+== Reguralization
+
+#definition[Hilbertian Regularization][
+  Let $X$ be a norm space.
+  Let $J: X -> RR$ be Frechet differentiable at $x in X$.
+  Let $H subset.eq X$ be a Hilbert space continuously embedded in $X$.
+  Since $H$ is a Hilbert space, there exists a Riesz representation $hdj: X -> H$ such that for any $x in X, h in H$,
+
+  $
+    ip(hdj(x), h)_H = D J (x) [h] quad forall h in H
+  $
+  The regularized steepest descent direction $hdh$ is defined as
+  $
+    hdh := - hdj(x)/norm(hdj(x))_H
+  $
+]
+#theorem[
+  The regularized steepest descent direction $hdh$ is the steepest descent direction with respect to $norm(dot)_H$, i.e. $hdh = arginf_(norm(h)_H = 1) D J (x) [h]$.
+]
+#proof[
+  By the Cauchy–Schwarz inequality,
+  $
+    D J (x) [h] = ip(hdj(x), h)_H >= -norm(hdj(x))_H norm(h)_H = -norm(hdj(x))_H
+  $
+  for any $norm(h)_H = 1$, with equality if and only if $h = -hdj(x) / norm(hdj(x))_H$.
+  Hence
+  $
+    D J (x) [hdh] = D J (x) [-hdj(x)/norm(hdj(x))_H] = -norm(hdj(x))_H = inf_(norm(h)_H = 1) D J (x) [h]
+  $
+]
+#let h2pi = $H_(2 pi)$
+#definition[Periodic Hilbert Space][
+  Let $alpha > 0$.
+  Let $a_m (f) := 1/pi integral_0^(2 pi) f(t) cos(m t) dd(t)$, $b_m (f) := 1/pi integral_0^(2 pi) f(t) sin(m t) dd(t)$.
+  Let $ip(f, g)_h2pi^k := 1/2 a_0 (f) a_0 (g) + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m (f) a_m (g) + b_m (f) b_m (g))$.
+  Let $h2pi^k (RR) := {a_0 / 2 + sum_(m = 1)^infinity (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR, a_0^2 + sum_(m = 1)^infinity (1 + alpha m^2)^k (a_m^2 + b_m^2) < infinity}$.
+  $(h2pi^k (RR), ip(dot, dot)_h2pi^k)$ is a Hilbert space.
+]
+
+$h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
+#let hdr = $h^((R_N))$
+#let hdk = $h^((h2pi^k))$
+#definition[Trigonometric polynomial space][
+  Let $R_N := {a_0 / 2 + sum_(m = 1)^(N - 1) (a_m cos(m t) + b_m sin(m t)) | a_m, b_m in RR} subset.neq h2pi^k (RR)$.
+  $R_N$ is continuously embedded in $h2pi^k (RR)$.
+]
+
+#theorem[Regularized steepest descent direction in $R_N$][
+  The coefficients ${c_m}_(m = 0)^(N - 1) union {d_m}_(m = 1)^(N - 1)$ of the finite-dimensional steepest descent direction $hdr$ can be computed by
+
+  $
+    c'_m := (D_x J (x) [cos(m t)]) / (1 + alpha m^2)^k, quad d'_m := (D_x J (x) [sin(m t)]) / (1 + alpha m^2)^k
+  $
+
+  $
+    S := 1/2 c'_0^2 + sum_(m = 1)^(N - 1) (1 + alpha m^2)^k (c'_m^2 + d'_m^2), quad c_m := c'_m / sqrt(S), quad d_m := d'_m / sqrt(S)
+  $
+  where $c'_m, d'_m$ are the Fourier coefficients of the unnormalized Riesz representation $hdj(x)$.
+]
+
 
 #bibliography("main.bib")
