@@ -452,13 +452,11 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   of the sesquilinear form fixed above, the Riesz representation of the Frechet derivative with respect to each density is
   $
     grad_(psi_a) J(x, psi_x)(tau)
-      = (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a(x_0, tau)) quad (a in I),
+      = (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a (x_0, tau)) quad (a in I),
   $
   where
   $
-    K_a(x_0, tau) & := dlk_a(x_0, tau) - i eta slk_a(x_0, tau), \
-    slk_a(x_0, tau) & := G(x_0, x_a(tau)) abs(x'_a(tau)), \
-    dlk_a(x_0, tau) & := n_(x_a)(tau) dot grad_y G(x_0, x_a(tau)) abs(x'_a(tau)).
+    K_a (x_0, tau) & := dlk_a (x_0, tau) - i eta slk_a (x_0, tau)
   $
   Especially, if $c in CC$ and $ju(z) = abs(z - c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(z) = 2(z - c)$.
 ]
@@ -471,15 +469,15 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   and
   $
     ((dl_(x_a) - i eta sl_(x_a)) h_a)(x_0)
-      = integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau).
+      = integral_0^(2 pi) K_a (x_0, tau) h_a (tau) dd(tau).
   $
   Since $ju$ is real-valued, $D ju$ is real-linear, and hence
   $
     D_(psi_a) J(x, psi_x)[h_a]
-      & = pdv(ju, x_1)(u(x_0)) Re integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau) \
-      & quad + pdv(ju, x_2)(u(x_0)) Im integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau) \
-      & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u(x_0)) K_a(x_0, tau) h_a(tau) dd(tau) \
-      & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a(x_0, tau)) overline(h_a(tau)) dd(tau).
+      & = pdv(ju, x_1)(u(x_0)) Re integral_0^(2 pi) K_a (x_0, tau) h_a (tau) dd(tau) \
+      & quad + pdv(ju, x_2)(u(x_0)) Im integral_0^(2 pi) K_a (x_0, tau) h_a (tau) dd(tau) \
+      & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u(x_0)) K_a (x_0, tau) h_a (tau) dd(tau) \
+      & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a (x_0, tau)) overline(h_a (tau)) dd(tau).
   $
   Comparing with $Re dp(grad_(psi_a) J, h_a)$ proves the result for every $a in I$.
 ]
