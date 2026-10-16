@@ -137,6 +137,7 @@
 #let dxa = $op("dxa")$
 #let dh = $op("dh")$
 #let ntaudotdxdxa2 = $op(A_1)$
+In this chapter, the subscript $x$ for layer potentials and their kernels and other functions depending on $x$ are omitted for brevity.
 #definition[
   $
      dx(t, tau) & := x(t) - x(tau) \
@@ -437,44 +438,50 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 ]
 #let ju = $tilde(J)$
 #theorem[Riesz representation for point evaluation][
-  Let $x_0 in RR^2 without overline(Omega_x)$.
-  Let $ju in C^1 (RR^2, RR)$
-  Let $J(x, psi) := ju(Re u_psi (x), Im u_psi (x))$.
-
-  Then, the Riesz representation of the Frechet derivative of $J$ with respect to $psi$ under the sesquilinear form
+  Let $I$, $x := (x_a)_(a in I)$, $psi_x := (psi_(x_a))_(a in I)$ be those in @bie.
+  Let $x_0 in RR^2 without union_(a in I) overline(Omega_(x_a))$ and $ju in C^1(RR^2, RR)$.
+  Let
   $
-    dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
+    u(x_0) := sum_(a in I) ((dl_(x_a) - i eta sl_(x_a)) psi_(x_a))(x_0),
+    quad J(x, psi_x) := ju(Re u(x_0), Im u(x_0)).
   $
-  is given by
+  For the choice
   $
-    grad_psi J(x, psi)(tau) =
-    (pdv(ju, x_1) + i pdv(ju, x_2)) (u_psi (x_0)) overline(K(x_0, tau)),
+    dp(f, g) = integral_0^(2 pi) f(t) overline(g(t)) dd(t)
   $
-  where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
+  of the sesquilinear form fixed above, the Riesz representation of the Frechet derivative with respect to each density is
   $
-    K(x_0, tau) := dlk(x_0, tau) - i eta slk(x_0, tau).
+    grad_(psi_a) J(x, psi_x)(tau)
+      = (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a(x_0, tau)) quad (a in I),
   $
-  Especially, if $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.
+  where
+  $
+    K_a(x_0, tau) & := dlk_a(x_0, tau) - i eta slk_a(x_0, tau), \
+    slk_a(x_0, tau) & := G(x_0, x_a(tau)) abs(x'_a(tau)), \
+    dlk_a(x_0, tau) & := n_(x_a)(tau) dot grad_y G(x_0, x_a(tau)) abs(x'_a(tau)).
+  $
+  Especially, if $c in CC$ and $ju(z) = abs(z - c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(z) = 2(z - c)$.
 ]
 #proof[
-  Let $u := u_psi (x_0)$.
-  Since
+  Fix $a in I$. For any $h_a in c2pi(CC)$,
   $
-    D_psi J(x, psi)[h] = D ju(u) [(dlp_x - i eta slp_x) h (x_0)]
+    D_(psi_a) J(x, psi_x)[h_a]
+      = D ju(u(x_0))[((dl_(x_a) - i eta sl_(x_a)) h_a)(x_0)],
   $
-  and expanding the evaluation operators gives
+  and
   $
-    (dlp_x - i eta slp_x) h (x_0)
-    = integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau),
+    ((dl_(x_a) - i eta sl_(x_a)) h_a)(x_0)
+      = integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau).
   $
-  using that $ju$ is real-valued, hence $D ju$ is real-linear,
+  Since $ju$ is real-valued, $D ju$ is real-linear, and hence
   $
-    D_psi J(x, psi)[h] & = pdv(ju, x_1)(u) Re integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) + pdv(ju, x_2)(u) Im integral_0^(2 pi) K(x_0, tau) h(tau) dd(tau) \
-                       & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u) K(x_0, tau) h(tau) dd(tau) \
-                       & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u) overline(K(x_0, tau)) overline(h(tau)) dd(tau),
+    D_(psi_a) J(x, psi_x)[h_a]
+      & = pdv(ju, x_1)(u(x_0)) Re integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau) \
+      & quad + pdv(ju, x_2)(u(x_0)) Im integral_0^(2 pi) K_a(x_0, tau) h_a(tau) dd(tau) \
+      & = Re integral_0^(2 pi) (pdv(ju, x_1) - i pdv(ju, x_2))(u(x_0)) K_a(x_0, tau) h_a(tau) dd(tau) \
+      & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a(x_0, tau)) overline(h_a(tau)) dd(tau).
   $
-  where the last equality uses $Re(z) = Re(overline(z))$.
-  Comparing with $Re dp(grad_psi J, h)$ gives the claimed representation.
+  Comparing with $Re dp(grad_(psi_a) J, h_a)$ proves the result for every $a in I$.
 ]
 
 #bibliography("main.bib")
