@@ -440,7 +440,7 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   Let $x_0 in RR^2 without overline(Omega_x)$.
   Let $ju in C^1 (RR^2, RR)$
   Let $J(x, psi) := ju(Re u_psi (x), Im u_psi (x)), u_psi (x) := ((alpha dlp_x - i eta slp_x) psi)$.
-  (If $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.)
+
   Then, the Riesz representation of the Frechet derivative of $J$ with respect to $psi$ under the sesquilinear form
   $
     dp(f, g) := integral_0^(2 pi) f(t) overline(g(t)) dd(t),
@@ -452,8 +452,9 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
   $
   where $pdv(ju, x_1), pdv(ju, x_2)$ are the partial derivatives of $ju$ with respect to its first and second arguments, and
   $
-    K(x_0, tau) := dlk(x_0, tau) - i eta slk(x_0, tau),
+    K(x_0, tau) := dlk(x_0, tau) - i eta slk(x_0, tau).
   $
+  Especially, if $c in CC$ and $ju(u) = abs(u - c)^2 = (Re u - Re c)^2 + (Im u - Im c)^2$, then $(pdv(ju, x_1) + i pdv(ju, x_2))(u) = 2 (u - c)$.
 ]
 #proof[
   Let $u := u_psi (x_0)$.
