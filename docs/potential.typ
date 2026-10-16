@@ -36,17 +36,15 @@
 #let outomega = $RR^2 without overline(Omega)$
 = Layer potentials
 
-#theorem[Weakly singular kernels ][
+#theorem[Weakly singular kernels][
   Let $m in NN, k in NN_0$.
   Let $D subset RR^m$ bounded open domain of $C^(k + 1)$ boundary $Gamma$.
   Let $K: Gamma^2 -> KK$ weakly singular, i.e. continuous on $T := Gamma^2 backslash {(x, x) | x in Gamma}$ and $exists M > 0. exists alpha in (0, m - 1]. forall x, y in T. abs(K(x, y)) <= M abs(x - y)^(alpha - m + 1)$.
-  Then $(A phi) (x) := integral_Gamma K(x, y) phi(y) dd(s(y))$ is a compact linear operator on $C^k (Gamma)$.
+  Then $(A phi) (x) := integral_Gamma K(x, y) phi(y) dd(s(y))$ is always a compact linear operator on $C^k (Gamma)$ only if $k = 0$.
 ]
 #proof[
   The case $k = 0$ follows #cite(<kress_linear_2014>, supplement: "Theorem 2.29, 2.30").
-  For $k >= 1$ this is wrong.
 ]
-
 
 #definition[
   Let
