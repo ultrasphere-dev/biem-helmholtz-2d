@@ -66,8 +66,8 @@
 
 
 #theorem[
-  Let $(Omega_i)_(i in I)$ be bounded open sets satisfying $forall i, j in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_i)_(i in I)$.
-  Let $Omega := union_(i in I) Omega_i$, $Gamma := union_(i in I) Gamma_i$.
+  Let $(Omega_j)_(j in I)$ be bounded open sets satisfying $forall j, k in I. overline(Omega_i) inter overline(Omega_j) = emptyset$ with connected $C^2$ boundaries $(Gamma_j)_(j in I)$.
+  Let $Omega := union_(j in I) Omega_j$, $Gamma := union_(j in I) Gamma_j$.
   Let $k > 0$, let $eta > 0$, let $u in C^1 (RR^2 without Omega)$ satisfy
   $
   cases(
@@ -83,7 +83,7 @@
     u(xi) = (dlo_Gamma - i eta slo_Gamma) phi(xi) &quad(xi in RR^d without overline(Omega))
   )
   $
-]
+] <bie-original>
 
 #definition[
   Let $c2pi^k (KK) := C^k (RR \/ 2 pi, KK)$.Let $x(t) := (x_1 (t), x_2 (t)), x_1, x_2 in C^2_(2 pi)$ satisfies $forall t in [0, 2 pi). abs(x'(t)) != 0$, counterclockwise and does not intersect itself.
@@ -93,18 +93,22 @@
     G(x, y) := i/4 hk1_0 (k abs(x - y)),
   $
   $
-    slp_x&: c2pi -> c2pi, phi |-> slp_Gamma_x (phi compose x) compose x^(-1), \
-    dlp_x&: c2pi -> c2pi, phi |-> dlp_Gamma_x (phi compose x) compose x^(-1), \
-    dlpa_x&: c2pi -> c2pi, phi |-> dlpa_Gamma_x (phi compose x) compose x^(-1), \
-    tlp_x&: c2pi -> c2pi, phi |-> tlp_Gamma_x (phi compose x) compose x^(-1), \
-    sl_x&: c2pi -> c2pi, phi |-> slo_Gamma_x (phi compose x) compose x^(-1), \
-    dl_x&: c2pi -> c2pi, phi |-> dlo_Gamma_x (phi compose x) compose x^(-1)
+    slp_x&: c2pi -> c2pi, psi |-> slp_Gamma_x (psi compose x) compose x^(-1), \
+    dlp_x&: c2pi -> c2pi, psi |-> dlp_Gamma_x (psi compose x) compose x^(-1), \
+    dlpa_x&: c2pi -> c2pi, psi |-> dlpa_Gamma_x (psi compose x) compose x^(-1), \
+    tlp_x&: c2pi -> c2pi, psi |-> tlp_Gamma_x (psi compose x) compose x^(-1), \
+    sl_x&: c2pi -> c2pi, psi |-> slo_Gamma_x (psi compose x) compose x^(-1), \
+    dl_x&: c2pi -> c2pi, psi |-> dlo_Gamma_x (psi compose x) compose x^(-1)
   $
 ]
 #theorem[
-  Let $g_x (t) := f(x(t)) = -uin(x(t))$, then
+  Let $g_x (t) := f(x(t)) = -uin(x(t))$.
+  Let $phi$ be a solution of @bie-original.
+  Let $phi := psi compose x$. Then
   $
-  forall eta > 0. exists phi in c2pi. (I/2 + dlp_x - i eta slp_x) phi = g_x and forall x in RR^d without overline(Omega). u(x) = (dl_x - i eta sl_x) phi(x)
+  cases(
+  (I/2 + dlp_x - i eta slp_x) psi = g_x \
+  sum_() in outomega
   $
 ]
 
