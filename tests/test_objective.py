@@ -37,7 +37,7 @@ def test_grad_phi_central_derivative(
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
 
-    phi = scattering_dirichlet(
+    density = scattering_dirichlet(
         k=k_arr,
         shape=shape,
         incident_field=incident_field,
@@ -45,7 +45,7 @@ def test_grad_phi_central_derivative(
         eta=eta,
         n=n,
     )
-    u = near_field(phi, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
+    u = near_field(density, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
 
     target_arr = xp.asarray(target_val, dtype=xp.result_type(dtype, 1j), device=device)
 
@@ -53,28 +53,27 @@ def test_grad_phi_central_derivative(
         x0[None], u, shape=shape, k=k_arr, alpha=alpha, eta=eta, target=target_arr
     )
 
-    def v_func(t_in: Array) -> Array:
+    def density_perb(t_in: Array) -> Array:
         return xp.cos(m * t_in)
 
-    v_t = v_func(t)
+    density_perb_t = density_perb(t)
     gj_t = grad_phi_j(t)
-    inner = xp.real(xp.sum(gj_t * xp.conj(v_t) * wt))
+    actual = xp.real(xp.sum(gj_t * xp.conj(density_perb_t) * wt))
+
+    def j_of_phi(density_: Callable[[Array], Array], /) -> Array:
+        u = near_field(density_, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
+        return xp.sum(xp.abs(u - target_arr) ** 2)
 
     eps = 1e-5
 
-    def j_of_phi(phi_pert: Callable[[Array], Array]) -> Array:
-        up = near_field(phi_pert, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
-        return xp.sum(xp.abs(up - target_arr) ** 2)
+    def density_plus(t_in: Array) -> Array:
+        return density(t_in) + eps * density_perb(t_in)[..., None]
 
-    class _PerturbedDensity:
-        def __init__(self, eps_pert: float) -> None:
-            self._eps = eps_pert
+    def density_minus(t_in: Array) -> Array:
+        return density(t_in) - eps * density_perb(t_in)[..., None]
 
-        def __call__(self, t_in: Array) -> Array:
-            return phi(t_in) + self._eps * v_func(t_in)
+    j_plus = j_of_phi(density_plus)
+    j_minus = j_of_phi(density_minus)
+    expected = (j_plus - j_minus) / (2 * eps)
 
-    j_plus = j_of_phi(_PerturbedDensity(eps))
-    j_minus = j_of_phi(_PerturbedDensity(-eps))
-    fd_deriv = (j_plus - j_minus) / (2 * eps)
-
-    assert float(inner) == pytest.approx(float(fd_deriv), rel=1e-6, abs=1e-8)
+    assert float(actual) == pytest.approx(float(expected), rel=1e-6, abs=1e-8)
