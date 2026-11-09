@@ -491,17 +491,6 @@ $
 
 ]
 
-#definition[
-  $
-  P_C: RR^(2 N - 2) -> RR^(2 N - 2), ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) |-> cases(
-    ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) &quad "if" sum_(m = 1)^(N - 1) sqrt(a_m^2 + b_m^2) < 1,
-    ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) &quad "otherwise"
-  )
-  $
-] <projection-def>
-
-and projected gradient descent is applied.
-
-
+Projected gradient descent is applied.
 
 #bibliography("main.bib")
