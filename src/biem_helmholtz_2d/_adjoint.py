@@ -187,8 +187,8 @@ def objective_derivative(
         rhs=lambda t_in: -grad_phi_j(t_in)[..., None],
         eps=eps,
     )
-    psi_t = psi(t)
-    phi_t = phi(t)
+    psi_t = psi(t).squeeze(axis=-1)
+    phi_t = phi(t).squeeze(axis=-1)
 
     _, w_log_cot_raw = log_cot_power_quadrature(n, 0, xp=xp, device=device, dtype=dtype)
     roll_idx = (

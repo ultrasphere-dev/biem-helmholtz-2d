@@ -5,7 +5,6 @@ from typing import Any, Literal
 import numpy as np
 from array_api.latest import Array
 from array_api_compat import array_namespace
-from array_api_shape_check import check_shapes
 from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
@@ -46,7 +45,7 @@ def scattering_dirichlet(
     Returns
     -------
     NystromInterpolant
-        The density of the integral equation of shape (...,) -> (..., 1, 1).
+        The density of the integral equation of shape (...,) -> (..., 1).
 
     """
     xp = array_namespace(k, alpha, eta)
@@ -144,7 +143,7 @@ def plot_near_field_prepare(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        Density function of shape (...) -> (..., ...(B), 1, 1).
+        Density function of shape (...) -> (..., ...(B), 1).
     incident_field : Callable[[Array], Array]
         Incident field of shape (..., 2) -> (...,).
     xlim : tuple[float, float]
@@ -320,7 +319,7 @@ def near_field(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        The density function of shape (...) -> (..., ...(B), 1, 1).
+        The density function of shape (...) -> (..., ...(B), 1).
     x : Array
         The position of the scttered field of shape (..., 2).
     n : int
@@ -340,8 +339,8 @@ def near_field(
         The near field of shape (..., ...(*B)).
 
     """
-    dlp_ = dlp(x, density, shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
-    slp_ = slp(x, density, shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
+    dlp_ = dlp(x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
+    slp_ = slp(x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
     return alpha * dlp_ - 1j * eta * slp_
 
 
@@ -362,7 +361,7 @@ def far_field(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        The density function of shape (...) -> (..., ...(B), 1, 1).
+        The density function of shape (...) -> (..., ...(B), 1).
     direction : Array
         The direction of the far-field pattern of shape (..., 2).
     n : int
@@ -394,25 +393,17 @@ def far_field(
     ny_t = ny_t_unnormalized / xp.linalg.vector_norm(ny_t_unnormalized, axis=-1, keepdims=True)
     jacobian = xp.sqrt(xp.sum(dx_t**2, axis=-1))
     direction_normalized = direction / xp.linalg.vector_norm(direction, axis=-1, keepdims=True)
-    # (..., Q)
     integrand_without_density = (
         (
-            alpha[..., None, None]
-            * k[..., None, None]
-            * xp.sum(ny_t * direction_normalized, axis=-1)
-            + eta[..., None, None]
+            alpha[..., None]
+            * k[..., None]
+            * xp.sum(ny_t * direction_normalized[..., None, :], axis=-1)
+            + eta[..., None]
         )
-        * xp.exp(-1j * k[..., None, None] * xp.sum(x_t * direction, axis=-1))
+        * xp.exp(-1j * k[..., None] * xp.sum(x_t * direction[..., None, :], axis=-1))
         * jacobian
     )
-    # (..., *B, Q)
     density_t = density(t)
-    info = check_shapes("*bQ,*b*BQ", density_t, integrand_without_density)
-    B_ndim = len(info.unique["b"].shape_broadcasted)
-    integrand = (
-        integrand_without_density[(...,) + (None,) * B_ndim + (slice(None), slice(None))]
-        * density_t
-    )
-    integral = xp.sum(integrand * w, axis=-1)
-    result = coef[..., None] * integral
-    return result
+    if density_t.ndim == 2 and density_t.shape == (t.shape[0], 1):
+        density_t = density_t[..., 0]
+    return coef * xp.sum(integrand_without_density * density_t * w, axis=-1)

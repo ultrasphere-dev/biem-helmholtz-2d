@@ -67,7 +67,7 @@ def test_adjoint_central_derivative(
     # Compute dr_j analytically using shape derivatives of near-field operators
     ds = slp_shape_derivative(
         x0[None],
-        phi,
+        lambda t: phi(t).squeeze(axis=-1),
         shape_x=shape.x,
         shape_dx=shape.dx,
         h=shape_h.x,
@@ -77,7 +77,7 @@ def test_adjoint_central_derivative(
     )
     dd = dlp_shape_derivative(
         x0[None],
-        phi,
+        lambda t: phi(t).squeeze(axis=-1),
         shape_x=shape.x,
         shape_dx=shape.dx,
         h=shape_h.x,

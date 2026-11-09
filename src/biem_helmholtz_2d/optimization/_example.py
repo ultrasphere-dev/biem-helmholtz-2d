@@ -152,7 +152,7 @@ def example_optimization(
         dr_g = -xp.sum(incident_grad_at_shape * h_all.x(t), axis=-1)
         slp_deriv = slp_shape_derivative(
             point[None],
-            phi,
+            lambda t: phi(t).squeeze(axis=-1),
             shape_x=shape.x,
             shape_dx=shape.dx,
             h=h_all.x,
@@ -162,7 +162,7 @@ def example_optimization(
         )
         dlp_deriv = dlp_shape_derivative(
             point[None],
-            phi,
+            lambda t: phi(t)[..., 0],
             shape_x=shape.x,
             shape_dx=shape.dx,
             h=h_all.x,
