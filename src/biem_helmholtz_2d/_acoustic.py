@@ -339,8 +339,12 @@ def near_field(
         The near field of shape (..., ...(*B)).
 
     """
-    dlp_ = dlp(x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
-    slp_ = slp(x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n)
+    dlp_ = dlp(
+        x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n
+    )
+    slp_ = slp(
+        x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n
+    )
     return alpha * dlp_ - 1j * eta * slp_
 
 
