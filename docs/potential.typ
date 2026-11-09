@@ -466,5 +466,42 @@ $h2pi^3 (RR) subset.neq c2pi^2 (RR)$ may be used for regularization.
 ]
 Therefore, the regularized steepest descent direction $hdr$ can be used for stable shape optimization in this formulation.
 
+== Constrained optimization
+
+To avoid self-intersection of the boundary, the feasible set of the coefficients are defined as
+
+$
+C := {((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) in RR^(2 N - 2) | sum_(m = 1)^(N - 1) sqrt(a_m^2 + b_m^2) <= 1}
+$
+
+#let argmin = $op("argmin")$
+
+#theorem[
+  + $C$ is convex and compact in $RR^(2 N - 2)$
+  + $exists! ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C, ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) = argmin_((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1) in C) sum_(m = 1)^(N - 1) ((a_m - a'_m)^2 + (b_m - b'_m)^2)$
+  + If $((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) in C, ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) = ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1))$.
+  + If $((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) in.not C$:
+    + Let $r_m := sqrt(a_m^2 + b_m^2)$. Then $exists! tau > 0. sum_(m = 1)^(N - 1) max(r_m - tau, 0) = 1. (a'_m, b'_m) = cases((1 - tau/r_m)(a_m, b_m) &quad r_m > tau, (0, 0) &quad r_m <= tau).$
+    + Let $u_1 >= ... >= u_(N - 1)$ be a non-increasing rearrangement of $(r_m)_(m = 1)^(N - 1)$. Let $S_j := sum_(m = 1)^j u_m$. Let $rho := max{j | u_j > (S_j - 1)/j}$. Then $tau = (S_rho - 1)/rho$.
+] <projection-existence>
+#proof[
+  + 
+  + Since the objective function $f((a''_m)_(m = 1)^(N - 1), (b''_m)_(m = 1)^(N - 1)) := sum_(m = 1)^(N - 1) ((a_m - a''_m)^2 + (b_m - b''_m)^2)$ is strictly convex, there exists a unique minimizer $((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C$.
+  + 
+
+]
+
+#definition[
+  $
+  P_C: RR^(2 N - 2) -> RR^(2 N - 2), ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) |-> cases(
+    ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) &quad "if" sum_(m = 1)^(N - 1) sqrt(a_m^2 + b_m^2) < 1,
+    ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) &quad "otherwise"
+  )
+  $
+] <projection-def>
+
+and projected gradient descent is applied.
+
+
 
 #bibliography("main.bib")
