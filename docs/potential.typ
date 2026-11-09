@@ -487,8 +487,8 @@ $
 #proof[
   + 
   + Since the objective function $f((a''_m)_(m = 1)^(N - 1), (b''_m)_(m = 1)^(N - 1)) := sum_(m = 1)^(N - 1) ((a_m - a''_m)^2 + (b_m - b''_m)^2)$ is strictly convex, there exists a unique minimizer $((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C$.
+  + This follows from the definition.
   + 
-
 ]
 
 Projected gradient descent is applied.
