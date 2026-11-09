@@ -481,14 +481,23 @@ $
   + $exists! ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C, ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) = argmin_((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1) in C) sum_(m = 1)^(N - 1) ((a_m - a'_m)^2 + (b_m - b'_m)^2)$
   + If $((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) in C, ((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) = ((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1))$.
   + If $((a_m)_(m = 1)^(N - 1), (b_m)_(m = 1)^(N - 1)) in.not C$:
-    + Let $r_m := sqrt(a_m^2 + b_m^2)$. Then $exists! tau > 0. sum_(m = 1)^(N - 1) max(r_m - tau, 0) = 1. (a'_m, b'_m) = cases((1 - tau/r_m)(a_m, b_m) &quad r_m > tau, (0, 0) &quad r_m <= tau).$
-    + Let $u_1 >= ... >= u_(N - 1)$ be a non-increasing rearrangement of $(r_m)_(m = 1)^(N - 1)$. Let $S_j := sum_(m = 1)^j u_m$. Let $rho := max{j | u_j > (S_j - 1)/j}$. Then $tau = (S_rho - 1)/rho$.
+    + Let $r_m := sqrt(a_m^2 + b_m^2)$. Then $exists! lambda > 0. sum_(m = 1)^(N - 1) max(r_m - lambda, 0) = 1. (a'_m, b'_m) = cases((1 - lambda/r_m)(a_m, b_m) &quad r_m > lambda, (0, 0) &quad r_m <= lambda).$
+    + Let $u_1 >= ... >= u_(N - 1)$ be a non-increasing rearrangement of $(r_m)_(m = 1)^(N - 1)$. Let $S_j := sum_(m = 1)^j u_m$. Let $rho := max{j | u_j > (S_j - 1)/j}$. Then $lambda = (S_rho - 1)/rho$.
 ] <projection-existence>
 #proof[
   + 
   + Since the objective function $f((a''_m)_(m = 1)^(N - 1), (b''_m)_(m = 1)^(N - 1)) := sum_(m = 1)^(N - 1) ((a_m - a''_m)^2 + (b_m - b''_m)^2)$ is strictly convex, there exists a unique minimizer $((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C$.
   + This follows from the definition.
   + 
+    + Since $(a_m - a'_m)^2 + (b_m - b'_m)^2 = (r_m - r'_m)^2 + r_m r'_m (1 - cos(theta_m - theta'_m)) >= (r_m - r'_m)^2$ where the equality holds if and only if $theta_m = theta'_m$, the problem reduces to
+    $
+    min_(r'_m >= 0, sum_(m = 1)^(N - 1) r'_m <= 1) sum_(m = 1)^(N - 1) (r_m - r'_m)^2.
+    $
+    Let Lagrangian $L((r'_m)_(m = 1)^(N - 1), lambda, (mu_m)_(m = 1)^(N - 1)) := sum_(m = 1)^(N - 1) (r_m - r'_m)^2 + lambda (sum_(m = 1)^(N - 1) r'_m - 1) - sum_(m = 1)^(N - 1) mu_m r'_m$. The additional KKT conditions are
+    $
+    r'_m - r_m + lambda - mu_m = 0, quad mu_m r'_m = 0, quad lambda >= 0, quad mu_m >= 0, quad mu_m r'_m = 0.
+    $
+    Therefore, if $r'_m > 0, mu_m = 0$ and thus $r'_m = r_m - lambda$. Otherwise, $0 <= mu_m = lambda - r_m$. Thus, $r'_m = max(0, r_m - lambda)$. Therefore, $(a'_m, b'_m) = r'_m/r_m (a_m, b_m) = cases((1 - lambda/r_m)(a_m, b_m) &quad r_m > lambda, (0, 0) &quad r_m <= lambda)$.
 ]
 
 Projected gradient descent is applied.
