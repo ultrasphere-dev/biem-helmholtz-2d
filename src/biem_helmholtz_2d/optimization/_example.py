@@ -12,6 +12,7 @@ from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
 from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 from biem_helmholtz_2d._acoustic import (
     _density_component,
@@ -316,9 +317,12 @@ def example_optimization(
         raise ValueError("alpha_reg and k_reg must define finite positive Sobolev weights")
 
     x = xp.zeros((n_scatterers, n_modes, 2), dtype=dtype, device=device)
+    progress = tqdm(range(n_steps), desc=f"alpha_reg={alpha_reg:g}", unit="step")
+    progress.set_postfix_str("initial solve")
     value = fun(x)
     val_hist = [value]
-    for _ in range(n_steps):
+    for _ in progress:
+        progress.set_postfix_str(f"objective={value:.3e}, gradient")
         derivative = jac(x)
         riesz = derivative / weights[:, None]
         norm = xp.sqrt(xp.sum(weights[:, None] * riesz**2))
@@ -329,6 +333,7 @@ def example_optimization(
         direction = riesz / norm
         step = 1.0
         while step >= xp.finfo(dtype).eps:
+            progress.set_postfix_str(f"objective={value:.3e}, line search={step:.2g}")
             candidate = project_coefficients(x - step * direction, weights=weights)
             slope = float(xp.sum(derivative * (candidate - x)))
             if slope >= 0:

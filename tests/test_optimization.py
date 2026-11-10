@@ -53,7 +53,11 @@ def test_optimization(
 
 
 def test_optimization_complex_couplings(
-    xp: ArrayNamespace, dtype: Any, device: Any, tmp_path: Path
+    xp: ArrayNamespace,
+    dtype: Any,
+    device: Any,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     example_optimization(
         path=tmp_path,
@@ -65,6 +69,11 @@ def test_optimization_complex_couplings(
         n_modes=1,
         n_steps=1,
     )
+    progress = capsys.readouterr().err
+    assert "alpha_reg=0.1" in progress
+    assert "initial solve" in progress
+    assert "gradient" in progress
+    assert "line search" in progress
     history = json.loads((tmp_path / "optimization_history.json").read_text())
     assert history["alpha"]["imag"] == pytest.approx(0.1)
     assert history["eta"]["imag"] == pytest.approx(-0.2)
