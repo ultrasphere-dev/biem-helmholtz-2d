@@ -18,7 +18,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
 
     density = scattering_dirichlet(
         k=k,
-        shape=shape,
+        shape=[shape],
         incident_field=incident_field,
         eta=eta,
         alpha=alpha,
@@ -31,7 +31,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         xlim=(-6, 6),
         ylim=(-6, 6),
         k=k,
-        shape=shape,
+        shape=[shape],
         n=n,
         alpha=alpha,
         eta=eta,
@@ -48,7 +48,7 @@ def example_3_1(n: int, /, *, xp: ArrayNamespace, dtype: Any, device: Any) -> Ar
         density,
         direction,
         k=k,
-        shape=shape,
+        shape=[shape],
         n=n,
         alpha=alpha,
         eta=eta,

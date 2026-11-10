@@ -95,7 +95,7 @@ wheels = [
 
 [[package]]
 name = "array-api-shape-check"
-version = "0.1.3"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -103,9 +103,9 @@ dependencies = [
     { name = "numpy" },
     { name = "types-array-api" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/67/81/8732832017719199207b556cb1b65452b3a56985f7dcc0c77bf0803eb4cc/array_api_shape_check-0.1.3.tar.gz", hash = "sha256:345d56dcf9155dff338c248e558841d45dbeb3ba5456322335af6fd094b80606", size = 10471, upload-time = "2026-05-13T02:12:38.379Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/c9/5af17de9965c43f4c370f029ff78229c0d84074106aae5ae5438b6161507/array_api_shape_check-1.0.1.tar.gz", hash = "sha256:8db7b6da3dbae217987ff3edf7e6bfd97c7dbaaa0cfda60134018eef1fa2ae25", size = 10175, upload-time = "2026-11-10T05:14:14.238Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/07/38fc496989e7eac9cb63f52988a6653bedf9a3a11fbdce80b4282d54d131/array_api_shape_check-0.1.3-py3-none-any.whl", hash = "sha256:778feb8ef2e71aa436de940a7bec3c5d82f5aa0a17daf57dfb4a339a3770104b", size = 8606, upload-time = "2026-05-13T02:12:37.201Z" },
+    { url = "https://files.pythonhosted.org/packages/30/45/e11f763cfb41cbf95227abc9f73817d66ed700d7ad50a2788b4c2f4aedf2/array_api_shape_check-1.0.1-py3-none-any.whl", hash = "sha256:7b26d99d594dac71dc0cd9349e3b859dc61af42687c0cebc683bc5d5af302cb8", size = 8792, upload-time = "2026-11-10T05:14:13.056Z" },
 ]
 
 [[package]]
@@ -160,6 +160,7 @@ source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },
     { name = "array-api-extra" },
+    { name = "array-api-shape-check" },
     { name = "attrs" },
     { name = "ie-circle" },
     { name = "matplotlib" },
@@ -199,8 +200,9 @@ docs = [
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
+    { name = "array-api-shape-check", specifier = ">=1.0.1" },
     { name = "attrs", specifier = ">=25.3.0" },
-    { name = "ie-circle", specifier = ">=0.2.2" },
+    { name = "ie-circle", specifier = ">=1.0.1" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "orjson", specifier = ">=3.12.0" },
     { name = "pandas", specifier = ">=3.0.3" },
@@ -613,7 +615,7 @@ wheels = [
 
 [[package]]
 name = "ie-circle"
-version = "0.2.2"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "array-api-compat" },
@@ -624,9 +626,9 @@ dependencies = [
     { name = "sympy" },
     { name = "types-array-api" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/0e/6cb5491c12991129c9f273ec392d426465a526115bbfbdd6f9a4a9aca687/ie_circle-0.2.2.tar.gz", hash = "sha256:7928abe3a8e21724accca4ed8a3026c3d5d9b82d4ad838a347ab509f958422cc", size = 16204, upload-time = "2026-05-16T07:37:13.297Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/e5/86dc4b677505a281d1b6bb812b8b78f72ac3bd1b4fb85f6083e1e6a7e569/ie_circle-1.0.1.tar.gz", hash = "sha256:646908a8a53cba086b15511abb5573910f93c853fef311319d54e219f623da7c", size = 15343, upload-time = "2026-11-10T05:05:53.037Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/1e/d84fd9de51c5dabb7179ca71d35122f86ffeeb9841011e80bb48f9057c33/ie_circle-0.2.2-py3-none-any.whl", hash = "sha256:610378c9254a14fcb3c17e6bed1fd6ed8608ca3f3b4a8765fcc100472d588da5", size = 14983, upload-time = "2026-05-16T07:37:11.917Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/09/a212615dab8eaa8ee60453b09e7dadf3eaa485651fe8d32550cd423a795f/ie_circle-1.0.1-py3-none-any.whl", hash = "sha256:626cced5f0e592f3965eb6a420496e28e098240311b88755a540f675d34d0120", size = 14883, upload-time = "2026-11-10T05:05:51.46Z" },
 ]
 
 [[package]]

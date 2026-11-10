@@ -485,10 +485,10 @@ $
     + Let $u_1 >= ... >= u_(N - 1)$ be a non-increasing rearrangement of $(r_m)_(m = 1)^(N - 1)$. Let $S_j := sum_(m = 1)^j u_m$. Let $rho := max{j | u_j > (S_j - 1)/j}$. Then $lambda = (S_rho - 1)/rho$.
 ] <projection-existence>
 #proof[
-  + 
+  +
   + Since the objective function $f((a''_m)_(m = 1)^(N - 1), (b''_m)_(m = 1)^(N - 1)) := sum_(m = 1)^(N - 1) ((a_m - a''_m)^2 + (b_m - b''_m)^2)$ is strictly convex, there exists a unique minimizer $((a'_m)_(m = 1)^(N - 1), (b'_m)_(m = 1)^(N - 1)) in C$.
   + This follows from the definition.
-  + 
+  +
     + Since $(a_m - a'_m)^2 + (b_m - b'_m)^2 = (r_m - r'_m)^2 + r_m r'_m (1 - cos(theta_m - theta'_m)) >= (r_m - r'_m)^2$ where the equality holds if and only if $theta_m = theta'_m$, the problem reduces to
     $
     min_(r'_m >= 0, sum_(m = 1)^(N - 1) r'_m <= 1) sum_(m = 1)^(N - 1) (r_m - r'_m)^2.
@@ -500,6 +500,8 @@ $
     Therefore, if $r'_m > 0, mu_m = 0$ and thus $r'_m = r_m - lambda$. Otherwise, $0 <= mu_m = lambda - r_m$. Thus, $r'_m = max(0, r_m - lambda)$. Therefore, $(a'_m, b'_m) = r'_m/r_m (a_m, b_m) = cases((1 - lambda/r_m)(a_m, b_m) &quad r_m > lambda, (0, 0) &quad r_m <= lambda)$.
 ]
 
-Projected gradient descent is applied. For simplicity, the coefficient of $1$ is set to $1$ (meaning that the area of the scatterer is fixed). For multiple scatterers, the centers of each scatteres $(c_a)_(a in I)$ are fixed so that $forall a, b in I. abs(c_a - c_b) > 4$ and the scatterers do not intersect as long as $forall b in I. ((a_(b,m))_(m = 1)^(N - 1), (b_(b,m))_(m = 1)^(N - 1)) in C$.
+Projected gradient descent is applied. The coefficient of $1$ is set to $1$, fixing the mean radius, not the area. For multiple scatterers, the centers $(c_a)_(a in I)$ are fixed with $abs(c_a - c_b) > 4$ whenever $a != b$. Since $r(t) <= 2$, their closures are disjoint. However, $C$ permits $r(t) = 0$ at equality, so it does not guarantee that the boundary parametrization is regular.
+
+To retain Hilbertian regularization at an active constraint, the projected descent step uses the same metric as the Riesz gradient. With $w_m := (1 + alpha m^2)^k$, the metric projection minimizes $sum_m w_m ((a_m-a'_m)^2 + (b_m-b'_m)^2)$ over $C$. Its projected radii are $r'_m = max(r_m - lambda / w_m, 0)$, with $lambda >= 0$ chosen so that $sum_m r'_m = 1$ when the input is outside $C$. When all $w_m = 1$, this is the Euclidean projection in @projection-existence.
 
 #bibliography("main.bib")

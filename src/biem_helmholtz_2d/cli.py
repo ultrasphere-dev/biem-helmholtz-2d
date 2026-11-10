@@ -3,6 +3,7 @@ import warnings
 from datetime import datetime
 from logging import DEBUG, INFO, basicConfig, getLogger
 
+import array_api_compat.numpy as xp
 import typer
 from rich.logging import RichHandler
 
@@ -31,11 +32,8 @@ def optimize() -> None:
     """Compare optimization results with/without Hilbertian regularization."""
     warnings.filterwarnings("ignore")
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    import numpy as np
-
-    xp = np
-    dtype = np.float64
-    device = None
+    dtype = xp.float64
+    device = "cpu"
     for alpha_reg in [
         0,
         1,
@@ -44,6 +42,7 @@ def optimize() -> None:
     ]:
         example_optimization(
             k=5,
+            centers=xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device),
             n=100,
             alpha=1,
             eta=1,
@@ -51,9 +50,6 @@ def optimize() -> None:
             n_steps=20,
             target_point=(-3, 3),
             desired_total_field=0,
-            xp=xp,
-            dtype=dtype,
-            device=device,
             alpha_reg=alpha_reg,
             path=path / f"alpha_reg_{alpha_reg}",
         )

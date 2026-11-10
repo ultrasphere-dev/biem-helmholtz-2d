@@ -1,24 +1,66 @@
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
-import numpy as np
 from array_api.latest import Array
 from array_api_compat import array_namespace
+from array_api_shape_check import check_shapes
 from ie_circle import Shape, nystrom, trapezoidal_quadrature
-from ie_circle._bie import NystromInterpolant, QuadratureType
+from ie_circle._bie import Kernels, NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from scipy.stats import quantile
 
 from ._potential import dlp_kernel_split, slp_kernel_split
-from ._potential_inner import dlp, slp
+from ._potential_inner import dlp_kernel, slp_kernel
+
+
+def _coupled_kernels(*, shape: Sequence[Shape], k: Array, alpha: Array, eta: Array) -> Kernels:
+    xp = array_namespace(k, alpha, eta)
+    k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
+    info = check_shapes("*B,*B,*B", k, alpha, eta, names="k,alpha,eta")
+    batch_ndim = len(info.unique["B"].shape_broadcasted)
+
+    def coupled_kernel(t: Array, tau: Array, /, *, logarithmic: bool) -> Array:
+        check_shapes("...,...", t, tau, names="t,tau")
+        t = t[(...,) + (None,) * batch_ndim]
+        tau = tau[(...,) + (None,) * batch_ndim]
+        rows = []
+        for i, target in enumerate(shape):
+            columns = []
+            for j, source in enumerate(shape):
+                if i == j:
+                    s = slp_kernel_split(t=t, tau=tau, k=k, x=source.x, dx=source.dx)
+                    d = dlp_kernel_split(
+                        t=t, tau=tau, k=k, x=source.x, dx=source.dx, ddx=source.ddx
+                    )
+                    part = 0 if logarithmic else 1
+                    value = alpha * d[part] - 1j * eta * s[part]
+                elif logarithmic:
+                    value = xp.zeros_like(t + tau + 0 * k, dtype=xp.result_type(k, alpha, eta, 1j))
+                else:
+                    point = target.x(t)
+                    value = alpha * dlp_kernel(
+                        point, shape_x=source.x, shape_dx=source.dx, k=k, tau=tau
+                    ) - 1j * eta * slp_kernel(
+                        point, shape_x=source.x, shape_dx=source.dx, k=k, tau=tau
+                    )
+                columns.append(value)
+            rows.append(xp.stack(columns, axis=-1))
+        return xp.stack(rows, axis=-2)
+
+    return {
+        (QuadratureType.NO_SINGULARITY, 0): lambda t, tau: coupled_kernel(
+            t, tau, logarithmic=False
+        ),
+        (QuadratureType.LOG_COT_POWER, 0): lambda t, tau: coupled_kernel(t, tau, logarithmic=True),
+    }
 
 
 def scattering_dirichlet(
     *,
     k: Array,
-    shape: Shape,
+    shape: Sequence[Shape],
     incident_field: Callable[[Array], Array],
     alpha: Array,
     eta: Array,
@@ -30,60 +72,58 @@ def scattering_dirichlet(
     Parameters
     ----------
     k : Array
-        The wave number of shape (...,).
-    shape : Shape
-        The shape of the scatterer of (...,) -> (..., 2).
+        The wave number of shape (...(B),).
+    shape : Sequence[Shape]
+        Disjoint boundaries of (...,) -> (..., 2). The solve is coupled.
     incident_field : Callable[[Array], Array]
-        The incident field of (...,) -> (..., 2).
+        The incident field of (..., 2) -> (..., ...(B)).
     alpha : Array
-        The coupling parameter for the double-layer potential of shape (...,).
+        The coupling parameter for the double-layer potential of shape (...(B),).
     eta : Array
-        The coupling parameter for the single-layer potential of shape (...,).
+        The coupling parameter for the single-layer potential of shape (...(B),).
     n : int
         The maximum order - 1.
 
     Returns
     -------
     NystromInterpolant
-        The density of the integral equation of shape (...,) -> (..., 1).
+        Density of (...) -> (..., ...(B), C), where C is the number of boundaries.
 
     """
     xp = array_namespace(k, alpha, eta)
-    dtype = xp.result_type(k, alpha, eta)
+    dtype = xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
     device = k.device
 
-    def k_log(t: Array, tau: Array) -> Array:
-        slp_log, _ = slp_kernel_split(t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx)
-        dlp_log, _ = dlp_kernel_split(
-            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
-        )
-        res = alpha * dlp_log - 1j * eta * slp_log
-        res = res[..., None, None]
-        return res
-
-    def k_cont(t: Array, tau: Array) -> Array:
-        _, slp_cont = slp_kernel_split(t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx)
-        _, dlp_cont = dlp_kernel_split(
-            t=t, tau=tau, k=k[..., None, None], x=shape.x, dx=shape.dx, ddx=shape.ddx
-        )
-        res = alpha * dlp_cont - 1j * eta * slp_cont
-        res = res[..., None, None]
-        return res
+    if not shape:
+        raise ValueError("At least one boundary is required")
+    k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
+    info = check_shapes("*B,*B,*B", k, alpha, eta, names="k,alpha,eta")
+    batch_shape = info.unique["B"].shape_broadcasted
 
     def a(t: Array) -> Array:
-        xp = array_namespace(t)
-        return xp.ones_like(t)[..., None] * (alpha / 2)
+        coefficient = xp.broadcast_to(alpha / 2, (*t.shape, *batch_shape))
+        return coefficient[..., None] * xp.ones(len(shape), dtype=t.dtype, device=t.device)
 
     def rhs(t: Array) -> Array:
-        return -incident_field(shape.x(t))[..., None]
+        parameter = t[(...,) + (None,) * len(batch_shape)]
+        components = []
+        for boundary in shape:
+            values = incident_field(boundary.x(parameter))
+            check_shapes("...*B,...,*B", values, t, alpha, names="incident_field,t,alpha")
+            if values.shape[: t.ndim] != t.shape:
+                raise ValueError("incident_field must have one value per parameter")
+            components.append(xp.broadcast_to(-values, (*t.shape, *batch_shape)))
+        return xp.stack(components, axis=-1)
 
-    kernels = {
-        (QuadratureType.NO_SINGULARITY, 0): k_cont,
-        (QuadratureType.LOG_COT_POWER, 0): k_log,
-    }
-
-    result = nystrom(a, kernels, rhs, n=n, xp=xp, device=device, dtype=dtype)
-    return result
+    return nystrom(
+        a,
+        _coupled_kernels(shape=shape, k=k, alpha=alpha, eta=eta),
+        rhs,
+        n=n,
+        xp=xp,
+        device=device,
+        dtype=dtype,
+    )
 
 
 def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Array:
@@ -125,7 +165,7 @@ def plot_near_field_prepare(
     xlim: tuple[float, float],
     ylim: tuple[float, float],
     n: int,
-    shape: Shape,
+    shape: Sequence[Shape],
     k: Array,
     alpha: Array,
     eta: Array,
@@ -143,17 +183,17 @@ def plot_near_field_prepare(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        Density function of shape (...) -> (..., ...(B), 1).
+        Density function of shape (...) -> (..., ...(B), C), where C is the number of boundaries.
     incident_field : Callable[[Array], Array]
-        Incident field of shape (..., 2) -> (...,).
+        Incident field of shape (..., 2) -> (..., ...(B)).
     xlim : tuple[float, float]
         Horizontal extent of the plot domain.
     ylim : tuple[float, float]
         Vertical extent of the plot domain.
     n : int
         Maximum order minus $1$.
-    shape : Shape
-        Boundary parametrisation of (...,) -> (..., 2).
+    shape : Sequence[Shape]
+        Boundary parametrisations of (...,) -> (..., 2).
     k : Array
         Wave number of shape (...(B),).
     alpha : Array
@@ -170,27 +210,35 @@ def plot_near_field_prepare(
     Returns
     -------
     FieldData
-        Dictionary keyed by ``(field, component)`` tuples where
-        ``field`` is one of ``"uin"``, ``"uscat"``, ``"utot"``
-        and ``component`` is one of ``"re"``, ``"im"``, ``"abs"``.
-        Each value is a dict with keys ``"data"``, ``"vmax"``,
-        ``"vmin"``, ``"extent"``.
+        Dictionary keyed by field (``"uin"``, ``"uscat"``, ``"utot"``),
+        then component (``"re"``, ``"im"``, ``"abs"``). Each entry has
+        keys ``"data"``, ``"vmax"``, ``"vmin"``, and ``"extent"``.
+        The data arrays have shape ``(n_plot, n_plot, ...(B))``.
 
     """
     xp = array_namespace(k, alpha, eta)
-    dtype = xp.result_type(k, alpha, eta)
+    dtype = xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
     device = k.device
     x = xp.linspace(xlim[0], xlim[1], n_plot, device=device, dtype=dtype)
     y = xp.linspace(ylim[0], ylim[1], n_plot, device=device, dtype=dtype)
     x, y = xp.broadcast_arrays(x[:, None], y[None, :])
     xy = xp.stack([x, y], axis=-1)
     uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
-    uin = incident_field(xy)
+    batch_ndim = uscat.ndim - (xy.ndim - 1)
+    uin = incident_field(xy[(...,) + (None,) * batch_ndim + (slice(None),)])
+    uin = xp.broadcast_to(uin, uscat.shape)
     utot = uscat + uin
-    inside = isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol)
-    uscat[inside] = xp.nan
-    uin[inside] = xp.nan
-    utot[inside] = xp.nan
+    inside = xp.any(
+        xp.stack([
+            isin_shape(xy, boundary, n_quad=isin_shape_n_quad, tol=isin_shape_tol)
+            for boundary in shape
+        ]),
+        axis=0,
+    )
+    inside = inside[(...,) + (None,) * batch_ndim]
+    uscat = xp.where(inside, xp.nan, uscat)
+    uin = xp.where(inside, xp.nan, uin)
+    utot = xp.where(inside, xp.nan, utot)
 
     extent = (xlim[0], xlim[1], ylim[0], ylim[1])
 
@@ -219,7 +267,7 @@ def plot_near_field_prepare(
                 vmax = vmax_abs
                 vmin = 0
             result[field_name][component] = {  # type: ignore
-                "data": xp.ascontiguousarray(data),
+                "data": data,
                 "vmax": vmax,
                 "vmin": vmin,
                 "extent": extent,
@@ -243,6 +291,8 @@ def plot_near_field(
 ) -> None:
     r"""
     Plot precomputed near-field data on provided axes.
+
+    Select a single batch from the data arrays before plotting batched fields.
 
     Parameters
     ----------
@@ -283,9 +333,19 @@ def plot_near_field(
         if ax is None:
             continue
         entry = field_data[key[0]][key[1]]
+        data = entry["data"]
+        if isinstance(data, (list, tuple)):
+            data = [
+                [float("nan") if value is None else value for value in column]
+                for column in zip(*data, strict=True)
+            ]
+        else:
+            check_shapes("IJ", data, names="field_data")
+            xp = array_namespace(data)
+            data = xp.permute_dims(xp.asarray(data, device="cpu"), (1, 0))
         cmap = "inferno" if key[1] == "abs" else "seismic"
         im = ax.imshow(
-            np.asarray(entry["data"], dtype=float).T,
+            data,
             extent=entry["extent"],
             origin="lower",
             cmap=cmap,
@@ -298,13 +358,66 @@ def plot_near_field(
         ax.set_title(f"{_FIELD_NAMES[key[0]]} field {_COMPONENT_NAMES[key[1]]}")
 
 
+def _density_component(
+    density: Callable[[Array], Array], index: int, /
+) -> Callable[[Array], Array]:
+    def component(t: Array, /) -> Array:
+        return density(t)[..., index]
+
+    return component
+
+
+def _field_quadrature(
+    density: Callable[[Array], Array],
+    points: Array,
+    /,
+    *,
+    n: int,
+    n_scatterers: int,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> tuple[Array, Array, Array, Array, Array, Array, Array]:
+    check_shapes("...D,D", points, (2,), names="points,coordinate_dimension")
+    if points.shape[-1] != 2:
+        raise ValueError("points must contain two coordinates")
+    xp = array_namespace(points, k, alpha, eta)
+    t, w = trapezoidal_quadrature(
+        n, xp=xp, device=points.device, dtype=xp.result_type(points, xp.real(k))
+    )
+    values = density(t)
+    info = check_shapes("Q*BC,QC", values, (t.shape[0], n_scatterers), names="density,expected")
+    if values.shape[0] != t.shape[0] or values.shape[-1] != n_scatterers:
+        raise ValueError("density must have one value per quadrature node and scatterer")
+    density_batch_ndim = len(info.unique["B"].shape_broadcasted)
+    k, alpha, eta, _ = xp.broadcast_arrays(k, alpha, eta, values[0, ..., 0])
+    batch_shape = k.shape
+    batch_ndim = len(batch_shape)
+    values = values[(slice(None),) + (None,) * (batch_ndim - density_batch_ndim) + (...,)]
+    check_shapes(
+        "Q*BC,*B,*B,*B,QC",
+        values,
+        k,
+        alpha,
+        eta,
+        (t.shape[0], n_scatterers),
+        names="density,k,alpha,eta,expected",
+    )
+    values = xp.moveaxis(xp.broadcast_to(values, (t.shape[0], *batch_shape, n_scatterers)), 0, -2)
+    point_ndim = points.ndim - 1
+    points = points[(...,) + (None,) * (batch_ndim + 1) + (slice(None),)]
+    t = t[(None,) * (point_ndim + batch_ndim) + (slice(None),)]
+    expand = (None,) * point_ndim + (..., None)
+    return points, t, w, k[expand], alpha[expand], eta[expand], values
+
+
 def near_field(
     density: Callable[[Array], Array],
     x: Array,
     /,
     *,
     n: int,
-    shape: Shape,
+    shape: Sequence[Shape],
     k: Array,
     alpha: Array,
     eta: Array,
@@ -319,13 +432,14 @@ def near_field(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        The density function of shape (...) -> (..., ...(B), 1).
+        The density function of shape (...) -> (..., ...(B), C),
+        where C is the number of boundaries.
     x : Array
         The position of the scttered field of shape (..., 2).
     n : int
         The maximum order - 1.
-    shape : Shape
-        The shape of the scatterer of (...,) -> (..., 2).
+    shape : Sequence[Shape]
+        Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array
         The wave number of shape (...(B),).
     alpha : Array
@@ -336,16 +450,21 @@ def near_field(
     Returns
     -------
     Array
-        The near field of shape (..., ...(*B)).
+        The near field of shape (..., ...(B)).
 
     """
-    dlp_ = dlp(
-        x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n
+    if not shape:
+        raise ValueError("At least one boundary is required")
+    xp = array_namespace(x, k, alpha, eta)
+    point, t, w, k, alpha, eta, values = _field_quadrature(
+        density, x, n=n, n_scatterers=len(shape), k=k, alpha=alpha, eta=eta
     )
-    slp_ = slp(
-        x, lambda t: density(t).squeeze(axis=-1), shape_x=shape.x, shape_dx=shape.dx, k=k, n=n
-    )
-    return alpha * dlp_ - 1j * eta * slp_
+    fields = []
+    for i, boundary in enumerate(shape):
+        dlp_ = dlp_kernel(point, shape_x=boundary.x, shape_dx=boundary.dx, k=k, tau=t)
+        slp_ = slp_kernel(point, shape_x=boundary.x, shape_dx=boundary.dx, k=k, tau=t)
+        fields.append(xp.sum((alpha * dlp_ - 1j * eta * slp_) * values[..., i] * w, axis=-1))
+    return xp.sum(xp.stack(fields), axis=0)
 
 
 def far_field(
@@ -354,7 +473,7 @@ def far_field(
     /,
     *,
     n: int,
-    shape: Shape,
+    shape: Sequence[Shape],
     k: Array,
     alpha: Array,
     eta: Array,
@@ -365,13 +484,14 @@ def far_field(
     Parameters
     ----------
     density : Callable[[Array], Array]
-        The density function of shape (...) -> (..., ...(B), 1).
+        The density function of shape (...) -> (..., ...(B), C),
+        where C is the number of boundaries.
     direction : Array
         The direction of the far-field pattern of shape (..., 2).
     n : int
         The maximum order - 1.
-    shape : Shape
-        The shape of the scatterer of (...,) -> (..., 2).
+    shape : Sequence[Shape]
+        Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array
         The wave number of shape (...(B),).
     alpha : Array
@@ -382,32 +502,28 @@ def far_field(
     Returns
     -------
     Array
-        The far-field pattern of shape (..., ...(*B)).
+        The far-field pattern of shape (..., ...(B)).
 
     """
-    xp = array_namespace(direction, k)
-    dtype = xp.result_type(direction, k)
-    device = direction.device
-    t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
-    # (...)
-    coef = xp.exp(-1j * xp.pi / 4) / xp.sqrt(8 * xp.pi * k)
-    x_t = shape.x(t)
-    dx_t = shape.dx(t)
-    ny_t_unnormalized = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
-    ny_t = ny_t_unnormalized / xp.linalg.vector_norm(ny_t_unnormalized, axis=-1, keepdims=True)
-    jacobian = xp.sqrt(xp.sum(dx_t**2, axis=-1))
-    direction_normalized = direction / xp.linalg.vector_norm(direction, axis=-1, keepdims=True)
-    integrand_without_density = (
-        (
-            alpha[..., None]
-            * k[..., None]
-            * xp.sum(ny_t * direction_normalized[..., None, :], axis=-1)
-            + eta[..., None]
-        )
-        * xp.exp(-1j * k[..., None] * xp.sum(x_t * direction[..., None, :], axis=-1))
-        * jacobian
+    if not shape:
+        raise ValueError("At least one boundary is required")
+    xp = array_namespace(direction, k, alpha, eta)
+    direction, t, w, k, alpha, eta, values = _field_quadrature(
+        density, direction, n=n, n_scatterers=len(shape), k=k, alpha=alpha, eta=eta
     )
-    density_t = density(t)
-    if density_t.ndim == 2 and density_t.shape == (t.shape[0], 1):
-        density_t = density_t[..., 0]
-    return coef * xp.sum(integrand_without_density * density_t * w, axis=-1)
+    coef = xp.exp(-1j * xp.pi / 4) / xp.sqrt(8 * xp.pi * k)
+    direction_normalized = direction / xp.linalg.vector_norm(direction, axis=-1, keepdims=True)
+    fields = []
+    for i, boundary in enumerate(shape):
+        x_t = boundary.x(t)
+        dx_t = boundary.dx(t)
+        normal = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
+        jacobian = xp.linalg.vector_norm(normal, axis=-1)
+        normal = normal / jacobian[..., None]
+        kernel = (
+            (alpha * k * xp.sum(normal * direction_normalized, axis=-1) + eta)
+            * xp.exp(-1j * k * xp.sum(x_t * direction, axis=-1))
+            * jacobian
+        )
+        fields.append(xp.sum(coef * kernel * values[..., i] * w, axis=-1))
+    return xp.sum(xp.stack(fields), axis=0)

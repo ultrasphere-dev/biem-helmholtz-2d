@@ -14,6 +14,7 @@ from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
 
 @pytest.mark.parametrize("m", [1, 3])
 @pytest.mark.parametrize("target_val", [0, 1 + 0.5j])
+@pytest.mark.parametrize(("alpha_value", "eta_value"), [(1, 1), (1 + 0.1j, 0.8 - 0.2j)])
 def test_grad_phi_central_derivative(
     xp: Any,
     shape: Shape,
@@ -21,6 +22,8 @@ def test_grad_phi_central_derivative(
     dtype: Any,
     m: int,
     target_val: complex,
+    alpha_value: complex,
+    eta_value: complex,
 ) -> None:
     r"""
     Verify $\operatorname{grad}_\phi j$ by central FD on $j(\phi)=|u(x_0) - c|^2$.
@@ -29,8 +32,8 @@ def test_grad_phi_central_derivative(
     """
     n = 8
     k_arr = xp.asarray(1, device=device, dtype=dtype)
-    alpha = xp.asarray(1, device=device, dtype=dtype)
-    eta = xp.asarray(1, device=device, dtype=dtype)
+    alpha = xp.asarray(alpha_value, device=device, dtype=xp.result_type(dtype, alpha_value))
+    eta = xp.asarray(eta_value, device=device, dtype=xp.result_type(dtype, eta_value))
     x0 = xp.asarray([3, 3], device=device, dtype=dtype)
     t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     wt = w[0]
@@ -39,13 +42,13 @@ def test_grad_phi_central_derivative(
 
     density = scattering_dirichlet(
         k=k_arr,
-        shape=shape,
+        shape=[shape],
         incident_field=incident_field,
         alpha=alpha,
         eta=eta,
         n=n,
     )
-    u = near_field(density, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
+    u = near_field(density, x0[None], k=k_arr, shape=[shape], n=n, alpha=alpha, eta=eta)
 
     target_arr = xp.asarray(target_val, dtype=xp.result_type(dtype, 1j), device=device)
 
@@ -61,7 +64,7 @@ def test_grad_phi_central_derivative(
     actual = xp.real(xp.sum(gj_t * xp.conj(density_perb_t) * wt))
 
     def j_of_phi(density_: Callable[[Array], Array], /) -> Array:
-        u = near_field(density_, x0[None], k=k_arr, shape=shape, n=n, alpha=alpha, eta=eta)
+        u = near_field(density_, x0[None], k=k_arr, shape=[shape], n=n, alpha=alpha, eta=eta)
         return xp.sum(xp.abs(u - target_arr) ** 2)
 
     eps = 1e-5

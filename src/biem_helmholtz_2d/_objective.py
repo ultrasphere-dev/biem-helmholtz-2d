@@ -106,13 +106,12 @@ def grad_phi_abs2_scattered_field(
         $t$ of shape ``(...,)`` and returns values of shape ``(...,)``.
 
     """
-    xp = array_namespace(point, k, alpha, eta, target)
+    xp = array_namespace(point, field_value, k, alpha, eta, target)
     diff = field_value - target
 
     def grad(t_in: Array) -> Array:
         dlp = dlp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
         slp = slp_kernel(point, shape_x=shape.x, shape_dx=shape.dx, k=k, tau=t_in)
-        conj_k = alpha * xp.conj(dlp) + 1j * eta * xp.conj(slp)
-        return 2 * diff * conj_k
+        return 2 * diff * xp.conj(alpha * dlp - 1j * eta * slp)
 
     return grad

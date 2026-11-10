@@ -1,5 +1,6 @@
-from array_api._2024_12 import Array
+from array_api.latest import Array
 from array_api_compat import array_namespace
+from array_api_shape_check import check_shapes
 from attrs import frozen
 from ie_circle import Shape
 
@@ -43,6 +44,30 @@ class RadiusShape(Shape):
 class ParameterShape(RadiusShape):
     sin_coefs: Array
     cos_coefs: Array
+    center: Array
+
+    def __attrs_post_init__(self) -> None:
+        array_namespace(self.cos_coefs, self.sin_coefs, self.center)
+        coefs = (self.cos_coefs, self.sin_coefs, self.center)
+        for value, name in zip(coefs, ("cos_coefs", "sin_coefs", "center"), strict=True):
+            check_shapes("*BM", value, names=name)
+        batch_ndim = max(value.ndim - 1 for value in coefs)
+        cos, sin, center = (
+            value[(None,) * (batch_ndim - value.ndim + 1) + (...,)] for value in coefs
+        )
+        check_shapes(
+            "*BM,*BN,*BD,D",
+            cos,
+            sin,
+            center,
+            (2,),
+            names="cos_coefs,sin_coefs,center,coordinate_dimension",
+        )
+        if self.center.shape[-1] != 2:
+            raise ValueError("center must contain two coordinates")
+
+    def x(self, t: Array, /) -> Array:
+        return super().x(t) + self.center[(...,) + (None,) * t.ndim + (slice(None),)]
 
     def r(self, t: Array, /) -> Array:
         xp = array_namespace(t, self.cos_coefs, self.sin_coefs)
