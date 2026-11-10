@@ -66,6 +66,7 @@ def test_optimization_complex_couplings(
         alpha=1 + 0.1j,
         eta=1 - 0.2j,
         n=4,
+        n_quadrature=7,
         n_modes=1,
         n_steps=1,
     )
@@ -77,6 +78,8 @@ def test_optimization_complex_couplings(
     history = json.loads((tmp_path / "optimization_history.json").read_text())
     assert history["alpha"]["imag"] == pytest.approx(0.1)
     assert history["eta"]["imag"] == pytest.approx(-0.2)
+    assert history["n"] == 4
+    assert history["n_quadrature"] == 7
     assert all(b <= a for a, b in zip(history["val_hist"], history["val_hist"][1:], strict=False))
 
 

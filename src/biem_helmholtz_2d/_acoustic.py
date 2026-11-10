@@ -5,14 +5,14 @@ from typing import Any, Literal
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
-from ie_circle import Shape, nystrom, trapezoidal_quadrature
+from ie_circle import Shape, nystrom
 from ie_circle._bie import Kernels, NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from scipy.stats import quantile
 
 from ._potential import dlp_kernel_split, slp_kernel_split
 from ._potential_inner import dlp_kernel, slp_kernel
+from ._quadrature import trapezoidal_quadrature
 
 
 def _coupled_kernels(*, shape: Sequence[Shape], k: Array, alpha: Array, eta: Array) -> Kernels:
@@ -242,6 +242,13 @@ def plot_near_field_prepare(
 
     extent = (xlim[0], xlim[1], ylim[0], ylim[1])
 
+    def quantile_99(values: Array, /) -> float:
+        ordered = xp.sort(values)
+        position = 0.99 * (ordered.shape[0] - 1)
+        lower = math.floor(position)
+        upper = math.ceil(position)
+        return float(ordered[lower] + (position - lower) * (ordered[upper] - ordered[lower]))
+
     result: FieldData = {}
     for field_name, field_val in (("uin", uin), ("uscat", uscat), ("utot", utot)):
         valid_reim = xp.abs(
@@ -250,8 +257,8 @@ def plot_near_field_prepare(
                 field_val.imag[~xp.isnan(field_val.imag)],
             ])
         )
-        vmax_reim = float(quantile(valid_reim, 0.99))
-        vmax_abs = float(quantile(xp.abs(field_val[~xp.isnan(field_val)]), 0.99))
+        vmax_reim = quantile_99(valid_reim)
+        vmax_abs = quantile_99(xp.abs(field_val[~xp.isnan(field_val)]))
         result[field_name] = {}  # type: ignore
         for component in ("re", "im", "abs"):
             if component == "re":
@@ -435,9 +442,10 @@ def near_field(
         The density function of shape (...) -> (..., ...(B), C),
         where C is the number of boundaries.
     x : Array
-        The position of the scttered field of shape (..., 2).
+        The position of the scattered field of shape (..., 2).
     n : int
-        The maximum order - 1.
+        Integration order, with $2n-1$ nodes. It may differ from the
+        Nyström order used to compute ``density``.
     shape : Sequence[Shape]
         Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array
@@ -489,7 +497,8 @@ def far_field(
     direction : Array
         The direction of the far-field pattern of shape (..., 2).
     n : int
-        The maximum order - 1.
+        Integration order, with $2n-1$ nodes. It may differ from the
+        Nyström order used to compute ``density``.
     shape : Sequence[Shape]
         Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array

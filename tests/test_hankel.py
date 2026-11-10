@@ -17,6 +17,20 @@ from biem_helmholtz_2d._hankel import hankel_h1_h2, neumann_y1_y2
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_yv
 
 
+def test_complex_wave_number_diagonal_limit(xp: Any, device: Any, dtype: Any) -> None:
+    k = xp.asarray(1 + 0.3j, device=device, dtype=xp.result_type(dtype, 1j))
+    x = xp.asarray([0, 1e-5], device=device, dtype=dtype)
+
+    def argument(t: Array, /) -> Array:
+        return 2 * k * xp.sin(xp.abs(t) / 2)
+
+    _, analytic = neumann_y1_y2(
+        x, order=0, f=argument, fprime0=k, t_singularity=xp.asarray(0, device=device, dtype=dtype)
+    )
+    assert abs(complex(analytic[0]).imag) > 0.1
+    assert abs(complex(analytic[0] - analytic[1])) < 1e-8
+
+
 def _g(x: Array) -> Array:
     xp = array_namespace(x)
     return 43 + (xp.sin(x - 0.3) / 4) + xp.cos(4 * x)

@@ -4,8 +4,8 @@ from collections.abc import Callable
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from ie_circle import trapezoidal_quadrature
 
+from ._quadrature import trapezoidal_quadrature
 from ._scipy_wrapper import scipy_hankel1
 
 
@@ -147,7 +147,7 @@ def slp(
 
     """
     xp = array_namespace(x, k)
-    dtype = xp.result_type(x, k)
+    dtype = xp.result_type(x, xp.real(k))
     device = x.device
     t, w = trapezoidal_quadrature(
         n, t_start=t_start, t_start_factor=t_start_factor, xp=xp, dtype=dtype, device=device
@@ -201,7 +201,7 @@ def dlp(
 
     """
     xp = array_namespace(x, k)
-    dtype = xp.result_type(x, k)
+    dtype = xp.result_type(x, xp.real(k))
     device = x.device
     t, w = trapezoidal_quadrature(
         n, t_start=t_start, t_start_factor=t_start_factor, xp=xp, dtype=dtype, device=device

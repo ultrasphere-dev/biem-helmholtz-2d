@@ -1,0 +1,118 @@
+{
+  "settings": {
+    "centers": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        5.0,
+        0.0
+      ]
+    ],
+    "k": 5,
+    "alpha": 1,
+    "eta": 1,
+    "target_point": [
+      -3,
+      3
+    ],
+    "desired_total_field": {
+      "real": 0,
+      "imag": 0
+    },
+    "perturbation": "first body's first cosine radius coefficient",
+    "step": 0.00001,
+    "reference_order": 40,
+    "solve_orders": [
+      10,
+      20
+    ],
+    "quadrature_orders": [
+      10,
+      20
+    ]
+  },
+  "reference": {
+    "field": {
+      "real": -0.3127618069999767,
+      "imag": 0.0845256061124514
+    },
+    "field_derivative": {
+      "real": -1.183282084715742,
+      "imag": -2.5345878315423396
+    },
+    "objective_derivative": 5.405969233814985,
+    "objective_central": 5.4059692279784235
+  },
+  "records": [
+    {
+      "n_solve": 10,
+      "n_quadrature": 10,
+      "field": {
+        "real": -0.3127933387363888,
+        "imag": 0.08359665117382865
+      },
+      "field_derivative": {
+        "real": -1.1818714390376959,
+        "imag": -2.5342179156694065
+      },
+      "objective_derivative": 5.407307853263559,
+      "objective_central": 5.40730784740484,
+      "field_error": 0.0009294899291507957,
+      "field_derivative_error": 0.0014583411747728556,
+      "objective_derivative_error": 0.00133861944857383
+    },
+    {
+      "n_solve": 10,
+      "n_quadrature": 20,
+      "field": {
+        "real": -0.3128440343733433,
+        "imag": 0.08375254256176917
+      },
+      "field_derivative": {
+        "real": -1.1805318683139052,
+        "imag": -2.533377802042824
+      },
+      "objective_derivative": 5.4045826727737705,
+      "objective_central": 5.402812180521631,
+      "field_error": 0.0007774243335040282,
+      "field_derivative_error": 0.003004640019474832,
+      "objective_derivative_error": 0.0013865610412144846
+    },
+    {
+      "n_solve": 20,
+      "n_quadrature": 10,
+      "field": {
+        "real": -0.3126350227493467,
+        "imag": 0.08429297437898936
+      },
+      "field_derivative": {
+        "real": -1.1849057868579258,
+        "imag": -2.5381256799614222
+      },
+      "objective_derivative": 5.410917055113212,
+      "objective_central": 5.4143355102231885,
+      "field_error": 0.0002649372937533811,
+      "field_derivative_error": 0.003892657200799764,
+      "objective_derivative_error": 0.00494782129822724
+    },
+    {
+      "n_solve": 20,
+      "n_quadrature": 20,
+      "field": {
+        "real": -0.3127618069991929,
+        "imag": 0.08452560611293486
+      },
+      "field_derivative": {
+        "real": -1.1832820847351708,
+        "imag": -2.5345878316346266
+      },
+      "objective_derivative": 5.405969233781661,
+      "objective_central": 5.405969228133855,
+      "field_error": 9.208782950823751e-13,
+      "field_derivative_error": 9.431004708898432e-11,
+      "objective_derivative_error": 3.3323566128729e-11
+    }
+  ]
+}

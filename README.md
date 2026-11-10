@@ -46,6 +46,66 @@ Install this via pip (or your favourite package manager):
 
 `pip install biem-helmholtz-2d`
 
+## Optimization and quadrature accuracy
+
+The example starts from two unit circles and compares several Sobolev metrics:
+
+```sh
+uv run biem-helmholtz-2d optimize
+```
+
+For NVIDIA CUDA, enter the supplied Nix development shell, install the CUDA
+extra, and select the device:
+
+```sh
+nix develop
+uv sync --extra cuda
+uv run biem-helmholtz-2d optimize --device cuda
+```
+
+On CUDA, the real-argument Bessel functions of orders 0, 1, and 2 used by
+these kernels run on the GPU through Triton and NVIDIA libdevice. Other Bessel
+orders and complex arguments currently use SciPy on the CPU and copy their
+results back to the original device. Thus complex wave numbers work, but do
+not benefit from the fully GPU-resident Bessel path.
+
+When running the full test suite with CUDA visible, the sphere-reference
+package's Numba CUDA initialization can fail during collection. As a workaround,
+`NUMBA_DISABLE_CUDA=1 uv run pytest` uses its CPU path while still exercising
+this project's PyTorch CUDA tests. This disables Numba CUDA for that process.
+
+To study the quadrature at the **initial circles** using the same wave number,
+centers, incident wave, and target as `optimize`, run:
+
+```sh
+uv run biem-helmholtz-2d accuracy --n-solve 10 --n-solve 20 \
+  --n-quadrature 10 --n-quadrature 20 --n-reference 40
+uv run biem-helmholtz-2d plot-accuracy
+```
+
+Pass `--device cuda` to `accuracy` as well to run the study on the GPU. The
+commands write `accuracy.json` and `accuracy.svg` beneath `accuracy/`. Each
+order `n` means `2n-1` nodes: `--n-solve` controls both forward and adjoint
+Nyström solves; `--n-quadrature` controls field and sensitivity integrations.
+`optimize --n-quadrature N` also permits a different integration order. The
+field and sensitivity quadrature rules are cached by order, namespace, dtype,
+and device; quadratures constructed inside the `ie-circle` solver are separate.
+
+The study compares the scattered field, its central-difference shape
+derivative, and the adjoint objective derivative against a higher-order
+numerical reference. It perturbs the first circle's first cosine coefficient.
+For other geometries, perturbations, incident fields, and scalar wave
+parameters, `biem_helmholtz_2d.accuracy()` runs the same study and returns a
+JSON-compatible mapping. Its `target` is a desired **scattered** field; for a
+desired total field, subtract the incident field at the observation point.
+The JSON also records the central-difference objective derivative, which can
+be compared with the adjoint. These errors are estimates, not bounds: increase
+`--n-reference` and vary `--step` to check reference and finite-difference
+convergence. When solve and integration grids differ, the continuous-adjoint
+quadrature is not generally the exact derivative of the discrete Nyström solve;
+the comparison measures that discrepancy too. Optimized shapes and points
+closer to a boundary can require more quadrature than the initial circles.
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):

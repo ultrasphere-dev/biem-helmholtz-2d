@@ -50,6 +50,10 @@ cli = [
     "rich>=14.1.0",
     "typer>=0.19.2",
 ]
+cuda = [
+    "torch>=2.4",
+    "triton>=3 ; platform_machine == 'x86_64' and sys_platform == 'linux'",
+]
 
 [dependency-groups]
 dev = [

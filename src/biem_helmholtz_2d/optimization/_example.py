@@ -10,7 +10,7 @@ import orjson
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
-from ie_circle import NystromInterpolant, trapezoidal_quadrature
+from ie_circle import NystromInterpolant
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -28,6 +28,7 @@ from biem_helmholtz_2d._potential_inner_derivative import (
     dlp_shape_derivative,
     slp_shape_derivative,
 )
+from biem_helmholtz_2d._quadrature import trapezoidal_quadrature
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -99,6 +100,7 @@ def example_optimization(
     alpha: complex,
     eta: complex,
     n: int,
+    n_quadrature: int | None = None,
     n_steps: int = 10,
     n_modes: int = 20,
     alpha_reg: float = 0.1,
@@ -125,7 +127,10 @@ def example_optimization(
     path : Path
         Directory to save JSON files.
     n : int
-        Maximum order minus $1$.
+        Nyström order; the forward and adjoint solves use $2n-1$ nodes.
+    n_quadrature : int or None
+        Order for field and sensitivity integration, independent of the solve.
+        None uses ``n``; the number of integration nodes is $2n_{\rm quadrature}-1$.
     centers : Array
         Fixed scatterer centers of shape (n_scatterers, 2), pairwise separated
         by more than 4. The target must be more than 2 from every center.
@@ -157,6 +162,10 @@ def example_optimization(
 
     """
     xp = array_namespace(centers)
+    if n_quadrature is None:
+        n_quadrature = n
+    if n < 1 or n_quadrature < 1:
+        raise ValueError("n and n_quadrature must be positive")
     dtype, device = centers.dtype, centers.device
     if not xp.isdtype(dtype, "real floating"):
         raise ValueError("centers must have a real floating dtype")
@@ -187,7 +196,7 @@ def example_optimization(
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
-    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    t, _ = trapezoidal_quadrature(n_quadrature, xp=xp, device=device, dtype=dtype)
 
     # Unit perturbations of the cosine and sine coefficients.
     center_zero = xp.zeros(2, dtype=dtype, device=device)
@@ -228,7 +237,7 @@ def example_optimization(
         phi = scattering_dirichlet(
             k=k, shape=shapes, incident_field=incident_field, alpha=alpha, eta=eta, n=n
         )
-        field = near_field(phi, point, k=k, shape=shapes, n=n, alpha=alpha, eta=eta)
+        field = near_field(phi, point, k=k, shape=shapes, n=n_quadrature, alpha=alpha, eta=eta)
         return shapes, phi, field
 
     target = desired_total_field - incident_field(point)
@@ -279,7 +288,7 @@ def example_optimization(
                         h=h.x,
                         dh=h.dx,
                         k=k,
-                        n=n,
+                        n=n_quadrature,
                     )
                     dd = dlp_shape_derivative(
                         point,
@@ -289,7 +298,7 @@ def example_optimization(
                         h=h.x,
                         dh=h.dx,
                         k=k,
-                        n=n,
+                        n=n_quadrature,
                     )
                     dr_j = 2 * xp.real(xp.conj(field - target) * (alpha * dd - 1j * eta * ds))
                     pair_derivatives.append(
@@ -298,7 +307,7 @@ def example_optimization(
                             shape=shapes,
                             alpha=alpha,
                             eta=eta,
-                            n=n,
+                            n=n_quadrature,
                             phi=phi,
                             dr_j=dr_j,
                             dr_g=dr_g,
@@ -368,6 +377,7 @@ def example_optimization(
             "val_hist": val_hist,
             "k": {"real": k_value.real, "imag": k_value.imag},
             "n": n,
+            "n_quadrature": n_quadrature,
             "alpha_reg": alpha_reg,
             "k_reg": k_reg,
             "n_modes": n_modes,
@@ -412,7 +422,7 @@ def example_optimization(
         ),
         k=k,
         shape=shapes_opt,
-        n=n,
+        n=n_quadrature,
         alpha=alpha,
         eta=eta,
         n_plot=200,

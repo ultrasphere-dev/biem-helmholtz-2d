@@ -49,7 +49,9 @@ def _neumann_y1_y2(
     if order == 0:
         if fprime0 is None:
             raise AssertionError()
-        y2_lim = (2 / xp.pi) * (xp.log(xp.abs(fprime0) / 2) + _EULER_MASCHERONI)
+        # For complex k the logarithmic limit retains the phase of f'(0).
+        argument = fprime0 if xp.isdtype(fprime0.dtype, "complex floating") else xp.abs(fprime0)
+        y2_lim = (2 / xp.pi) * (xp.log(argument / 2) + _EULER_MASCHERONI)
     else:
         y2_lim = -((2**order) * math.factorial(order - 1)) / xp.pi
 
