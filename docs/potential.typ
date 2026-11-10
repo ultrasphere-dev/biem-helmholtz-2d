@@ -500,6 +500,6 @@ $
     Therefore, if $r'_m > 0, mu_m = 0$ and thus $r'_m = r_m - lambda$. Otherwise, $0 <= mu_m = lambda - r_m$. Thus, $r'_m = max(0, r_m - lambda)$. Therefore, $(a'_m, b'_m) = r'_m/r_m (a_m, b_m) = cases((1 - lambda/r_m)(a_m, b_m) &quad r_m > lambda, (0, 0) &quad r_m <= lambda)$.
 ]
 
-Projected gradient descent is applied.
+Projected gradient descent is applied. For simplicity, the coefficient of $1$ is set to $1$ (meaning that the area of the scatterer is fixed). For multiple scatterers, the centers of each scatteres $(c_a)_(a in I)$ are fixed so that $forall a, b in I. abs(c_a - c_b) > 4$ and the scatterers do not intersect as long as $forall b in I. ((a_(b,m))_(m = 1)^(N - 1), (b_(b,m))_(m = 1)^(N - 1)) in C$.
 
 #bibliography("main.bib")
