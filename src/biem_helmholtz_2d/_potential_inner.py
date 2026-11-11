@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Literal
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
@@ -102,10 +103,12 @@ def slp_kernel(
     return (1j / 4) * h0 * jac
 
 
-def slp(
+def potential(
     x: Array,
     func: Callable[[Array], Array],
     /,
+    *,
+    kind: Literal["single", "double"],
     shape_x: Callable[[Array], Array],
     shape_dx: Callable[[Array], Array],
     k: Array,
@@ -114,12 +117,9 @@ def slp(
     t_start_factor: float | None = None,
 ) -> Array:
     r"""
-    Single-layer potential at an exterior point.
+    Evaluate a single- or double-layer potential at exterior points.
 
-    $$
-    (\mathcal S\phi)(x) = \int_0^{2\pi}
-      \widetilde{\mathcal S}(x, \tau)\,\phi(\tau)\,\mathrm d\tau
-    $$
+    Integrates the selected kernel against $\phi$ over the boundary.
 
     Parameters
     ----------
@@ -127,84 +127,34 @@ def slp(
         Evaluation points of shape (*B, 2).
     func : Callable[[Array], Array]
         Density $\phi$ of (..., *B) -> (..., *B).
-    shape_x : Callable[[Array], Array]
-        Boundary parametrization of shape (*B, 2).
-    shape_dx : Callable[[Array], Array]
-        First derivative of the boundary parametrization of shape (*B, 2).
+    kind : {"single", "double"}
+        Layer potential to evaluate.
+    shape_x, shape_dx : Callable[[Array], Array]
+        Boundary parametrization and derivative of (...,) -> (..., 2).
     k : Array
         Wave number of shape (*B,).
     n : int
-        Maximum order minus 1.
-    t_start : float | None
-        Grid shift $t_\mathrm{start}$.
-    t_start_factor : float | None
-        Grid shift as a multiple of $h = 2\pi/(2n-1)$.
+        Quadrature order; the number of nodes is $2n-1$.
+    t_start, t_start_factor : float or None
+        Optional grid shift and grid shift as a multiple of the node spacing.
 
     Returns
     -------
     Array
-        Single-layer potential $(\mathcal S\phi)(x)$ of shape (...,).
+        Layer potential of shape (...,).
 
     """
     xp = array_namespace(x, k)
-    dtype = xp.result_type(x, xp.real(k))
-    device = x.device
     t, w = trapezoidal_quadrature(
-        n, t_start=t_start, t_start_factor=t_start_factor, xp=xp, dtype=dtype, device=device
+        n,
+        t_start=t_start,
+        t_start_factor=t_start_factor,
+        xp=xp,
+        dtype=xp.result_type(x, xp.real(k)),
+        device=x.device,
     )
-    kernel = slp_kernel(x[..., None, :], shape_x=shape_x, shape_dx=shape_dx, k=k, tau=t)
-    return xp.sum(kernel * w * func(t), axis=-1)
-
-
-def dlp(
-    x: Array,
-    func: Callable[[Array], Array],
-    /,
-    shape_x: Callable[[Array], Array],
-    shape_dx: Callable[[Array], Array],
-    k: Array,
-    n: int,
-    t_start: float | None = None,
-    t_start_factor: float | None = None,
-) -> Array:
-    r"""
-    Double-layer potential at an exterior point.
-
-    $$
-    (\mathcal D\phi)(x) = \int_0^{2\pi}
-      \widetilde{\mathcal D}(x, \tau)\,\phi(\tau)\,\mathrm d\tau
-    $$
-
-    Parameters
-    ----------
-    x : Array
-        Evaluation points of shape (*B, 2).
-    func : Callable[[Array], Array]
-        Density $\phi$ of (..., *B) -> (..., *B).
-    shape_x : Callable[[Array], Array]
-        Boundary parametrization of shape (*B, 2).
-    shape_dx : Callable[[Array], Array]
-        First derivative of the boundary parametrization of shape (*B, 2).
-    k : Array
-        Wave number of shape (*B,).
-    n : int
-        Maximum order minus 1.
-    t_start : float | None
-        Grid shift $t_\mathrm{start}$.
-    t_start_factor : float | None
-        Grid shift as a multiple of $h = 2\pi/(2n-1)$.
-
-    Returns
-    -------
-    Array
-        Double-layer potential $(\mathcal D\phi)(x)$ of shape (...,).
-
-    """
-    xp = array_namespace(x, k)
-    dtype = xp.result_type(x, xp.real(k))
-    device = x.device
-    t, w = trapezoidal_quadrature(
-        n, t_start=t_start, t_start_factor=t_start_factor, xp=xp, dtype=dtype, device=device
+    kernel = {"single": slp_kernel, "double": dlp_kernel}[kind]
+    return xp.sum(
+        kernel(x[..., None, :], shape_x=shape_x, shape_dx=shape_dx, k=k, tau=t) * w * func(t),
+        axis=-1,
     )
-    kernel = dlp_kernel(x[..., None, :], shape_x=shape_x, shape_dx=shape_dx, k=k, tau=t)
-    return xp.sum(kernel * w * func(t), axis=-1)

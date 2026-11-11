@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ def test_help():
     assert result.exit_code == 0
     assert "accuracy" in result.output
     assert "plot-accuracy" in result.output
+    assert runner.invoke(app, ["accuracy"]).exit_code != 0  # A reference order is required.
 
 
 def test_accuracy_and_plot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -39,19 +41,41 @@ def test_accuracy_and_plot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     )
     assert result.exit_code == 0, result.output
     files = list((tmp_path / "accuracy").rglob("accuracy.json"))
-    assert len(files) == 1
-    data = json.loads(files[0].read_text())
-    assert len(data["records"]) == 4
-    assert data["settings"]["reference_order"] == 6
-    assert {(item["n_solve"], item["n_quadrature"]) for item in data["records"]} == {
-        (3, 3),
-        (3, 5),
-        (4, 3),
-        (4, 5),
-    }
-    assert all(item["field_error"] >= 0 for item in data["records"])
-    assert all(item["field_derivative_error"] >= 0 for item in data["records"])
-    assert all(item["objective_derivative_error"] >= 0 for item in data["records"])
+    assert {file.parent.name for file in files} == {"highest_mode", "random"}
+    studies = {file.parent.name: json.loads(file.read_text()) for file in files}
+    assert (
+        studies["highest_mode"]["settings"]["coefficients"]
+        == studies["random"]["settings"]["coefficients"]
+    )
+    for case, data in studies.items():
+        settings = data["settings"]
+        assert settings["case"] == case
+        assert settings["reference_order"] == 6
+        assert settings["seed"] == 0
+        for body in settings["coefficients"] + settings["perturbation_coefficients"]:
+            assert sum(math.hypot(*pair) for pair in body) == pytest.approx(1)
+        assert all(len(body) == 10 for body in settings["coefficients"])
+        if case == "highest_mode":
+            assert all(
+                body[:-1] == [[0, 0]] * 9 and body[-1] == [1, 0]
+                for body in settings["perturbation_coefficients"]
+            )
+        else:
+            assert all(
+                any(pair != [0, 0] for pair in body[:-1])
+                for body in settings["perturbation_coefficients"]
+            )
+        assert {(item["n_solve"], item["n_quadrature"]) for item in data["records"]} == {
+            (3, 3),
+            (3, 5),
+            (4, 3),
+            (4, 5),
+        }
+        for item in data["records"]:
+            assert all(
+                item[key] >= 0
+                for key in ("field_error", "field_derivative_error", "objective_derivative_error")
+            )
     savefig = Figure.savefig
 
     def check_ticks(fig: Figure, *args: Any, **kwargs: Any) -> None:
@@ -62,6 +86,6 @@ def test_accuracy_and_plot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
         savefig(fig, *args, **kwargs)
 
     monkeypatch.setattr(Figure, "savefig", check_ticks)
-    result = runner.invoke(app, ["plot-accuracy"])
+    result = runner.invoke(app, ["plot-accuracy", "--path", str(files[0].parent.parent)])
     assert result.exit_code == 0, result.output
-    assert (files[0].parent / "accuracy.svg").is_file()
+    assert all((file.parent / "accuracy.svg").is_file() for file in files)

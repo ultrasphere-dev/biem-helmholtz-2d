@@ -74,18 +74,19 @@ package's Numba CUDA initialization can fail during collection. As a workaround,
 `NUMBA_DISABLE_CUDA=1 uv run pytest` uses its CPU path while still exercising
 this project's PyTorch CUDA tests. This disables Numba CUDA for that process.
 
-To study the quadrature at the **initial circles** using the same wave number,
-centers, incident wave, and target as `optimize`, run:
+To stress-test quadrature using the same wave number, centers, incident wave,
+target, and 10 Fourier modes as `optimize`, run:
 
 ```sh
 uv run biem-helmholtz-2d accuracy --n-solve 10 --n-solve 20 \
-  --n-quadrature 10 --n-quadrature 20 --n-reference 40
+  --n-quadrature 10 --n-quadrature 20 --n-reference 160
 uv run biem-helmholtz-2d plot-accuracy
 ```
 
 Pass `--device cuda` to `accuracy` as well to run the study on the GPU. The
-commands write `accuracy.json` and `accuracy.svg` beneath `accuracy/`. Each
-order `n` means `2n-1` nodes: `--n-solve` controls both forward and adjoint
+commands write an `accuracy.json` and `accuracy.svg` for each case in the
+`highest_mode/` and `random/` subdirectories beneath `accuracy/`. Each order
+`n` means `2n-1` nodes: `--n-solve` controls both forward and adjoint
 Nyström solves; `--n-quadrature` controls field and sensitivity integrations.
 `optimize --n-quadrature N` also permits a different integration order. The
 field and sensitivity quadrature rules are cached by order, namespace, dtype,
@@ -93,18 +94,24 @@ and device; quadratures constructed inside the `ie-circle` solver are separate.
 
 The study compares the scattered field, its central-difference shape
 derivative, and the adjoint objective derivative against a higher-order
-numerical reference. It perturbs the first circle's first cosine coefficient.
-For other geometries, perturbations, incident fields, and scalar wave
-parameters, `biem_helmholtz_2d.accuracy()` runs the same study and returns a
+numerical reference. Both cases use the same seeded random Fourier shape for
+each body, scaled to the boundary of the optimization constraint. One perturbs
+the highest cosine mode on each body; the other uses random perturbation
+coefficients, normalized to the same per-body constraint norm. Coefficients are
+saved in the JSON, and `--seed` selects a reproducible sample. These are stress
+tests, not a guarantee of the global worst case; the constraint boundary can
+admit irregular shapes. For other geometries, perturbations, incident fields,
+and scalar wave parameters, `biem_helmholtz_2d.accuracy()` returns a
 JSON-compatible mapping. Its `target` is a desired **scattered** field; for a
 desired total field, subtract the incident field at the observation point.
 The JSON also records the central-difference objective derivative, which can
-be compared with the adjoint. These errors are estimates, not bounds: increase
-`--n-reference` and vary `--step` to check reference and finite-difference
-convergence. When solve and integration grids differ, the continuous-adjoint
+be compared with the adjoint. `--n-reference` is required because the needed
+reference order depends on the shape. These errors are estimates, not bounds:
+increase `--n-reference` and vary `--step` to check reference and
+finite-difference convergence. When solve and integration grids differ, the continuous-adjoint
 quadrature is not generally the exact derivative of the discrete Nyström solve;
-the comparison measures that discrepancy too. Optimized shapes and points
-closer to a boundary can require more quadrature than the initial circles.
+the comparison measures that discrepancy too. Other shapes and points closer
+to a boundary can require more quadrature than these sampled configurations.
 
 ## Contributors ✨
 

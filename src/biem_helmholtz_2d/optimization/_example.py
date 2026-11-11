@@ -15,20 +15,13 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from biem_helmholtz_2d._acoustic import (
-    _density_component,
     near_field,
     plot_near_field,
     plot_near_field_prepare,
     scattering_dirichlet,
 )
-from biem_helmholtz_2d._adjoint import objective_derivative, solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import grad_phi_abs2_scattered_field
-from biem_helmholtz_2d._potential_inner_derivative import (
-    dlp_shape_derivative,
-    slp_shape_derivative,
-)
-from biem_helmholtz_2d._quadrature import trapezoidal_quadrature
+from biem_helmholtz_2d._sensitivity import _point_adjoint
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -196,7 +189,6 @@ def example_optimization(
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
-    t, _ = trapezoidal_quadrature(n_quadrature, xp=xp, device=device, dtype=dtype)
 
     # Unit perturbations of the cosine and sine coefficients.
     center_zero = xp.zeros(2, dtype=dtype, device=device)
@@ -250,71 +242,28 @@ def example_optimization(
         if n_modes == 0:
             return xp.zeros_like(x)
         shapes, phi, field = solve(x)
-        gradients = [
-            grad_phi_abs2_scattered_field(
-                point, field, shape=shape, k=k, alpha=alpha, eta=eta, target=target
-            )
-            for shape in shapes
-        ]
-
-        def grad_phi_j(t_in: Array) -> Array:
-            return xp.stack([gradient(t_in) for gradient in gradients], axis=-1)
-
-        adjoint = solve_adjoint(k=k, shape=shapes, alpha=alpha, eta=eta, n=n, grad_phi_j=grad_phi_j)
-        incident_grads = [incident_field_grad(shape.x(t)) for shape in shapes]
+        derivative = _point_adjoint(
+            shape=shapes,
+            density=phi,
+            field=field,
+            point=point,
+            target=target,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            incident_field_grad=incident_field_grad,
+            n_solve=n,
+            n_quadrature=n_quadrature,
+        )
         body_derivatives = []
-        for body, shape in enumerate(shapes):
-            density = _density_component(phi, body)
+        for body in range(n_scatterers):
             mode_derivatives = []
             for pair in basis:
                 pair_derivatives = []
                 for h in pair:
                     perturbations = [zero_shape] * n_scatterers
                     perturbations[body] = h
-                    dr_g = xp.stack(
-                        [
-                            -xp.sum(grad * perturbation.x(t), axis=-1)
-                            for grad, perturbation in zip(
-                                incident_grads, perturbations, strict=True
-                            )
-                        ],
-                        axis=-1,
-                    )
-                    ds = slp_shape_derivative(
-                        point,
-                        density,
-                        shape_x=shape.x,
-                        shape_dx=shape.dx,
-                        h=h.x,
-                        dh=h.dx,
-                        k=k,
-                        n=n_quadrature,
-                    )
-                    dd = dlp_shape_derivative(
-                        point,
-                        density,
-                        shape_x=shape.x,
-                        shape_dx=shape.dx,
-                        h=h.x,
-                        dh=h.dx,
-                        k=k,
-                        n=n_quadrature,
-                    )
-                    dr_j = 2 * xp.real(xp.conj(field - target) * (alpha * dd - 1j * eta * ds))
-                    pair_derivatives.append(
-                        objective_derivative(
-                            k=k,
-                            shape=shapes,
-                            alpha=alpha,
-                            eta=eta,
-                            n=n_quadrature,
-                            phi=phi,
-                            dr_j=dr_j,
-                            dr_g=dr_g,
-                            h_shape=perturbations,
-                            adjoint=adjoint,
-                        )
-                    )
+                    pair_derivatives.append(derivative(perturbations, [body]))
                 mode_derivatives.append(xp.stack(pair_derivatives))
             body_derivatives.append(xp.stack(mode_derivatives))
         return xp.stack(body_derivatives)

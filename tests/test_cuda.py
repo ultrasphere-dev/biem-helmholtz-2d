@@ -6,7 +6,7 @@ from scipy import special
 
 from biem_helmholtz_2d import adjoint_central_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._potential_inner import dlp, slp
+from biem_helmholtz_2d._potential_inner import potential
 from biem_helmholtz_2d._scipy_wrapper import scipy_hankel1, scipy_jv, scipy_yv
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
@@ -89,10 +89,11 @@ def test_torch_adjoint_and_different_quadratures(
     assert result.field.device.type == device
     assert float(result.adjoint) == pytest.approx(float(result.central_objective[0]), abs=1e-7)
     if complex_wave_number:
-        for potential in (slp, dlp):
+        for kind in ("single", "double"):
             value = potential(
                 point,
                 lambda t: xp.ones_like(t),
+                kind=kind,
                 shape_x=shapes[0].x,
                 shape_dx=shapes[0].dx,
                 k=k,

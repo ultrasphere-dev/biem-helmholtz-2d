@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -6,6 +7,7 @@ from array_api.latest import ArrayNamespace
 
 from biem_helmholtz_2d import accuracy, adjoint_central_derivative
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
+from biem_helmholtz_2d.optimization import _accuracy as example
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -78,4 +80,37 @@ def test_accuracy_general_configuration(xp: ArrayNamespace, device: Any, dtype: 
     )
     assert row["objective_derivative_error"] == pytest.approx(
         float(xp.abs(sample.adjoint - reference.adjoint))
+    )
+
+
+def test_example_accuracy_seed(
+    xp: ArrayNamespace, device: Any, dtype: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(example, "accuracy", lambda **kwargs: {"settings": {}})
+    settings = []
+    for index, seed in enumerate((7, 7, 8)):
+        path = tmp_path / str(index)
+        example.example_accuracy(
+            path=path,
+            centers=xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device),
+            k=1,
+            alpha=1,
+            eta=1,
+            target_point=(-3, 3),
+            desired_total_field=0,
+            solve_orders=[3],
+            quadrature_orders=[3],
+            reference_order=4,
+            step=1e-5,
+            n_modes=4,
+            seed=seed,
+        )
+        settings.append([
+            json.loads((path / case / "accuracy.json").read_text())["settings"]
+            for case in ("highest_mode", "random")
+        ])
+    assert settings[0] == settings[1]
+    assert settings[0][0]["coefficients"] != settings[2][0]["coefficients"]
+    assert (
+        settings[0][1]["perturbation_coefficients"] != settings[2][1]["perturbation_coefficients"]
     )

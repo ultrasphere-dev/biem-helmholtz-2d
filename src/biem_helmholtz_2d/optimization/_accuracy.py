@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import random
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -30,18 +31,22 @@ def example_accuracy(
     quadrature_orders: Sequence[int],
     reference_order: int,
     step: float,
+    n_modes: int,
+    seed: int,
 ) -> None:
     """
-    Export a two-order convergence study at the optimization's initial circles.
+    Study random feasible shapes with highest-mode and random perturbations.
 
-    The perturbation is the first body's first cosine radius coefficient. The
-    field derivative uses central differences; the objective derivative uses
-    the adjoint and is independently checked against central differences.
-    Errors are absolute differences from the higher-order numerical reference,
-    not rigorous error bounds.
+    Each body's Fourier coefficient pairs are scaled to the constraint boundary.
+    Both cases use the same shapes and have unit perturbation coefficient norm
+    per body. The random samples are reproducible from ``seed``; they are stress
+    cases, not a proof of the global worst case. Each case is saved in its own
+    directory with its coefficients and numerical reference.
     """
     if centers.ndim != 2 or centers.shape[1] != 2 or centers.shape[0] == 0:
         raise ValueError("centers must have shape (n_scatterers, 2) with n_scatterers > 0")
+    if n_modes < 1:
+        raise ValueError("n_modes must be positive")
     xp = array_namespace(centers)
     dtype, device = centers.dtype, centers.device
     point = xp.asarray(target_point, dtype=dtype, device=device)
@@ -52,52 +57,81 @@ def example_accuracy(
     incident = plane_wave(wave_number, direction)
     incident_grad = plane_wave_grad(wave_number, direction)
     target = desired_total_field - incident(point)
-    zero = xp.zeros(1, dtype=dtype, device=device)
-    one = xp.ones(1, dtype=dtype, device=device)
-    shape = [
-        ParameterShape(
-            center=center, cos_coefs=one, sin_coefs=xp.zeros(0, dtype=dtype, device=device)
-        )
-        for center in centers
-    ]
-    h_shape = [
-        ParameterShape(
-            center=xp.zeros(2, dtype=dtype, device=device),
-            cos_coefs=xp.concat([zero, one if index == 0 else zero]),
-            sin_coefs=zero,
-        )
-        for index in range(len(shape))
-    ]
+    rng = random.Random(seed)  # ruff: ignore[suspicious-non-cryptographic-random-usage]  # Reproducible numerical samples, not security.
 
-    data = accuracy(
-        shape=shape,
-        h_shape=h_shape,
-        point=point,
-        target=target,
-        k=wave_number,
-        alpha=coupling_alpha,
-        eta=coupling_eta,
-        incident_field=incident,
-        incident_field_grad=incident_grad,
-        solve_orders=solve_orders,
-        quadrature_orders=quadrature_orders,
-        reference_order=reference_order,
-        step=step,
+    def random_coefficients() -> Array:
+        values = xp.asarray(
+            [[[rng.uniform(-1, 1) for _ in range(2)] for _ in range(n_modes)] for _ in centers],
+            dtype=dtype,
+            device=device,
+        )
+        return values / xp.sum(xp.linalg.vector_norm(values, axis=-1), axis=-1)[:, None, None]
+
+    def shapes(coefficients: Array, *, perturbation: bool) -> list[ParameterShape]:
+        return [
+            ParameterShape(
+                center=xp.zeros_like(center) if perturbation else center,
+                cos_coefs=xp.concat([
+                    xp.full((1,), 0 if perturbation else 1, dtype=dtype, device=device),
+                    coefficients[i, :, 0],
+                ]),
+                sin_coefs=coefficients[i, :, 1],
+            )
+            for i, center in enumerate(centers)
+        ]
+
+    coefficients = random_coefficients()
+    highest = xp.broadcast_to(
+        xp.stack(
+            [
+                xp.concat([
+                    xp.zeros(n_modes - 1, dtype=dtype, device=device),
+                    xp.ones(1, dtype=dtype, device=device),
+                ]),
+                xp.zeros(n_modes, dtype=dtype, device=device),
+            ],
+            axis=-1,
+        ),
+        coefficients.shape,
     )
-    data["settings"].update({
-        "centers": [[float(value) for value in row] for row in centers],
-        "k": k,
-        "alpha": alpha,
-        "eta": eta,
-        "target_point": target_point,
-        "desired_total_field": {
-            "real": desired_total_field.real,
-            "imag": desired_total_field.imag,
-        },
-        "perturbation": "first body's first cosine radius coefficient",
-    })
-    path.mkdir(parents=True, exist_ok=True)
-    (path / "accuracy.json").write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+    for case, perturbation in (("highest_mode", highest), ("random", random_coefficients())):
+        data = accuracy(
+            shape=shapes(coefficients, perturbation=False),
+            h_shape=shapes(perturbation, perturbation=True),
+            point=point,
+            target=target,
+            k=wave_number,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            incident_field=incident,
+            incident_field_grad=incident_grad,
+            solve_orders=solve_orders,
+            quadrature_orders=quadrature_orders,
+            reference_order=reference_order,
+            step=step,
+        )
+        data["settings"].update({
+            "centers": [[float(value) for value in row] for row in centers],
+            "coefficients": [
+                [[float(value) for value in pair] for pair in body] for body in coefficients
+            ],
+            "perturbation_coefficients": [
+                [[float(value) for value in pair] for pair in body] for body in perturbation
+            ],
+            "case": case,
+            "seed": seed,
+            "k": k,
+            "alpha": alpha,
+            "eta": eta,
+            "target_point": target_point,
+            "desired_total_field": {
+                "real": desired_total_field.real,
+                "imag": desired_total_field.imag,
+            },
+        })
+        directory = path / case
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "accuracy.json").write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
 
 
 def example_accuracy_plot(path: Path, /) -> None:

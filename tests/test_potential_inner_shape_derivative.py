@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 from array_api.latest import ArrayNamespace
@@ -10,77 +10,44 @@ from ie_circle import Shape
 from biem_helmholtz_2d import _potential_inner, _potential_inner_derivative
 
 
+@pytest.mark.parametrize("kind", ["single", "double"])
 @pytest.mark.parametrize("k", [1, 2.5])
-@pytest.mark.parametrize("epsilon", [1e-6])
-def test_slp_shape_derivative_numerical(
+def test_shape_derivative_numerical(
     xp: ArrayNamespace,
     shape: Shape,
     shape_h: Shape,
     shape_central_difference: Callable[[float], tuple[Shape, Shape]],
-    epsilon: float,
+    kind: Literal["single", "double"],
     k: float,
     device: Any,
     dtype: Any,
 ) -> None:
-    n = 8
+    epsilon = 1e-6
     x = xp.asarray([[3, 3]], device=device, dtype=dtype)
-    func = xp.ones_like
-
-    da = _potential_inner_derivative.slp_shape_derivative(
+    wave_number = xp.asarray(k, device=device, dtype=dtype)
+    derivative = _potential_inner_derivative.potential_shape_derivative(
         x,
-        func,
+        xp.ones_like,
+        kind=kind,
         shape_x=shape.x,
         shape_dx=shape.dx,
         h=shape_h.x,
         dh=shape_h.dx,
-        k=k,
-        n=n,
+        k=wave_number,
+        n=8,
     )
-
     shape_p, shape_m = shape_central_difference(epsilon)
-
-    p = _potential_inner.slp(x, func, shape_x=shape_p.x, shape_dx=shape_p.dx, k=k, n=n)
-    m = _potential_inner.slp(x, func, shape_x=shape_m.x, shape_dx=shape_m.dx, k=k, n=n)
-
-    num = (p - m) / (2 * epsilon)
-
-    print(da, num)
-    assert xp.all(xp.abs(da - num) < 1e-6 * xp.abs(da) + 1e-6), "SLP shape derivative mismatch"
-
-
-@pytest.mark.parametrize("k", [1, 2.5])
-@pytest.mark.parametrize("epsilon", [1e-6])
-def test_dlp_shape_derivative_numerical(
-    xp: ArrayNamespace,
-    shape: Shape,
-    shape_h: Shape,
-    shape_central_difference: Callable[[float], tuple[Shape, Shape]],
-    epsilon: float,
-    k: float,
-    device: Any,
-    dtype: Any,
-) -> None:
-    n = 8
-    x = xp.asarray([[3, 3]], device=device, dtype=dtype)
-    func = xp.ones_like
-
-    da = _potential_inner_derivative.dlp_shape_derivative(
-        x,
-        func,
-        shape_x=shape.x,
-        shape_dx=shape.dx,
-        h=shape_h.x,
-        dh=shape_h.dx,
-        k=k,
-        n=n,
+    plus, minus = (
+        _potential_inner.potential(
+            x,
+            xp.ones_like,
+            kind=kind,
+            shape_x=boundary.x,
+            shape_dx=boundary.dx,
+            k=wave_number,
+            n=8,
+        )
+        for boundary in (shape_p, shape_m)
     )
-
-    shape_p, shape_m = shape_central_difference(epsilon)
-
-    p = _potential_inner.dlp(x, func, shape_x=shape_p.x, shape_dx=shape_p.dx, k=k, n=n)
-    m = _potential_inner.dlp(x, func, shape_x=shape_m.x, shape_dx=shape_m.dx, k=k, n=n)
-
-    num = (p - m) / (2 * epsilon)
-
-    print(da, num)
-    assert xp.all(xp.abs(da - num) < 1e-6 * xp.abs(da) + 1e-6), "DLP shape derivative mismatch"
+    central = (plus - minus) / (2 * epsilon)
+    assert xp.all(xp.abs(derivative - central) < 1e-6 * xp.abs(derivative) + 1e-6)

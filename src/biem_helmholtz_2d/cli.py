@@ -29,6 +29,7 @@ _ETA = 1
 _TARGET_POINT = (-3, 3)
 _DESIRED_TOTAL_FIELD = 0
 _N_SOLVE = 20
+_N_MODES = 10
 
 
 def _namespace(device: str, /) -> Any:
@@ -81,7 +82,7 @@ def optimize(
             n_quadrature=n_quadrature,
             alpha=_ALPHA,
             eta=_ETA,
-            n_modes=10,
+            n_modes=_N_MODES,
             n_steps=20,
             target_point=_TARGET_POINT,
             desired_total_field=_DESIRED_TOTAL_FIELD,
@@ -92,6 +93,7 @@ def optimize(
 
 @app.command()
 def accuracy(
+    n_reference: Annotated[int, typer.Option(help="Reference order for both stages.")],
     device: str = typer.Option("cpu", help="Array device: cpu, cuda, or cuda:N."),
     n_solve: Annotated[
         list[int] | None, typer.Option(help="Nyström orders; repeat for each value.")
@@ -99,17 +101,14 @@ def accuracy(
     n_quadrature: Annotated[
         list[int] | None, typer.Option(help="Integration orders; repeat for each value.")
     ] = None,
-    n_reference: int | None = typer.Option(None, help="Reference order for both stages."),
     step: float = typer.Option(1e-5, help="Central-difference step."),
+    seed: int = typer.Option(0, help="Random seed for reproducible stress cases."),
 ) -> None:
     """Export field and sensitivity errors for independent quadrature orders."""
     warnings.filterwarnings("ignore")
     namespace = _namespace(device)
     solve_orders = n_solve or [_N_SOLVE // 2, _N_SOLVE]
     quadrature_orders = n_quadrature or [_N_SOLVE // 2, _N_SOLVE]
-    reference_order = (
-        n_reference if n_reference is not None else 2 * max(*solve_orders, *quadrature_orders)
-    )
     path = pathlib.Path(f"accuracy/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     example_accuracy(
         path=path,
@@ -121,20 +120,19 @@ def accuracy(
         desired_total_field=_DESIRED_TOTAL_FIELD,
         solve_orders=solve_orders,
         quadrature_orders=quadrature_orders,
-        reference_order=reference_order,
+        reference_order=n_reference,
         step=step,
+        n_modes=_N_MODES,
+        seed=seed,
     )
-    LOG.info("Saved accuracy study to %s", path / "accuracy.json")
+    LOG.info("Saved accuracy studies to %s", path)
 
 
 @app.command("plot-accuracy")
 def plot_accuracy(path: pathlib.Path | None = None) -> None:
-    """Plot one accuracy directory, or all studies in accuracy/."""
-    paths = (
-        [path]
-        if path is not None
-        else [file.parent for file in pathlib.Path("accuracy").rglob("accuracy.json")]
-    )
+    """Plot studies under a directory, or all studies in accuracy/."""
+    root = path if path is not None else pathlib.Path("accuracy")
+    paths = [file.parent for file in root.rglob("accuracy.json")]
     if not paths:
         LOG.warning("No accuracy studies found.")
         return
