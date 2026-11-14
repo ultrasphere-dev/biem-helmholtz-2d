@@ -21,7 +21,7 @@ from biem_helmholtz_2d._acoustic import (
     scattering_dirichlet,
 )
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._sensitivity import _point_adjoint
+from biem_helmholtz_2d._objective import point_objective_shape_derivative
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -93,7 +93,7 @@ def example_optimization(
     alpha: complex,
     eta: complex,
     n: int,
-    n_quadrature: int | None = None,
+    n_quad: int | None = None,
     n_steps: int = 10,
     n_modes: int = 20,
     alpha_reg: float = 0.1,
@@ -120,10 +120,10 @@ def example_optimization(
     path : Path
         Directory to save JSON files.
     n : int
-        Nyström order; the forward and adjoint solves use $2n-1$ nodes.
-    n_quadrature : int or None
-        Order for field and sensitivity integration, independent of the solve.
-        None uses ``n``; the number of integration nodes is $2n_{\rm quadrature}-1$.
+        Nyström parameter; the forward and adjoint solves use $2n-1$ nodes.
+    n_quad : int or None
+        Integration parameter for field and sensitivity, independent of the solve.
+        None uses ``n``; the number of integration nodes is $2n_{\rm quad}-1$.
     centers : Array
         Fixed scatterer centers of shape (n_scatterers, 2), pairwise separated
         by more than 4. The target must be more than 2 from every center.
@@ -155,10 +155,10 @@ def example_optimization(
 
     """
     xp = array_namespace(centers)
-    if n_quadrature is None:
-        n_quadrature = n
-    if n < 1 or n_quadrature < 1:
-        raise ValueError("n and n_quadrature must be positive")
+    if n_quad is None:
+        n_quad = n
+    if n < 1 or n_quad < 1:
+        raise ValueError("n and n_quad must be positive")
     dtype, device = centers.dtype, centers.device
     if not xp.isdtype(dtype, "real floating"):
         raise ValueError("centers must have a real floating dtype")
@@ -229,7 +229,7 @@ def example_optimization(
         phi = scattering_dirichlet(
             k=k, shape=shapes, incident_field=incident_field, alpha=alpha, eta=eta, n=n
         )
-        field = near_field(phi, point, k=k, shape=shapes, n=n_quadrature, alpha=alpha, eta=eta)
+        field = near_field(phi, point, k=k, shape=shapes, n=n_quad, alpha=alpha, eta=eta)
         return shapes, phi, field
 
     target = desired_total_field - incident_field(point)
@@ -242,7 +242,7 @@ def example_optimization(
         if n_modes == 0:
             return xp.zeros_like(x)
         shapes, phi, field = solve(x)
-        derivative = _point_adjoint(
+        derivative = point_objective_shape_derivative(
             shape=shapes,
             density=phi,
             field=field,
@@ -253,7 +253,7 @@ def example_optimization(
             eta=eta,
             incident_field_grad=incident_field_grad,
             n_solve=n,
-            n_quadrature=n_quadrature,
+            n_quad=n_quad,
         )
         body_derivatives = []
         for body in range(n_scatterers):
@@ -275,12 +275,12 @@ def example_optimization(
         raise ValueError("alpha_reg and k_reg must define finite positive Sobolev weights")
 
     x = xp.zeros((n_scatterers, n_modes, 2), dtype=dtype, device=device)
-    progress = tqdm(range(n_steps), desc=f"alpha_reg={alpha_reg:g}", unit="step")
-    progress.set_postfix_str("initial solve")
+    pbar = tqdm(range(n_steps), desc=f"alpha_reg={alpha_reg:g}", unit="step")
+    pbar.set_postfix_str("initial solve")
     value = fun(x)
     val_hist = [value]
-    for _ in progress:
-        progress.set_postfix_str(f"objective={value:.3e}, gradient")
+    for _ in pbar:
+        pbar.set_postfix_str(f"objective={value:.3e}, gradient")
         derivative = jac(x)
         riesz = derivative / weights[:, None]
         norm = xp.sqrt(xp.sum(weights[:, None] * riesz**2))
@@ -291,7 +291,7 @@ def example_optimization(
         direction = riesz / norm
         step = 1.0
         while step >= xp.finfo(dtype).eps:
-            progress.set_postfix_str(f"objective={value:.3e}, line search={step:.2g}")
+            pbar.set_postfix_str(f"objective={value:.3e}, line search={step:.2g}")
             candidate = project_coefficients(x - step * direction, weights=weights)
             slope = float(xp.sum(derivative * (candidate - x)))
             if slope >= 0:
@@ -326,7 +326,7 @@ def example_optimization(
             "val_hist": val_hist,
             "k": {"real": k_value.real, "imag": k_value.imag},
             "n": n,
-            "n_quadrature": n_quadrature,
+            "n_quad": n_quad,
             "alpha_reg": alpha_reg,
             "k_reg": k_reg,
             "n_modes": n_modes,
@@ -371,7 +371,7 @@ def example_optimization(
         ),
         k=k,
         shape=shapes_opt,
-        n=n_quadrature,
+        n=n_quad,
         alpha=alpha,
         eta=eta,
         n_plot=200,

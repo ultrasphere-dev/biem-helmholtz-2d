@@ -27,6 +27,7 @@ dependencies = [
   "array-api-extra>=0.1.1",
   "array-api-shape-check>=1.0.1",
   "attrs>=25.3.0",
+  "cyclopts>=5.5,<6",
   "ie-circle>=1.0.1",
   "matplotlib>=3.10.9",
   "orjson>=3.12.0",
@@ -36,20 +37,15 @@ dependencies = [
   "strenum>=0.4.15",
   "sympy>=1.14.0",
   "tqdm>=4.67.3",
-  "typer>=0.15,<1",
   "types-array-api>=1.2.0",
 ]
 urls."Bug Tracker" = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/issues"
 urls.Changelog = "https://github.com/ultrasphere-dev/biem-helmholtz-2d/blob/main/CHANGELOG.md"
 urls.documentation = "https://biem-helmholtz-2d.readthedocs.io"
 urls.repository = "https://github.com/ultrasphere-dev/biem-helmholtz-2d"
-scripts.biem-helmholtz-2d = "biem_helmholtz_2d.cli:app"
+scripts.biem-helmholtz-2d = "biem_helmholtz_2d.cli:main"
 
 [project.optional-dependencies]
-cli = [
-    "rich>=14.1.0",
-    "typer>=0.19.2",
-]
 cuda = [
     "torch>=2.4",
     "triton>=3 ; platform_machine == 'x86_64' and sys_platform == 'linux'",

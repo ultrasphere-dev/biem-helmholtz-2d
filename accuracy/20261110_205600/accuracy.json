@@ -1,22 +1,13 @@
 {
   "settings": {
     "centers": [
-      [
-        0.0,
-        0.0
-      ],
-      [
-        5.0,
-        0.0
-      ]
+      [0.0, 0.0],
+      [5.0, 0.0]
     ],
     "k": 5,
     "alpha": 1,
     "eta": 1,
-    "target_point": [
-      -3,
-      3
-    ],
+    "target_point": [-3, 3],
     "desired_total_field": {
       "real": 0,
       "imag": 0
@@ -24,14 +15,8 @@
     "perturbation": "first body's first cosine radius coefficient",
     "step": 0.00001,
     "reference_order": 40,
-    "solve_orders": [
-      10,
-      20
-    ],
-    "quadrature_orders": [
-      10,
-      20
-    ]
+    "solve_orders": [10, 20],
+    "quadrature_orders": [10, 20]
   },
   "reference": {
     "field": {

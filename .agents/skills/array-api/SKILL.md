@@ -13,7 +13,8 @@ description: Conventions that MUST be followed when implementing array API compa
 - If documentation about the formulation is provided, always read it first, to very make sure the functions are implemented mathematically correctly and beautifully.
 - All methods should be array API compatible.
   - **Function: name** Name functions without `compute_`, `calculate_` suffix (e.g. `prime_number(i: int, /)`, not `compute_prime_number`, `p_i`).
-  - **Arguments: name**: The function name variable names in the code should not the same as the variable name math formulation (e.g. `n`) but very readable (e.g. `n_iterations`). In the variable description in the docstring, the corresponding variable name in the math formulation should be mentioned:
+  - **Functions / Arguments / Variables: name**: The function / argument / variable names in the code should not the same as the variable name math formulation (e.g. `n`) but very readable (e.g. `n_iterations`).
+    For arguments, in the docstring, the corresponding variable name in the math formulation should be mentioned:
 
     ```text
     n_iterations : Array
@@ -22,11 +23,15 @@ description: Conventions that MUST be followed when implementing array API compa
 
     Try not to add the word "corresponding to" because it is redundant.
 
+    For variables, in the first definition, comment `# n in docs` etc. (without `$`).
+
+    If you define variable for `f(t)`, where `f` is a function name in code and `t` is a variable name in code, you can name the variable as `f_t` without comment.
+
   - **Output shape depending on integer output**: If output shape depends on the input argument, it should match the input integer when possible. For example, to compute $0, 1, ...$, set argument name to `n_*_end` (`n_end` if it is obvious) and return `0, 1, ..., n_*_end - 1`, so that the output shape is `(n_*_end,)` and it is intuitive, matches `range(n_end)` convention and `np.arange(n_end)` syntax.
   - **GUFunc compatibility**: If an array is passed to function, the function should be GUFunc-compatible, i.e. the function should only remove / append extra dimensions from the LAST dimensions of the input / output arrays, e.g. `(..., a, b) -> (..., c, d, e)`.
   - **Arguments: arrays** If array is passed to function, use `array_api.latest.Array` as the array type hint, and use `array_api_compat.array_namespace()` to get the array API namespace `xp`. `array_api_compat.array_namespace()` should be ideally called with all input arrays / evaluated function as arguments IF POSSIBLE, e.g. `xp = array_api_compat.array_namespace(x, y, z)` to validate the input arrays are on the same array API and device. The arguments may also contain None, Python scalars, useful when arguments are optional.
   - **Arguments: no arrays -> special kw-only arguments** If NO array is passed to function, add `xp`, `device`, `dtype` as an required keyword-only argument with type hint `array_api.latest.ArrayNamespace`, `Any`, `Any` respectively. Do not add these arguments if an array is passed to function.
-  - **Arguments: function -> GUFunc-compatible** If the function needs function arguments, assume that to be also GUFunc-compatible. The argument description should end with `of (..., a, b) -> (..., c, d, e)`. Don't add any word in the following sentence: "GUFunc-compatible vectorized function from array to array", just explain the mathematical meaning of the function and its shape convention.
+  - **Arguments: function -> GUFunc-compatible** If the function needs function arguments, assume that to be also GUFunc-compatible. The argument description should end with `(..., a, b) -> (..., c, d, e)` (No preposition needed for this). Don't add any word in the following sentence: "GUFunc-compatible vectorized function from array to array", just explain the mathematical meaning of the function and its shape convention.
   - **Arguments & Docstring: function shape convention should be reasonable to the function**: Conceptually (mathematically) unrelated axes to function should be placed at the _beginning_ of the shape as `...`.
     - _Example_: When mathetically integrating `n_func` functions using `n_quad` quadrature points, the function shape convention should be written as `(...) -> (..., n_func)` (`(:) -> (:, n_func)` if the user explicitly specifies to implement function not GUFunc-compatible), not `(n_quad) -> (n_quad, n_func)` or `(n_quad) -> (n_func, n_quad)`, because `n_quad` has nothing to do with functions mathematically.
   - `xp.moveaxis()` may be used without worrying about performance, do not worry about internal complexity whcn choosing convention.
@@ -34,8 +39,10 @@ description: Conventions that MUST be followed when implementing array API compa
   - **Docstring: function output-dependent shape**: When the shape is variable (depending on function etc.) one can do `(..., ...(f))` where `f` implies the function but may replaced with something more suitable. `(..., *something)` is also possible but less preferred, yet sometimes it might be more suitable.
   - **Docstring**: docstring should contain doctests. They should be "demostrative", cover the edge cases in terms of math (not errors, wrong types, etc.). When doctests are run, the file in which the function is implemented is imported, therefore do not re-import packages or the function.
   - **Docstring: LaTeX**: Use LaTeX in docstring for mathematical symbols.
-    - Do not use sphinx's native math syntax (e.g. `:math:`).
+    - Do not use sphinx's native math syntax (e.g. `:math:`, `.. math::`).
     - Use `$` for inline math and `$$` for block math. Install `sphinx_math_dollar` to `docs` group (`uv add --group docs sphinx_math_dollar`) and add both `sphinx_math_dollar` and `sphinx.ext.mathjax` to `extensions` in `docs/conf.py` if this is not already done and LaTeX needs to be written in docstring.
+    - For LaTeX variables which length longer than 1, use `\mathrm{}` to avoid confusion with multiplication. For variables which length is 1, write as-is.
+  - **Docstring: D301**: Be careful to Ruff `D301 escape-sequence-in-docstring: Use r""" if any backslashes in a docstring` when writing LaTeX in docstring. Note that it will be automatically fixed by `prek run -a`.
   - **Docstring**: The docstring should be Numpydoc style.
 
     ```python
@@ -71,6 +78,7 @@ description: Conventions that MUST be followed when implementing array API compa
     ```
 
   - **Docstring: shape**: The docstring should mention the shape of the input / output arrays and the argument description should end with `of shape (..., a, b)`.
+  - **Comment: shape**: If it is not obvious, simply comment the excepted shape of the variable on top of it, e.g. `# (..., a, b)`. (Not `# shape: (..., a, b)` because it is redundant.)
   - **ExceptionGroup**: If multiple input checks can be done in a row, use `ExceptionGroup` to raise all errors at once, allowing the user to fix all errors at once.
     ```python
     errors = []

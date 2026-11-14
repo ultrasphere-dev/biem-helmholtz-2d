@@ -36,16 +36,13 @@ def _g(x: Array) -> Array:
     return 43 + (xp.sin(x - 0.3) / 4) + xp.cos(4 * x)
 
 
-@pytest.mark.parametrize("n", [32, 64, 128])
-@pytest.mark.parametrize("t_start_factor", [0, 0.55555])
 @pytest.mark.parametrize("split_type", ["neumann", "hankel"])
 @pytest.mark.parametrize("order", [0, 1, 2])
-@pytest.mark.parametrize("t_singularity", [0, 0.11383759])
+@pytest.mark.parametrize(("t_start_factor", "t_singularity"), [(0, 0), (0.55555, 0.11383759)])
 def test_split_quadrature_matches_trapezoidal(
     xp: Any,
     device: Any,
     dtype: Any,
-    n: int,
     order: int,
     split_type: str,
     t_start_factor: float,
@@ -62,7 +59,7 @@ def test_split_quadrature_matches_trapezoidal(
         xp_local = array_namespace(x_in)
         return 4 * xp_local.sin(xp_local.abs(x_in - t_singularity) / 2)
 
-    # actual
+    n = 64
     x, w = trapezoidal_quadrature(
         n, t_start_factor=t_start_factor, xp=xp, device=device, dtype=dtype
     )

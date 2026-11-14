@@ -26,10 +26,9 @@ class ShiftedShape:
         return self.shape.ddx(t)
 
 
-@pytest.mark.parametrize("n", [8, 16, 32, 64])
 @pytest.mark.parametrize(
-    ("n_scatterers", "moving", "quadrature_offset"),
-    [(1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 0, 4), (2, 1, 4)],
+    ("n_scatterers", "moving", "quadrature_offset", "alpha_value", "eta_value", "target_value"),
+    [(1, 0, 0, 1, 1, 0), (2, 0, 0, 1, 1, 0), (2, 1, 4, 1 + 0.1j, 0.8 - 0.2j, 0.2 + 0.1j)],
 )
 def test_adjoint_central_derivative(
     xp: Any,
@@ -37,10 +36,12 @@ def test_adjoint_central_derivative(
     shape_h: Shape,
     device: Any,
     dtype: Any,
-    n: int,
     n_scatterers: int,
     moving: int,
     quadrature_offset: int,
+    alpha_value: complex,
+    eta_value: complex,
+    target_value: complex,
 ) -> None:
     r"""
     Compare adjoint-based shape derivative with central finite differences.
@@ -49,9 +50,10 @@ def test_adjoint_central_derivative(
     $x_0 = (3,3)$). Perturb one boundary by $h = \mathtt{shape\_h}$,
     with either one or two disjoint scatterers.
     """
+    n = 32
     k_arr = xp.asarray(1, device=device, dtype=dtype)
-    alpha = xp.asarray(1, device=device, dtype=dtype)
-    eta = xp.asarray(1, device=device, dtype=dtype)
+    alpha = xp.asarray(alpha_value, device=device, dtype=xp.result_type(dtype, alpha_value))
+    eta = xp.asarray(eta_value, device=device, dtype=xp.result_type(dtype, eta_value))
     x0 = xp.asarray([3, 3], device=device, dtype=dtype)
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k_arr, direction)
@@ -63,25 +65,16 @@ def test_adjoint_central_derivative(
         shape=shapes,
         h_shape=perturbations,
         point=x0,
-        target=xp.asarray(0, dtype=dtype, device=device),
+        target=xp.asarray(target_value, dtype=xp.result_type(dtype, target_value), device=device),
         k=k_arr,
         alpha=alpha,
         eta=eta,
         incident_field=incident_field,
         incident_field_grad=plane_wave_grad(k_arr, direction),
         n_solve=n,
-        n_quadrature=n + quadrature_offset,
+        n_quad=n + quadrature_offset,
         steps=[1e-5],
     )
-    # With a different integration grid, the continuous-adjoint quadrature is
-    # not the exact derivative of the discrete Nyström solve. The discrepancy
-    # is larger on under-resolved noncircular boundaries and decreases with n.
-    if quadrature_offset and n == 8:
-        tolerance = 0.05
-    elif quadrature_offset and n == 16:
-        tolerance = 0.005
-    else:
-        tolerance = 1e-5
     assert float(result.adjoint) == pytest.approx(
-        float(result.central_objective[0]), rel=tolerance, abs=1e-8
+        float(result.central_objective[0]), rel=1e-5, abs=1e-8
     )

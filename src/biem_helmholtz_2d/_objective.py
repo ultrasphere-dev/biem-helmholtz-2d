@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from ie_circle import Shape
+from ie_circle import NystromInterpolant, Shape, trapezoidal_quadrature
 
+from ._acoustic import _density_component
+from ._adjoint import objective_derivative, solve_adjoint
 from ._potential_inner import dlp_kernel, slp_kernel
+from ._potential_inner_derivative import potential_shape_derivative
 
 
 def abs2_scattered_field(
@@ -115,3 +118,82 @@ def grad_phi_abs2_scattered_field(
         return 2 * diff * xp.conj(alpha * dlp - 1j * eta * slp)
 
     return grad
+
+
+def point_objective_shape_derivative(
+    *,
+    shape: Sequence[Shape],
+    density: NystromInterpolant,
+    field: Array,
+    point: Array,
+    target: Array,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+    incident_field_grad: Callable[[Array], Array],
+    n_solve: int,
+    n_quad: int,
+) -> Callable[[Sequence[Shape], Sequence[int]], Array]:
+    """
+    Prepare the shape derivative of the point-field objective for reuse.
+
+    The returned function takes boundary perturbations and a nonempty sequence
+    of active boundary indices, which must include every nonzero perturbation.
+    """
+    xp = array_namespace(point, target, k, alpha, eta)
+    t, _ = trapezoidal_quadrature(n_quad, xp=xp, device=point.device, dtype=point.dtype)
+    gradients = [
+        grad_phi_abs2_scattered_field(
+            point, field, shape=boundary, k=k, alpha=alpha, eta=eta, target=target
+        )
+        for boundary in shape
+    ]
+
+    def grad_phi(parameter: Array, /) -> Array:
+        return xp.stack([gradient(parameter) for gradient in gradients], axis=-1)
+
+    adjoint = solve_adjoint(k=k, shape=shape, alpha=alpha, eta=eta, n=n_solve, grad_phi_j=grad_phi)
+    incident_grads = [incident_field_grad(boundary.x(t)) for boundary in shape]
+
+    def derivative(h_shape: Sequence[Shape], active: Sequence[int], /) -> Array:
+        dr_g = xp.stack(
+            [
+                -xp.sum(grad * perturbation.x(t), axis=-1)
+                for grad, perturbation in zip(incident_grads, h_shape, strict=True)
+            ],
+            axis=-1,
+        )
+        direct = []
+        for index in active:
+            boundary, perturbation = shape[index], h_shape[index]
+            component = _density_component(density, index)
+            ds, dd = (
+                potential_shape_derivative(
+                    point,
+                    component,
+                    kind=kind,
+                    shape_x=boundary.x,
+                    shape_dx=boundary.dx,
+                    h=perturbation.x,
+                    dh=perturbation.dx,
+                    k=k,
+                    n=n_quad,
+                )
+                for kind in ("single", "double")
+            )
+            direct.append(alpha * dd - 1j * eta * ds)
+        dr_j = 2 * xp.real(xp.conj(field - target) * xp.sum(xp.stack(direct)))
+        return objective_derivative(
+            k=k,
+            shape=shape,
+            alpha=alpha,
+            eta=eta,
+            n=n_quad,
+            phi=density,
+            adjoint=adjoint,
+            dr_j=dr_j,
+            dr_g=dr_g,
+            h_shape=h_shape,
+        )
+
+    return derivative

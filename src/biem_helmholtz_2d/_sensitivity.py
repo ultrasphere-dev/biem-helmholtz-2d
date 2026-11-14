@@ -9,11 +9,8 @@ from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
 from ie_circle import NystromInterpolant, Shape
 
-from ._acoustic import _density_component, near_field, scattering_dirichlet
-from ._adjoint import objective_derivative, solve_adjoint
-from ._objective import grad_phi_abs2_scattered_field
-from ._potential_inner_derivative import potential_shape_derivative
-from ._quadrature import trapezoidal_quadrature
+from ._acoustic import near_field, scattering_dirichlet
+from ._objective import point_objective_shape_derivative
 
 
 @dataclass(frozen=True)
@@ -48,80 +45,6 @@ class _PerturbedShape:
         return self.shape.ddx(t) + self.step * self.perturbation.ddx(t)
 
 
-def _point_adjoint(
-    *,
-    shape: Sequence[Shape],
-    density: NystromInterpolant,
-    field: Array,
-    point: Array,
-    target: Array,
-    k: Array,
-    alpha: Array,
-    eta: Array,
-    incident_field_grad: Callable[[Array], Array],
-    n_solve: int,
-    n_quadrature: int,
-) -> Callable[[Sequence[Shape], Sequence[int]], Array]:
-    """Prepare the adjoint for reuse; active indices must include every nonzero perturbation."""
-    xp = array_namespace(point, target, k, alpha, eta)
-    t, _ = trapezoidal_quadrature(n_quadrature, xp=xp, device=point.device, dtype=point.dtype)
-    gradients = [
-        grad_phi_abs2_scattered_field(
-            point, field, shape=boundary, k=k, alpha=alpha, eta=eta, target=target
-        )
-        for boundary in shape
-    ]
-
-    def grad_phi(parameter: Array, /) -> Array:
-        return xp.stack([gradient(parameter) for gradient in gradients], axis=-1)
-
-    adjoint = solve_adjoint(k=k, shape=shape, alpha=alpha, eta=eta, n=n_solve, grad_phi_j=grad_phi)
-    incident_grads = [incident_field_grad(boundary.x(t)) for boundary in shape]
-
-    def derivative(h_shape: Sequence[Shape], active: Sequence[int], /) -> Array:
-        dr_g = xp.stack(
-            [
-                -xp.sum(grad * perturbation.x(t), axis=-1)
-                for grad, perturbation in zip(incident_grads, h_shape, strict=True)
-            ],
-            axis=-1,
-        )
-        direct = []
-        for index in active:
-            boundary, perturbation = shape[index], h_shape[index]
-            component = _density_component(density, index)
-            ds, dd = (
-                potential_shape_derivative(
-                    point,
-                    component,
-                    kind=kind,
-                    shape_x=boundary.x,
-                    shape_dx=boundary.dx,
-                    h=perturbation.x,
-                    dh=perturbation.dx,
-                    k=k,
-                    n=n_quadrature,
-                )
-                for kind in ("single", "double")
-            )
-            direct.append(alpha * dd - 1j * eta * ds)
-        dr_j = 2 * xp.real(xp.conj(field - target) * xp.sum(xp.stack(direct)))
-        return objective_derivative(
-            k=k,
-            shape=shape,
-            alpha=alpha,
-            eta=eta,
-            n=n_quadrature,
-            phi=density,
-            adjoint=adjoint,
-            dr_j=dr_j,
-            dr_g=dr_g,
-            h_shape=h_shape,
-        )
-
-    return derivative
-
-
 def adjoint_central_derivative(
     *,
     shape: Sequence[Shape],
@@ -134,7 +57,7 @@ def adjoint_central_derivative(
     incident_field: Callable[[Array], Array],
     incident_field_grad: Callable[[Array], Array],
     n_solve: int,
-    n_quadrature: int,
+    n_quad: int,
     steps: Sequence[float],
 ) -> SensitivityResult:
     r"""
@@ -143,7 +66,7 @@ def adjoint_central_derivative(
     The objective is $|u_{\mathrm{scat}}(x_0)-c|^2$. Each boundary is
     perturbed as $x_j \pm \epsilon h_j$. Forward and adjoint solves use
     $2n_{\rm solve}-1$ nodes, while field and sensitivity integrations use
-    $2n_{\rm quadrature}-1$ nodes. The two orders may differ. With different
+    $2n_{\rm quad}-1$ nodes. These parameters may differ. With different
     grids the continuous-adjoint quadrature is generally not exactly the
     derivative of the discrete Nyström solve; their difference converges away
     as both discretizations are resolved.
@@ -162,8 +85,8 @@ def adjoint_central_derivative(
         Incident field of (..., 2) -> (...,).
     incident_field_grad : Callable[[Array], Array]
         Spatial incident-field gradient of (..., 2) -> (..., 2).
-    n_solve, n_quadrature : int
-        Nyström and integration orders, respectively; both must be positive.
+    n_solve, n_quad : int
+        Nyström and integration parameters, respectively; both must be positive.
     steps : Sequence[float]
         Positive central-difference steps. An empty sequence skips them.
 
@@ -179,13 +102,9 @@ def adjoint_central_derivative(
         raise ValueError("point must have shape (2,) and wave parameters and target must be scalar")
     if not shape or len(shape) != len(h_shape):
         raise ValueError("shape and h_shape must have the same nonzero length")
-    if (
-        n_solve < 1
-        or n_quadrature < 1
-        or any(not math.isfinite(step) or step <= 0 for step in steps)
-    ):
+    if n_solve < 1 or n_quad < 1 or any(not math.isfinite(step) or step <= 0 for step in steps):
         raise ValueError(
-            "quadrature orders and central-difference steps must be positive and finite"
+            "quadrature parameters and central-difference steps must be positive and finite"
         )
     xp = array_namespace(point, target, k, alpha, eta)
 
@@ -193,13 +112,11 @@ def adjoint_central_derivative(
         density = scattering_dirichlet(
             k=k, shape=boundaries, incident_field=incident_field, alpha=alpha, eta=eta, n=n_solve
         )
-        field = near_field(
-            density, point, shape=boundaries, k=k, alpha=alpha, eta=eta, n=n_quadrature
-        )
+        field = near_field(density, point, shape=boundaries, k=k, alpha=alpha, eta=eta, n=n_quad)
         return field, density
 
     field, density = field_for(shape)
-    derivative = _point_adjoint(
+    derivative = point_objective_shape_derivative(
         shape=shape,
         density=density,
         field=field,
@@ -210,7 +127,7 @@ def adjoint_central_derivative(
         eta=eta,
         incident_field_grad=incident_field_grad,
         n_solve=n_solve,
-        n_quadrature=n_quadrature,
+        n_quad=n_quad,
     )(h_shape, range(len(shape)))
 
     central_field = []

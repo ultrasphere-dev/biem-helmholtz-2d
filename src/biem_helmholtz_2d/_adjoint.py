@@ -9,13 +9,14 @@ from ie_circle import (
     NystromInterpolant,
     QuadratureType,
     Shape,
+    log_cot_power_quadrature,
     nystrom,
+    trapezoidal_quadrature,
 )
 
 from ._acoustic import _coupled_kernels
 from ._potential_inner_derivative import dlp_shape_derivative_kernel, slp_shape_derivative_kernel
 from ._potential_shape_derivative import dlp_shape_derivative_split, slp_shape_derivative_split
-from ._quadrature import log_cot_power_quadrature, trapezoidal_quadrature
 
 
 def solve_adjoint(
@@ -41,7 +42,7 @@ def solve_adjoint(
     shape : Sequence[Shape]
         Nonempty sequence of disjoint boundaries of (...) -> (..., 2).
     n : int
-        Quadrature order, with $Q=2n-1$ nodes.
+        Quadrature parameter, with $Q=2n-1$ nodes.
     grad_phi_j : Callable[[Array], Array]
         Density gradient under parameter measure of (...) -> (..., ...(B), C),
         where $C$ is the number of boundaries.
@@ -140,8 +141,8 @@ def objective_derivative(
     eta : Array
         Coupling parameter $\eta$ of shape (...(B),).
     n : int
-        Integration order, with $2n-1$ nodes. It may differ from the
-        Nyström order used to compute ``phi`` and ``adjoint``.
+        Integration parameter, with $2n-1$ nodes. It may differ from the
+        Nyström parameter used to compute ``phi`` and ``adjoint``.
     phi : NystromInterpolant
         Forward density $\phi_r$ of (...) -> (..., ...(B), C).
     adjoint : NystromInterpolant

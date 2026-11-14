@@ -27,12 +27,12 @@ def example_accuracy(
     eta: float,
     target_point: tuple[float, float],
     desired_total_field: complex,
-    solve_orders: Sequence[int],
-    quadrature_orders: Sequence[int],
-    reference_order: int,
+    n_solve: Sequence[int],
+    n_quad: Sequence[int],
     step: float,
     n_modes: int,
     seed: int,
+    n_quad_ref: int | None = None,
 ) -> None:
     """
     Study random feasible shapes with highest-mode and random perturbations.
@@ -105,9 +105,9 @@ def example_accuracy(
             eta=coupling_eta,
             incident_field=incident,
             incident_field_grad=incident_grad,
-            solve_orders=solve_orders,
-            quadrature_orders=quadrature_orders,
-            reference_order=reference_order,
+            n_solve=n_solve,
+            n_quad=n_quad,
+            n_quad_ref=n_quad_ref,
             step=step,
         )
         data["settings"].update({
@@ -137,6 +137,12 @@ def example_accuracy(
 def example_accuracy_plot(path: Path, /) -> None:
     """Plot absolute errors from the ``accuracy.json`` study in ``path``."""
     data = json.loads((path / "accuracy.json").read_text())
+    for row in data["records"]:
+        if "n_quad" not in row:
+            row["n_quad"] = row["n_quadrature"]
+    settings = data["settings"]
+    n_solve = settings["n_solve"] if "n_solve" in settings else settings["solve_orders"]
+    n_quad = settings["n_quad"] if "n_quad" in settings else settings["quadrature_orders"]
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
     metrics = (
         ("field_error", "Scattered field"),
@@ -144,21 +150,21 @@ def example_accuracy_plot(path: Path, /) -> None:
         ("objective_derivative_error", "Objective shape derivative (adjoint)"),
     )
     for axis, (key, title) in zip(axes, metrics, strict=True):
-        for n_solve in data["settings"]["solve_orders"]:
+        for solve in n_solve:
             records = sorted(
-                (row for row in data["records"] if row["n_solve"] == n_solve),
-                key=lambda row: row["n_quadrature"],
+                (row for row in data["records"] if row["n_solve"] == solve),
+                key=lambda row: row["n_quad"],
             )
             axis.loglog(
-                [row["n_quadrature"] for row in records],
+                [row["n_quad"] for row in records],
                 [max(row[key], 1e-300) for row in records],
                 "o-",
-                label=f"solve n={n_solve}",
+                label=f"solve n={solve}",
             )
-        orders = sorted(set(data["settings"]["quadrature_orders"]))
-        axis.set_xticks(orders, [str(order) for order in orders])
+        values = sorted(set(n_quad))
+        axis.set_xticks(values, [str(value) for value in values])
         axis.xaxis.set_minor_locator(NullLocator())
-        axis.set_xlabel("Integration order n (2n-1 nodes)")
+        axis.set_xlabel("Integration n (2n-1 nodes)")
         axis.set_ylabel("Absolute error vs. numerical reference")
         axis.set_title(title)
         axis.grid(True, which="both", alpha=0.3)

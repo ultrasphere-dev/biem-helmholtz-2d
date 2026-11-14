@@ -1,5 +1,5 @@
 """Make the CLI runnable using python -m biem_helmholtz_2d."""
 
-from .cli import app
+from .cli import main
 
-app(prog_name="biem-helmholtz-2d")
+main()

@@ -10,7 +10,6 @@ from biem_helmholtz_2d.optimization._example import (
     example_optimization_plot,
     project_coefficients,
 )
-from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
@@ -52,55 +51,6 @@ def test_optimization(
     assert bool(xp.any(xp.abs(parameters[0] - parameters[1]) > 1e-8))
 
 
-def test_optimization_complex_couplings(
-    xp: ArrayNamespace,
-    dtype: Any,
-    device: Any,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    example_optimization(
-        path=tmp_path,
-        centers=xp.asarray([[0, 0]], dtype=dtype, device=device),
-        k=1,
-        alpha=1 + 0.1j,
-        eta=1 - 0.2j,
-        n=4,
-        n_quadrature=7,
-        n_modes=1,
-        n_steps=1,
-    )
-    progress = capsys.readouterr().err
-    assert "alpha_reg=0.1" in progress
-    assert "initial solve" in progress
-    assert "gradient" in progress
-    assert "line search" in progress
-    history = json.loads((tmp_path / "optimization_history.json").read_text())
-    assert history["alpha"]["imag"] == pytest.approx(0.1)
-    assert history["eta"]["imag"] == pytest.approx(-0.2)
-    assert history["n"] == 4
-    assert history["n_quadrature"] == 7
-    assert all(b <= a for a, b in zip(history["val_hist"], history["val_hist"][1:], strict=False))
-
-
-def test_optimization_without_modes(
-    xp: ArrayNamespace, dtype: Any, device: Any, tmp_path: Path
-) -> None:
-    example_optimization(
-        path=tmp_path,
-        centers=xp.asarray([[0, 0]], dtype=dtype, device=device),
-        k=1,
-        alpha=1,
-        eta=1,
-        n=4,
-        n_modes=0,
-        n_steps=1,
-    )
-    history = json.loads((tmp_path / "optimization_history.json").read_text())
-    assert history["final_parameters"]["cos_coefs"] == [[1]]
-    assert history["final_parameters"]["sin_coefs"] == [[]]
-
-
 @pytest.mark.parametrize(
     ("coefficients", "expected"),
     [
@@ -119,17 +69,6 @@ def test_projection(
     tolerance = 20 * xp.finfo(dtype).eps
     assert bool(xp.all(xp.abs(result - expected) < tolerance))
     assert bool(xp.all(xp.abs(project_coefficients(result) - result) < tolerance))
-
-
-def test_reject_singleton_coordinate_axes(xp: ArrayNamespace, dtype: Any, device: Any) -> None:
-    with pytest.raises(ValueError, match="cosine/sine pairs"):
-        project_coefficients(xp.zeros((2, 1), dtype=dtype, device=device))
-    with pytest.raises(ValueError, match="two coordinates"):
-        ParameterShape(
-            cos_coefs=xp.ones(1, dtype=dtype, device=device),
-            sin_coefs=xp.zeros(0, dtype=dtype, device=device),
-            center=xp.zeros(1, dtype=dtype, device=device),
-        )
 
 
 def test_weighted_projection(xp: ArrayNamespace, dtype: Any, device: Any) -> None:

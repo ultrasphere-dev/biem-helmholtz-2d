@@ -24,13 +24,13 @@ def accuracy(
     eta: Array,
     incident_field: Callable[[Array], Array],
     incident_field_grad: Callable[[Array], Array],
-    solve_orders: Sequence[int],
-    quadrature_orders: Sequence[int],
-    reference_order: int,
+    n_solve: Sequence[int],
+    n_quad: Sequence[int],
     step: float,
+    n_quad_ref: int | None = None,
 ) -> dict[str, Any]:
     r"""
-    Compare field and shape-sensitivity results at different quadrature orders.
+    Compare field and shape-sensitivity results at different discretizations.
 
     The objective is $|u_{\mathrm{scat}}(x_0)-c|^2$. The field derivative is
     computed by central differences, while the objective derivative is computed
@@ -51,11 +51,12 @@ def accuracy(
         Incident field of (..., 2) -> (...,).
     incident_field_grad : Callable[[Array], Array]
         Spatial incident-field gradient of (..., 2) -> (..., 2).
-    solve_orders, quadrature_orders : Sequence[int]
-        Positive orders for the Nyström solves and the integration, respectively.
-        Each order $n$ uses $2n-1$ nodes; all combinations are evaluated.
-    reference_order : int
-        Order used for both stages of the reference, greater than every study order.
+    n_solve, n_quad : Sequence[int]
+        Positive discretization parameters for the Nyström solves and integration.
+        Each parameter $n$ uses $2n-1$ nodes; all combinations are evaluated.
+    n_quad_ref : int or None
+        Parameter used for both reference stages, greater than all study parameters.
+        None uses 1.5 times their maximum, rounded up.
     step : float
         Positive, finite central-difference step.
 
@@ -63,7 +64,7 @@ def accuracy(
     -------
     dict[str, Any]
         JSON-compatible mapping with ``settings``, ``reference``, and one
-        ``records`` entry per solve/integration order pair. Complex numbers are
+        ``records`` entry per solve/integration parameter pair. Complex numbers are
         mappings with ``real`` and ``imag`` keys. This routine currently accepts
         scalar wave parameters and a single observation point.
 
@@ -79,9 +80,9 @@ def accuracy(
     ...     point=xp.asarray([3.0, 3.0]), target=xp.asarray(0.0),
     ...     k=k, alpha=k, eta=k, incident_field=plane_wave(k, direction),
     ...     incident_field_grad=plane_wave_grad(k, direction),
-    ...     solve_orders=[3], quadrature_orders=[3], reference_order=4, step=1e-5,
+    ...     n_solve=[3], n_quad=[3], n_quad_ref=4, step=1e-5,
     ... )
-    >>> [(row['n_solve'], row['n_quadrature']) for row in study['records']]
+    >>> [(row['n_solve'], row['n_quad']) for row in study['records']]
     [(3, 3)]
 
     """
@@ -91,12 +92,13 @@ def accuracy(
     array_namespace(point, target, k, alpha, eta)
     if not shape or len(shape) != len(h_shape):
         raise ValueError("shape and h_shape must have the same nonzero length")
-    if not solve_orders or not quadrature_orders:
-        raise ValueError("solve_orders and quadrature_orders must be nonempty")
-    if min(*solve_orders, *quadrature_orders) < 1 or reference_order <= max(
-        *solve_orders, *quadrature_orders
-    ):
-        raise ValueError("reference_order must exceed all positive study orders")
+    if not n_solve or not n_quad:
+        raise ValueError("n_solve and n_quad must be nonempty")
+    n_max = max(*n_solve, *n_quad)
+    if n_quad_ref is None:
+        n_quad_ref = (3 * n_max + 1) // 2
+    if min(*n_solve, *n_quad) < 1 or n_quad_ref <= n_max:
+        raise ValueError("n_quad_ref must exceed all positive study parameters")
     if step <= 0 or not math.isfinite(step):
         raise ValueError("step must be positive and finite")
 
@@ -112,7 +114,7 @@ def accuracy(
             incident_field=incident_field,
             incident_field_grad=incident_field_grad,
             n_solve=n_solve,
-            n_quadrature=n_quad,
+            n_quad=n_quad,
             steps=[step],
         )
 
@@ -120,24 +122,24 @@ def accuracy(
         number = complex(value)
         return {"real": number.real, "imag": number.imag}
 
-    configurations = [(n, q) for n in solve_orders for q in quadrature_orders]
-    with tqdm(total=len(configurations) + 1, desc="Quadrature accuracy", unit="case") as progress:
-        progress.set_postfix_str(f"reference n={reference_order}")
-        reference = evaluate(reference_order, reference_order)
-        progress.update()
+    configurations = [(n, q) for n in n_solve for q in n_quad]
+    with tqdm(total=len(configurations) + 1, desc="Quadrature accuracy", unit="case") as pbar:
+        pbar.set_postfix_str(f"reference n={n_quad_ref}")
+        reference = evaluate(n_quad_ref, n_quad_ref)
+        pbar.update()
         ref_field = complex(reference.field)
         ref_field_derivative = complex(reference.central_field[0])
         ref_adjoint = float(reference.adjoint)
         records = []
-        for n_solve, n_quad in configurations:
-            progress.set_postfix_str(f"solve={n_solve}, quadrature={n_quad}")
-            result = evaluate(n_solve, n_quad)
+        for solve, quad in configurations:
+            pbar.set_postfix_str(f"solve={solve}, quadrature={quad}")
+            result = evaluate(solve, quad)
             field = complex(result.field)
             field_derivative = complex(result.central_field[0])
             adjoint = float(result.adjoint)
             records.append({
-                "n_solve": n_solve,
-                "n_quadrature": n_quad,
+                "n_solve": solve,
+                "n_quad": quad,
                 "field": complex_json(result.field),
                 "field_derivative": complex_json(result.central_field[0]),
                 "objective_derivative": adjoint,
@@ -146,13 +148,13 @@ def accuracy(
                 "field_derivative_error": abs(field_derivative - ref_field_derivative),
                 "objective_derivative_error": abs(adjoint - ref_adjoint),
             })
-            progress.update()
+            pbar.update()
     return {
         "settings": {
             "step": step,
-            "reference_order": reference_order,
-            "solve_orders": list(solve_orders),
-            "quadrature_orders": list(quadrature_orders),
+            "n_quad_ref": n_quad_ref,
+            "n_solve": list(n_solve),
+            "n_quad": list(n_quad),
         },
         "reference": {
             "field": complex_json(reference.field),

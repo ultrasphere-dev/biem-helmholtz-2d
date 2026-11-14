@@ -1,11 +1,10 @@
 import pathlib
-import warnings
 from datetime import datetime
 from logging import DEBUG, INFO, basicConfig, getLogger
-from typing import Annotated, Any
+from typing import Any, Self
 
 import array_api_compat.numpy as xp
-import typer
+from cyclopts import App
 from rich.logging import RichHandler
 
 from biem_helmholtz_2d.optimization._accuracy import example_accuracy, example_accuracy_plot
@@ -18,7 +17,7 @@ except ModuleNotFoundError as exc:
         raise
     torch_xp = None
 
-app = typer.Typer(pretty_exceptions_enable=False)
+app = App(name="biem-helmholtz-2d")
 
 LOG = getLogger(__name__)
 
@@ -28,7 +27,7 @@ _ALPHA = 1
 _ETA = 1
 _TARGET_POINT = (-3, 3)
 _DESIRED_TOTAL_FIELD = 0
-_N_SOLVE = 20
+_N_SOLVE = 200
 _N_MODES = 10
 
 
@@ -37,35 +36,60 @@ def _namespace(device: str, /) -> Any:
         return xp
     if device == "cuda" or device.startswith("cuda:"):
         if torch_xp is None:
-            raise typer.BadParameter("CUDA requires the 'cuda' extra: uv sync --extra cuda")
+            raise ValueError("CUDA requires the 'cuda' extra: uv sync --extra cuda")
         if not torch_xp.cuda.is_available():
-            raise typer.BadParameter("PyTorch cannot access CUDA on this system")
+            raise ValueError("PyTorch cannot access CUDA on this system")
         return torch_xp
-    raise typer.BadParameter("device must be 'cpu', 'cuda', or 'cuda:N'")
+    raise ValueError("device must be 'cpu', 'cuda', or 'cuda:N'")
 
 
-@app.callback()
-def _main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
-    level = INFO
-    if verbose:
-        level = DEBUG
-    basicConfig(
-        level=level,
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[RichHandler(rich_tracebacks=True)],
-    )
+class Device(str):
+    """A validated array device name."""
+
+    def __new__(cls, value: str, /) -> Self:
+        """Validate the device name."""
+        _namespace(value)
+        return super().__new__(cls, value)
+
+
+class Values(str):
+    """A single comma-separated list of positive quadrature parameters."""
+
+    values: list[int]
+
+    def __new__(cls, value: str, /) -> Self:
+        """Parse one comma-separated list of positive integers."""
+        values = [int(part) for part in value.split(",")]
+        if min(values) < 1:
+            raise ValueError("quadrature parameters must be positive integers")
+        result = super().__new__(cls, value)
+        result.values = values
+        return result
+
+
+_CPU = Device("cpu")
 
 
 @app.command()
 def optimize(
-    device: str = typer.Option("cpu", help="Array device: cpu, cuda, or cuda:N."),
-    n_quadrature: int | None = typer.Option(
-        None, help="Field and sensitivity integration order (defaults to the Nyström order)."
-    ),
+    *,
+    device: Device = _CPU,
+    n_quad: int | None = None,
+    verbose: bool = False,
 ) -> None:
-    """Compare optimization results with/without Hilbertian regularization."""
-    warnings.filterwarnings("ignore")
+    """
+    Compare optimization results with/without Hilbertian regularization.
+
+    Parameters
+    ----------
+    device : Device
+        Array device: cpu, cuda, or cuda:N.
+    n_quad : int or None
+        Integration parameter; defaults to the solve parameter.
+    verbose : bool
+        Enable debug logging.
+
+    """
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     namespace = _namespace(device)
     dtype = namespace.float64
@@ -79,7 +103,7 @@ def optimize(
             k=_K,
             centers=namespace.asarray(_CENTERS, dtype=dtype, device=device),
             n=_N_SOLVE,
-            n_quadrature=n_quadrature,
+            n_quad=n_quad,
             alpha=_ALPHA,
             eta=_ETA,
             n_modes=_N_MODES,
@@ -93,22 +117,40 @@ def optimize(
 
 @app.command()
 def accuracy(
-    n_reference: Annotated[int, typer.Option(help="Reference order for both stages.")],
-    device: str = typer.Option("cpu", help="Array device: cpu, cuda, or cuda:N."),
-    n_solve: Annotated[
-        list[int] | None, typer.Option(help="Nyström orders; repeat for each value.")
-    ] = None,
-    n_quadrature: Annotated[
-        list[int] | None, typer.Option(help="Integration orders; repeat for each value.")
-    ] = None,
-    step: float = typer.Option(1e-5, help="Central-difference step."),
-    seed: int = typer.Option(0, help="Random seed for reproducible stress cases."),
+    *,
+    n_quad_ref: int | None = None,
+    device: Device = _CPU,
+    n_solve: Values | None = None,
+    n_quad: Values | None = None,
+    step: float = 1e-5,
+    seed: int = 0,
+    verbose: bool = False,
 ) -> None:
-    """Export field and sensitivity errors for independent quadrature orders."""
-    warnings.filterwarnings("ignore")
+    """
+    Export field and sensitivity errors for independent quadrature parameters.
+
+    Parameters
+    ----------
+    n_quad_ref : int or None
+        Reference parameter; defaults to 1.5 times the largest study parameter, rounded up.
+    device : Device
+        Array device: cpu, cuda, or cuda:N.
+    n_solve : Values or None
+        Comma-separated solve parameters; defaults to powers of two and the optimization value.
+    n_quad : Values or None
+        Comma-separated integration parameters; defaults to the same values.
+    step : float
+        Central-difference step.
+    seed : int
+        Random seed for reproducible stress cases.
+    verbose : bool
+        Enable debug logging.
+
+    """
     namespace = _namespace(device)
-    solve_orders = n_solve or [_N_SOLVE // 2, _N_SOLVE]
-    quadrature_orders = n_quadrature or [_N_SOLVE // 2, _N_SOLVE]
+    default_values = [2**power for power in range(1, _N_SOLVE.bit_length())]
+    if not default_values or default_values[-1] != _N_SOLVE:
+        default_values.append(_N_SOLVE)
     path = pathlib.Path(f"accuracy/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     example_accuracy(
         path=path,
@@ -118,9 +160,9 @@ def accuracy(
         eta=_ETA,
         target_point=_TARGET_POINT,
         desired_total_field=_DESIRED_TOTAL_FIELD,
-        solve_orders=solve_orders,
-        quadrature_orders=quadrature_orders,
-        reference_order=n_reference,
+        n_solve=n_solve.values if n_solve is not None else default_values,
+        n_quad=n_quad.values if n_quad is not None else default_values,
+        n_quad_ref=n_quad_ref,
         step=step,
         n_modes=_N_MODES,
         seed=seed,
@@ -128,9 +170,19 @@ def accuracy(
     LOG.info("Saved accuracy studies to %s", path)
 
 
-@app.command("plot-accuracy")
-def plot_accuracy(path: pathlib.Path | None = None) -> None:
-    """Plot studies under a directory, or all studies in accuracy/."""
+@app.command()
+def plot_accuracy(*, path: pathlib.Path | None = None, verbose: bool = False) -> None:
+    """
+    Plot studies under a directory, or all studies in accuracy/.
+
+    Parameters
+    ----------
+    path : pathlib.Path or None
+        Directory to search; defaults to accuracy/.
+    verbose : bool
+        Enable debug logging.
+
+    """
     root = path if path is not None else pathlib.Path("accuracy")
     paths = [file.parent for file in root.rglob("accuracy.json")]
     if not paths:
@@ -145,8 +197,16 @@ _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_n
 
 
 @app.command()
-def plot() -> None:
-    """Plot all optimization runs that have JSON data but missing PNG files."""
+def plot(*, verbose: bool = False) -> None:
+    """
+    Plot optimization runs that have JSON data but missing SVG files.
+
+    Parameters
+    ----------
+    verbose : bool
+        Enable debug logging.
+
+    """
     optimization_dir = pathlib.Path("optimization")
     if not optimization_dir.is_dir():
         LOG.warning("No optimization/ directory found.")
@@ -169,3 +229,15 @@ def plot() -> None:
     for d in unplotted:
         LOG.info("Plotting %s", d.name)
         example_optimization_plot(d)
+
+
+def main() -> None:
+    """Configure logging and run the selected command."""
+    command, bound, _ = app.parse_args()
+    basicConfig(
+        level=DEBUG if bound.arguments.get("verbose", False) else INFO,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(rich_tracebacks=True)],
+    )
+    command(*bound.args, **bound.kwargs)

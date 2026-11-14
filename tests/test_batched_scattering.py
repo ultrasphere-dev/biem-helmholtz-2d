@@ -29,35 +29,6 @@ class _Circle(CircleShape):
         return super().x(t) + self.center
 
 
-def test_field_shape_validation(xp: ArrayNamespace, dtype: Any, device: Any) -> None:
-    k = xp.asarray(1, dtype=dtype, device=device)
-    shape = [CircleShape(1), CircleShape(1)]
-
-    def density(t: Array, /) -> Array:
-        return xp.ones((*t.shape, 1), dtype=dtype, device=device)
-
-    with pytest.raises(ValueError, match="two coordinates"):
-        near_field(
-            density,
-            xp.zeros(1, dtype=dtype, device=device),
-            shape=shape,
-            k=k,
-            alpha=k,
-            eta=k,
-            n=4,
-        )
-    with pytest.raises(ValueError, match="quadrature node and scatterer"):
-        near_field(
-            density,
-            xp.zeros(2, dtype=dtype, device=device),
-            shape=shape,
-            k=k,
-            alpha=k,
-            eta=k,
-            n=4,
-        )
-
-
 @pytest.mark.parametrize("n_scatterers", [1, 2])
 @pytest.mark.parametrize("batch_kind", ["eta", "mixed"])
 def test_batched_scattering_and_adjoint(

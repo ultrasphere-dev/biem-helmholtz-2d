@@ -5,8 +5,8 @@ from typing import Literal
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
+from ie_circle import trapezoidal_quadrature
 
-from ._quadrature import trapezoidal_quadrature
 from ._scipy_wrapper import scipy_hankel1
 
 
@@ -134,7 +134,7 @@ def potential(
     k : Array
         Wave number of shape (*B,).
     n : int
-        Quadrature order; the number of nodes is $2n-1$.
+        Quadrature parameter; the number of nodes is $2n-1$.
     t_start, t_start_factor : float or None
         Optional grid shift and grid shift as a multiple of the node spacing.
 

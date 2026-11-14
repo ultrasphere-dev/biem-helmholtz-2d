@@ -5,14 +5,13 @@ from typing import Any, Literal
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
-from ie_circle import Shape, nystrom
+from ie_circle import Shape, nystrom, trapezoidal_quadrature
 from ie_circle._bie import Kernels, NystromInterpolant, QuadratureType
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 
 from ._potential import dlp_kernel_split, slp_kernel_split
 from ._potential_inner import dlp_kernel, slp_kernel
-from ._quadrature import trapezoidal_quadrature
 
 
 def _coupled_kernels(*, shape: Sequence[Shape], k: Array, alpha: Array, eta: Array) -> Kernels:
@@ -82,7 +81,7 @@ def scattering_dirichlet(
     eta : Array
         The coupling parameter for the single-layer potential of shape (...(B),).
     n : int
-        The maximum order - 1.
+        Nyström parameter; the solve uses $2n-1$ nodes.
 
     Returns
     -------
@@ -191,7 +190,7 @@ def plot_near_field_prepare(
     ylim : tuple[float, float]
         Vertical extent of the plot domain.
     n : int
-        Maximum order minus $1$.
+        Integration parameter; the field uses $2n-1$ nodes.
     shape : Sequence[Shape]
         Boundary parametrisations of (...,) -> (..., 2).
     k : Array
@@ -201,7 +200,7 @@ def plot_near_field_prepare(
     eta : Array
         Coupling parameter of shape (...(B),).
     isin_shape_n_quad : int
-        Number of quadrature nodes for the inside-shape test.
+        Quadrature parameter for the inside-shape test; uses $2n-1$ nodes.
     n_plot : int
         Number of grid points per axis.
     isin_shape_tol : float
@@ -444,8 +443,8 @@ def near_field(
     x : Array
         The position of the scattered field of shape (..., 2).
     n : int
-        Integration order, with $2n-1$ nodes. It may differ from the
-        Nyström order used to compute ``density``.
+        Integration parameter, with $2n-1$ nodes. It may differ from the
+        Nyström parameter used to compute ``density``.
     shape : Sequence[Shape]
         Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array
@@ -497,8 +496,8 @@ def far_field(
     direction : Array
         The direction of the far-field pattern of shape (..., 2).
     n : int
-        Integration order, with $2n-1$ nodes. It may differ from the
-        Nyström order used to compute ``density``.
+        Integration parameter, with $2n-1$ nodes. It may differ from the
+        Nyström parameter used to compute ``density``.
     shape : Sequence[Shape]
         Boundaries of (...,) -> (..., 2), in density-component order.
     k : Array
