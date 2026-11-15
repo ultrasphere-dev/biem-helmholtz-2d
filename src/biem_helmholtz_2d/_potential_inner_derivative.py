@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Literal
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from ie_circle import trapezoidal_quadrature
 
 from ._scipy_wrapper import scipy_hankel1
 
@@ -14,12 +12,11 @@ def slp_shape_derivative_kernel(
     point: Array,
     /,
     *,
-    shape_x: Callable[[Array], Array],
-    shape_dx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
+    shape_x: Array,
+    shape_dx: Array,
+    h: Array,
+    dh: Array,
     k: Array,
-    tau: Array,
 ) -> Array:
     r"""
     Shape derivative of the single-layer potential kernel at an exterior point.
@@ -41,18 +38,12 @@ def slp_shape_derivative_kernel(
     ----------
     point : Array
         Exterior evaluation point $x_0$ of shape (..., 2).
-    shape_x : Callable[[Array], Array]
-        Boundary parametrisation $x(\tau)$ of (...,) -> (..., 2).
-    shape_dx : Callable[[Array], Array]
-        Derivative $x'(\tau)$ of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Shape perturbation $h(\tau)$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        Derivative $h'(\tau)$ of (...,) -> (..., 2).
+    shape_x, shape_dx : Array
+        Boundary positions and derivatives of shape (..., 2).
+    h, dh : Array
+        Perturbations and derivatives of shape (..., 2).
     k : Array
         Wave number of shape (...,).
-    tau : Array
-        Boundary parameter $\tau$ of shape (...,).
 
     Returns
     -------
@@ -60,12 +51,10 @@ def slp_shape_derivative_kernel(
         Shape derivative kernel value of shape (...,).
 
     """
-    xp = array_namespace(point, k, tau)
-    diff = point - shape_x(tau)
+    xp = array_namespace(point, k, shape_x, shape_dx, h, dh)
+    diff = point - shape_x
     r = xp.linalg.vector_norm(diff, axis=-1)
-    h_tau = h(tau)
-    dh_tau = dh(tau)
-    dx_tau = shape_dx(tau)
+    h_tau, dh_tau, dx_tau = h, dh, shape_dx
     jac = xp.linalg.vector_norm(dx_tau, axis=-1)
 
     diff_dot_h = xp.sum(diff * h_tau, axis=-1)
@@ -81,12 +70,11 @@ def dlp_shape_derivative_kernel(
     point: Array,
     /,
     *,
-    shape_x: Callable[[Array], Array],
-    shape_dx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
+    shape_x: Array,
+    shape_dx: Array,
+    h: Array,
+    dh: Array,
     k: Array,
-    tau: Array,
 ) -> Array:
     r"""
     Shape derivative of the double-layer potential kernel at an exterior point.
@@ -119,18 +107,12 @@ def dlp_shape_derivative_kernel(
     ----------
     point : Array
         Exterior evaluation point $x_0$ of shape (..., 2).
-    shape_x : Callable[[Array], Array]
-        Boundary parametrisation $x(\tau)$ of (...,) -> (..., 2).
-    shape_dx : Callable[[Array], Array]
-        Derivative $x'(\tau)$ of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Shape perturbation $h(\tau)$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        Derivative $h'(\tau)$ of (...,) -> (..., 2).
+    shape_x, shape_dx : Array
+        Boundary positions and derivatives of shape (..., 2).
+    h, dh : Array
+        Perturbations and derivatives of shape (..., 2).
     k : Array
         Wave number of shape (...,).
-    tau : Array
-        Boundary parameter $\tau$ of shape (...,).
 
     Returns
     -------
@@ -138,12 +120,10 @@ def dlp_shape_derivative_kernel(
         Shape derivative kernel value of shape (...,).
 
     """
-    xp = array_namespace(point, k, tau)
-    diff = point - shape_x(tau)
+    xp = array_namespace(point, k, shape_x, shape_dx, h, dh)
+    diff = point - shape_x
     r = xp.linalg.vector_norm(diff, axis=-1)
-    h_tau = h(tau)
-    dh_tau = dh(tau)
-    dx_tau = shape_dx(tau)
+    h_tau, dh_tau, dx_tau = h, dh, shape_dx
 
     diff_dot_h = xp.sum(diff * h_tau, axis=-1)
 
@@ -168,18 +148,15 @@ def dlp_shape_derivative_kernel(
 
 def potential_shape_derivative(
     x: Array,
-    func: Callable[[Array], Array],
+    func: Array,
     /,
     *,
     kind: Literal["single", "double"],
-    shape_x: Callable[[Array], Array],
-    shape_dx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
+    shape_x: Array,
+    shape_dx: Array,
+    h: Array,
+    dh: Array,
     k: Array,
-    n: int,
-    t_start: float | None = None,
-    t_start_factor: float | None = None,
 ) -> Array:
     r"""
     Shape derivative of a single- or double-layer potential at exterior points.
@@ -190,20 +167,16 @@ def potential_shape_derivative(
     ----------
     x : Array
         Exterior evaluation point $x_0$ of shape (*B, 2).
-    func : Callable[[Array], Array]
-        Density $\phi$ of (..., *B) -> (..., *B).
+    func : Array
+        Density values at equally spaced nodes over one $2\pi$ period of shape (..., Q).
     kind : {"single", "double"}
         Layer potential to differentiate.
-    shape_x, shape_dx : Callable[[Array], Array]
-        Boundary parametrization and derivative of (...,) -> (..., 2).
-    h, dh : Callable[[Array], Array]
-        Shape perturbation and derivative of (...,) -> (..., 2).
+    shape_x, shape_dx : Array
+        Boundary positions and derivatives of shape (..., Q, 2).
+    h, dh : Array
+        Perturbations and derivatives of shape (..., Q, 2).
     k : Array
-        Wave number of shape (*B,).
-    n : int
-        Quadrature parameter; the number of nodes is $2n-1$.
-    t_start, t_start_factor : float or None
-        Optional grid shift and grid shift as a multiple of the node spacing.
+        Wave number of shape (...,).
 
     Returns
     -------
@@ -211,19 +184,10 @@ def potential_shape_derivative(
         Shape derivative of the layer potential of shape (...,).
 
     """
-    xp = array_namespace(x, k)
-    t, w = trapezoidal_quadrature(
-        n,
-        t_start=t_start,
-        t_start_factor=t_start_factor,
-        xp=xp,
-        dtype=xp.result_type(x, xp.real(k)),
-        device=x.device,
-    )
+    xp = array_namespace(x, func, shape_x, shape_dx, h, dh, k)
     kernel = {"single": slp_shape_derivative_kernel, "double": dlp_shape_derivative_kernel}[kind]
-    return xp.sum(
-        kernel(x[..., None, :], shape_x=shape_x, shape_dx=shape_dx, h=h, dh=dh, k=k, tau=t)
-        * w
-        * func(t),
-        axis=-1,
+    values = (
+        kernel(x[..., None, :], shape_x=shape_x, shape_dx=shape_dx, h=h, dh=dh, k=k[..., None])
+        * func
     )
+    return xp.sum(values, axis=-1) * (2 * xp.pi / values.shape[-1])

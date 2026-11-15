@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 import pytest
 from array_api.latest import ArrayNamespace
-from ie_circle import Shape
+from ie_circle import Shape, trapezoidal_quadrature
 
 from biem_helmholtz_2d import _potential_inner, _potential_inner_derivative
 
@@ -25,27 +25,26 @@ def test_shape_derivative_numerical(
     epsilon = 1e-6
     x = xp.asarray([[3, 3]], device=device, dtype=dtype)
     wave_number = xp.asarray(k, device=device, dtype=dtype)
+    t, _ = trapezoidal_quadrature(8, xp=xp, device=device, dtype=dtype)
     derivative = _potential_inner_derivative.potential_shape_derivative(
         x,
-        xp.ones_like,
+        xp.ones_like(t),
         kind=kind,
-        shape_x=shape.x,
-        shape_dx=shape.dx,
-        h=shape_h.x,
-        dh=shape_h.dx,
+        shape_x=shape.x(t)[..., 0, :],
+        shape_dx=shape.dx(t)[..., 0, :],
+        h=shape_h.x(t)[..., 0, :],
+        dh=shape_h.dx(t)[..., 0, :],
         k=wave_number,
-        n=8,
     )
     shape_p, shape_m = shape_central_difference(epsilon)
     plus, minus = (
         _potential_inner.potential(
             x,
-            xp.ones_like,
+            xp.ones_like(t),
             kind=kind,
-            shape_x=boundary.x,
-            shape_dx=boundary.dx,
+            shape_x=boundary.x(t)[..., 0, :],
+            shape_dx=boundary.dx(t)[..., 0, :],
             k=wave_number,
-            n=8,
         )
         for boundary in (shape_p, shape_m)
     )

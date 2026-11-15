@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
 
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
@@ -17,7 +16,7 @@ def _neumann_y1_y2(
     /,
     *,
     order: int,
-    f: Callable[[Array], Array],
+    f: Array,
     fprime0: Array | None = None,
     eps: float = 0,
 ) -> tuple[Array, Array]:
@@ -25,15 +24,14 @@ def _neumann_y1_y2(
         msg = "fprime0 (shape (...,)) is required when order == 0."
         raise ValueError(msg)
 
-    fx = f(x)
-    xp = array_namespace(x, fx, fprime0)
-    jv = scipy_jv(order, fx)
-    yv = scipy_yv(order, fx)
+    xp = array_namespace(x, f, fprime0)
+    jv = scipy_jv(order, f)
+    yv = scipy_yv(order, f)
 
     if order == 0:
         fx_pow = 1
     else:
-        fx_pow = fx**order
+        fx_pow = f**order
 
     if eps < 0:
         msg = "eps must be non-negative."
@@ -64,7 +62,7 @@ def neumann_y1_y2(
     /,
     *,
     order: int,
-    f: Callable[[Array], Array],
+    f: Array,
     fprime0: Array | None = None,
     eps: float = 0,
     t_singularity: Array,
@@ -86,11 +84,9 @@ def neumann_y1_y2(
         Points to evaluate of shape (...).
     order : int
         Order of the Neumann function.
-    f : Callable[[Array], Array]
-        Function evaluated at nodes of (...) -> (...).
-
-        It is assumed to be smooth
-        everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+    f : Array
+        Function values $f(x)$ of shape (...,). The underlying function satisfies
+        $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
         Value $f'(t_s)$ of shape (...) required when ``order == 0``.
     eps : float
@@ -106,14 +102,10 @@ def neumann_y1_y2(
         $Y^{(2)}$ of shape (...).
 
     """
-
-    def f_shifted(x_in: Array) -> Array:
-        return f(x_in + t_singularity)
-
     return _neumann_y1_y2(
         x - t_singularity,
         order=order,
-        f=f_shifted,
+        f=f,
         fprime0=fprime0,
         eps=eps,
     )
@@ -124,7 +116,7 @@ def hankel_h1_h2(
     /,
     *,
     order: int,
-    f: Callable[[Array], Array],
+    f: Array,
     fprime0: Array | None = None,
     eps: float = 0,
     t_singularity: Array,
@@ -146,9 +138,9 @@ def hankel_h1_h2(
         Points to evaluate of shape (...).
     order : int
         Order of the Hankel function.
-    f : Callable[[Array], Array]
-        Function evaluated at nodes of (...) -> (...).
-        It is assumed to be smooth everywhere with $f(t_s) = 0$ and $f'(t_s) \ne 0$.
+    f : Array
+        Function values $f(x)$ of shape (...,). The underlying function satisfies
+        $f(t_s) = 0$ and $f'(t_s) \ne 0$.
     fprime0 : Array | None
         Value $f'(t_s)$ of shape (...) required when ``order == 0``.
     eps : float

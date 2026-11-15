@@ -25,7 +25,11 @@ def test_complex_wave_number_diagonal_limit(xp: Any, device: Any, dtype: Any) ->
         return 2 * k * xp.sin(xp.abs(t) / 2)
 
     _, analytic = neumann_y1_y2(
-        x, order=0, f=argument, fprime0=k, t_singularity=xp.asarray(0, device=device, dtype=dtype)
+        x,
+        order=0,
+        f=argument(x),
+        fprime0=k,
+        t_singularity=xp.asarray(0, device=device, dtype=dtype),
     )
     assert abs(complex(analytic[0]).imag) > 0.1
     assert abs(complex(analytic[0] - analytic[1])) < 1e-8
@@ -71,7 +75,7 @@ def test_split_quadrature_matches_trapezoidal(
     y1, y2 = (hankel_h1_h2 if split_type == "hankel" else neumann_y1_y2)(
         x,
         order=order,
-        f=_f,
+        f=_f(x),
         fprime0=fprime0,
         eps=1e-4,
         t_singularity=t_singularity,

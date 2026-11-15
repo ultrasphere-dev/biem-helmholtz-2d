@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
-from array_api._2024_12 import Array
+from array_api.latest import Array
 from array_api_compat import array_namespace
 
-from biem_helmholtz_2d._hankel import hankel_h1_h2
-from biem_helmholtz_2d._is_close import is_close
-from biem_helmholtz_2d._potential import A1 as _A1
+from ._hankel import hankel_h1_h2
+from ._is_close import is_close
+from ._potential import A1
 
 
 def A2(
     *,
     t: Array,
     tau: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    h_t: Array,
+    h_tau: Array,
+    dh_tau: Array,
     eps: float = 0,
 ) -> Array:
     r"""
@@ -32,17 +32,13 @@ def A2(
     Parameters
     ----------
     t : Array
-        Source nodes $t$ of shape (...,).
+        Target nodes $t$ of shape (...,).
     tau : Array
-        Target nodes $\tau$ of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization $x$ of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Perturbation $h$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        First derivative $h'$ of the perturbation of (...,) -> (..., 2).
+        Source nodes $\tau$ of shape (...,).
+    x_t, x_tau, dx_tau : Array
+        Boundary values $x(t)$, $x(\tau)$, and $x'(\tau)$ of shape (..., 2).
+    h_t, h_tau, dh_tau : Array
+        Perturbation values $h(t)$, $h(\tau)$, and $h'(\tau)$ of shape (..., 2).
     eps : float
         If ``abs(tau - t) <= eps``, replace $A_2(t, \tau)$ by the diagonal limit value.
 
@@ -53,39 +49,27 @@ def A2(
 
     """
     if eps < 0:
-        msg = "eps must be non-negative."
-        raise ValueError(msg)
-
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-    x_tau = x(tau)
-    h_t = h(t)
-    h_tau = h(tau)
-    dx_tau = dx(tau)
-    dh_tau = dh(tau)
-
-    # non-limit part
+        raise ValueError("eps must be non-negative")
+    xp = array_namespace(t, tau, x_t, x_tau, dx_tau, h_t, h_tau, dh_tau)
     diff_x = x_t - x_tau
     diff_h = h_t - h_tau
-    dist_sq = xp.sum(diff_x**2, axis=-1)
-    result = xp.sum(diff_x * diff_h, axis=-1) / dist_sq
-
-    # limit part
-    near0 = is_close(t, tau, eps)
+    result = xp.sum(diff_x * diff_h, axis=-1) / xp.sum(diff_x**2, axis=-1)
     limit = xp.sum(dx_tau * dh_tau, axis=-1) / xp.sum(dx_tau**2, axis=-1)
-    return xp.where(near0, limit, result)
+    return xp.where(is_close(t, tau, eps), limit, result)
 
 
 def D4(
     *,
     t: Array,
     tau: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    ddx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
-    ddh: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    ddx_tau: Array,
+    h_t: Array,
+    h_tau: Array,
+    dh_tau: Array,
+    ddh_tau: Array,
     eps: float = 0,
 ) -> Array:
     r"""
@@ -120,21 +104,13 @@ def D4(
     Parameters
     ----------
     t : Array
-        Source nodes $t$ of shape (...,).
+        Target nodes $t$ of shape (...,).
     tau : Array
-        Target nodes $\tau$ of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization $x$ of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
-    ddx : Callable[[Array], Array]
-        Second derivative $x''$ of the parametrization of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Perturbation $h$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        First derivative $h'$ of the perturbation of (...,) -> (..., 2).
-    ddh : Callable[[Array], Array]
-        Second derivative $h''$ of the perturbation of (...,) -> (..., 2).
+        Source nodes $\tau$ of shape (...,).
+    x_t, x_tau, dx_tau, ddx_tau : Array
+        Boundary positions and derivatives at $t$ and $\tau$ of shape (..., 2).
+    h_t, h_tau, dh_tau, ddh_tau : Array
+        Perturbations and derivatives at $t$ and $\tau$ of shape (..., 2).
     eps : float
         If ``abs(tau - t) <= eps``, replace $D_4(t, \tau)$ by the diagonal limit value.
 
@@ -145,32 +121,15 @@ def D4(
 
     """
     if eps < 0:
-        msg = "eps must be non-negative."
-        raise ValueError(msg)
-
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-    x_tau = x(tau)
-    h_t = h(t)
-    h_tau = h(tau)
-    dx_tau = dx(tau)
-    dh_tau = dh(tau)
-
+        raise ValueError("eps must be non-negative")
+    xp = array_namespace(t, tau, x_t, x_tau, dx_tau, ddx_tau, h_t, h_tau, dh_tau, ddh_tau)
     diff_x = x_t - x_tau
     diff_h = h_t - h_tau
-    dist_sq = xp.sum(diff_x**2, axis=-1)
-
-    n_star_tau = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
-    n_star_prime_tau = xp.stack([dh_tau[..., 1], -dh_tau[..., 0]], axis=-1)
-
-    result = (
-        xp.sum(n_star_tau * diff_h, axis=-1) + xp.sum(n_star_prime_tau * diff_x, axis=-1)
-    ) / dist_sq
-
-    # limit part
-    near0 = is_close(t, tau, eps)
-    ddx_tau = ddx(tau)
-    ddh_tau = ddh(tau)
+    normal = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
+    normal_h = xp.stack([dh_tau[..., 1], -dh_tau[..., 0]], axis=-1)
+    result = (xp.sum(normal * diff_h, axis=-1) + xp.sum(normal_h * diff_x, axis=-1)) / xp.sum(
+        diff_x**2, axis=-1
+    )
     numerator = (
         dh_tau[..., 1] * ddx_tau[..., 0]
         - dh_tau[..., 0] * ddx_tau[..., 1]
@@ -178,7 +137,7 @@ def D4(
         - dx_tau[..., 0] * ddh_tau[..., 1]
     )
     limit = numerator / (2 * xp.sum(dx_tau**2, axis=-1))
-    return xp.where(near0, limit, result)
+    return xp.where(is_close(t, tau, eps), limit, result)
 
 
 def slp_shape_derivative_split(
@@ -186,10 +145,12 @@ def slp_shape_derivative_split(
     t: Array,
     tau: Array,
     k: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    h_t: Array,
+    h_tau: Array,
+    dh_tau: Array,
     eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
@@ -210,19 +171,15 @@ def slp_shape_derivative_split(
     Parameters
     ----------
     t : Array
-        Source nodes $t$ of shape (...,).
+        Target nodes $t$ of shape (...,).
     tau : Array
-        Target nodes $\tau$ of shape (...,).
+        Source nodes $\tau$ of shape (...,).
     k : Array
         Wave number $k$ of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization $x$ of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Perturbation $h$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        First derivative $h'$ of the perturbation of (...,) -> (..., 2).
+    x_t, x_tau, dx_tau : Array
+        Boundary values $x(t)$, $x(\tau)$, and $x'(\tau)$ of shape (..., 2).
+    h_t, h_tau, dh_tau : Array
+        Perturbation values $h(t)$, $h(\tau)$, and $h'(\tau)$ of shape (..., 2).
     eps : float
         If ``abs(t - tau) <= eps``, replace singular values by their diagonal limits.
 
@@ -234,43 +191,27 @@ def slp_shape_derivative_split(
         Analytic remainder of $S'[h](t, \tau)$ of shape (...,).
 
     """
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-    dx_tau = dx(tau)
-    dh_tau = dh(tau)
-    jac_tau = xp.sqrt(xp.sum(dx_tau**2, axis=-1))
-
-    def fval(t_in: Array) -> Array:
-        diff = x_t - x(t_in)
-        r = xp.sqrt(xp.sum(diff**2, axis=-1))
-        return k * r
-
-    # order-1 Hankel: gives H_1^{(1,1)} * log + H_1^{(1,2)} = (k*r) * H_1^{(1)}(k*r)
-    h1_1, h2_1 = hankel_h1_h2(
-        tau,
-        order=1,
-        f=fval,
-        fprime0=None,
+    xp = array_namespace(t, tau, k, x_t, x_tau, dx_tau, h_t, h_tau, dh_tau)
+    jac = xp.linalg.vector_norm(dx_tau, axis=-1)
+    argument = k * xp.linalg.vector_norm(x_t - x_tau, axis=-1)
+    h1_1, h2_1 = hankel_h1_h2(tau, order=1, f=argument, fprime0=None, eps=eps, t_singularity=t)
+    h1_0, h2_0 = hankel_h1_h2(tau, order=0, f=argument, fprime0=k * jac, eps=eps, t_singularity=t)
+    a2 = A2(
+        t=t,
+        tau=tau,
+        x_t=x_t,
+        x_tau=x_tau,
+        dx_tau=dx_tau,
+        h_t=h_t,
+        h_tau=h_tau,
+        dh_tau=dh_tau,
         eps=eps,
-        t_singularity=t,
     )
-
-    # order-0 Hankel: gives H_0^{(1,1)} * log + H_0^{(1,2)} = H_0^{(1)}(k*r)
-    h1_0, h2_0 = hankel_h1_h2(
-        tau,
-        order=0,
-        f=fval,
-        fprime0=k * jac_tau,
-        eps=eps,
-        t_singularity=t,
-    )
-
-    a2 = A2(t=t, tau=tau, x=x, dx=dx, h=h, dh=dh, eps=eps)
     x_dot_h = xp.sum(dx_tau * dh_tau, axis=-1)
-
-    log_sing = (1j / 4) * (-h1_1 * a2 * jac_tau + h1_0 * x_dot_h / jac_tau)
-    analytic = (1j / 4) * (-h2_1 * a2 * jac_tau + h2_0 * x_dot_h / jac_tau)
-    return log_sing, analytic
+    return (
+        (1j / 4) * (-h1_1 * a2 * jac + h1_0 * x_dot_h / jac),
+        (1j / 4) * (-h2_1 * a2 * jac + h2_0 * x_dot_h / jac),
+    )
 
 
 def dlp_shape_derivative_split(
@@ -278,12 +219,14 @@ def dlp_shape_derivative_split(
     t: Array,
     tau: Array,
     k: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    ddx: Callable[[Array], Array],
-    h: Callable[[Array], Array],
-    dh: Callable[[Array], Array],
-    ddh: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    ddx_tau: Array,
+    h_t: Array,
+    h_tau: Array,
+    dh_tau: Array,
+    ddh_tau: Array,
     eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
@@ -304,23 +247,15 @@ def dlp_shape_derivative_split(
     Parameters
     ----------
     t : Array
-        Source nodes $t$ of shape (...,).
+        Target nodes $t$ of shape (...,).
     tau : Array
-        Target nodes $\tau$ of shape (...,).
+        Source nodes $\tau$ of shape (...,).
     k : Array
         Wave number $k$ of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization $x$ of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
-    ddx : Callable[[Array], Array]
-        Second derivative $x''$ of the parametrization of (...,) -> (..., 2).
-    h : Callable[[Array], Array]
-        Perturbation $h$ of (...,) -> (..., 2).
-    dh : Callable[[Array], Array]
-        First derivative $h'$ of the perturbation of (...,) -> (..., 2).
-    ddh : Callable[[Array], Array]
-        Second derivative $h''$ of the perturbation of (...,) -> (..., 2).
+    x_t, x_tau, dx_tau, ddx_tau : Array
+        Boundary positions and derivatives at $t$ and $\tau$ of shape (..., 2).
+    h_t, h_tau, dh_tau, ddh_tau : Array
+        Perturbations and derivatives at $t$ and $\tau$ of shape (..., 2).
     eps : float
         If ``abs(t - tau) <= eps``, replace singular values by their diagonal limits.
 
@@ -332,38 +267,33 @@ def dlp_shape_derivative_split(
         Analytic remainder of $D'[h](t, \tau)$ of shape (...,).
 
     """
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-
-    def fval(t_in: Array) -> Array:
-        diff = x_t - x(t_in)
-        r = xp.sqrt(xp.sum(diff**2, axis=-1))
-        return k * r
-
-    # order-2 Hankel: gives H_2^{(1,1)} * log + H_2^{(1,2)} = (k*r)^2 * H_2^{(1)}(k*r)
-    h1_2, h2_2 = hankel_h1_h2(
-        tau,
-        order=2,
-        f=fval,
-        fprime0=None,
+    xp = array_namespace(t, tau, k, x_t, x_tau, dx_tau, ddx_tau, h_t, h_tau, dh_tau, ddh_tau)
+    argument = k * xp.linalg.vector_norm(x_t - x_tau, axis=-1)
+    h1_2, h2_2 = hankel_h1_h2(tau, order=2, f=argument, fprime0=None, eps=eps, t_singularity=t)
+    h1_1, h2_1 = hankel_h1_h2(tau, order=1, f=argument, fprime0=None, eps=eps, t_singularity=t)
+    a1 = A1(t=t, tau=tau, x_t=x_t, x_tau=x_tau, dx_tau=dx_tau, ddx_tau=ddx_tau, eps=eps)
+    a2 = A2(
+        t=t,
+        tau=tau,
+        x_t=x_t,
+        x_tau=x_tau,
+        dx_tau=dx_tau,
+        h_t=h_t,
+        h_tau=h_tau,
+        dh_tau=dh_tau,
         eps=eps,
-        t_singularity=t,
     )
-
-    # order-1 Hankel: gives H_1^{(1,1)} * log + H_1^{(1,2)} = (k*r) * H_1^{(1)}(k*r)
-    h1_1, h2_1 = hankel_h1_h2(
-        tau,
-        order=1,
-        f=fval,
-        fprime0=None,
+    d4 = D4(
+        t=t,
+        tau=tau,
+        x_t=x_t,
+        x_tau=x_tau,
+        dx_tau=dx_tau,
+        ddx_tau=ddx_tau,
+        h_t=h_t,
+        h_tau=h_tau,
+        dh_tau=dh_tau,
+        ddh_tau=ddh_tau,
         eps=eps,
-        t_singularity=t,
     )
-
-    a1 = _A1(t=t, tau=tau, x=x, dx=dx, ddx=ddx, eps=eps)
-    a2 = A2(t=t, tau=tau, x=x, dx=dx, h=h, dh=dh, eps=eps)
-    d4 = D4(t=t, tau=tau, x=x, dx=dx, ddx=ddx, h=h, dh=dh, ddh=ddh, eps=eps)
-
-    log_sing = (1j / 4) * (-h1_2 * a2 * a1 + h1_1 * d4)
-    analytic = (1j / 4) * (-h2_2 * a2 * a1 + h2_1 * d4)
-    return log_sing, analytic
+    return (1j / 4) * (-h1_2 * a2 * a1 + h1_1 * d4), (1j / 4) * (-h2_2 * a2 * a1 + h2_1 * d4)

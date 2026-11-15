@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
-from array_api._2024_12 import Array
+from array_api.latest import Array
 from array_api_compat import array_namespace
 
-from biem_helmholtz_2d._hankel import hankel_h1_h2
-
+from ._hankel import hankel_h1_h2
 from ._is_close import is_close
 
 
@@ -14,9 +11,10 @@ def A1(
     *,
     t: Array,
     tau: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    ddx: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    ddx_tau: Array,
     eps: float = 0,
 ) -> Array:
     r"""
@@ -29,17 +27,15 @@ def A1(
     Parameters
     ----------
     t : Array
-        Source nodes t of shape (...,).
+        Target nodes $t$ of shape (...,).
     tau : Array
-        Target nodes tau of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization x of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative dx of the parametrization of (...,) -> (..., 2).
-    ddx : Callable[[Array], Array]
-        Second derivative ddx of the parametrization of (...,) -> (..., 2).
+        Source nodes $\tau$ of shape (...,).
+    x_t, x_tau : Array
+        Boundary positions $x(t)$ and $x(\tau)$ of shape (..., 2).
+    dx_tau, ddx_tau : Array
+        Boundary derivatives $x'(\tau)$ and $x''(\tau)$ of shape (..., 2).
     eps : float
-        If ``abs(tau - t) <= eps``, replace A_1(t, tau) by the diagonal limit value.
+        If ``abs(tau - t) <= eps``, replace $A_1(t, \tau)$ by the diagonal limit value.
 
     Returns
     -------
@@ -48,27 +44,15 @@ def A1(
 
     """
     if eps < 0:
-        msg = "eps must be non-negative."
-        raise ValueError(msg)
-
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-    x_tau = x(tau)
-    dx_tau = dx(tau)
-    ddx_tau = ddx(tau)
-
-    # non-limit part
+        raise ValueError("eps must be non-negative")
+    xp = array_namespace(t, tau, x_t, x_tau, dx_tau, ddx_tau)
     diff = x_t - x_tau
-    dist = xp.linalg.vector_norm(diff, axis=-1)
-    n_star_tau = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
-    result = xp.sum(n_star_tau * diff, axis=-1) / (dist**2)
-
-    # limit part
-    near0 = is_close(t, tau, eps)
+    normal = xp.stack([dx_tau[..., 1], -dx_tau[..., 0]], axis=-1)
+    result = xp.sum(normal * diff, axis=-1) / xp.sum(diff**2, axis=-1)
     limit = (ddx_tau[..., 0] * dx_tau[..., 1] - ddx_tau[..., 1] * dx_tau[..., 0]) / (
-        2 * xp.linalg.vector_norm(dx_tau, axis=-1) ** 2
+        2 * xp.sum(dx_tau**2, axis=-1)
     )
-    return xp.where(near0, limit, result)
+    return xp.where(is_close(t, tau, eps), limit, result)
 
 
 def slp_kernel_split(
@@ -76,8 +60,9 @@ def slp_kernel_split(
     t: Array,
     tau: Array,
     k: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
     eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
@@ -86,17 +71,17 @@ def slp_kernel_split(
     Parameters
     ----------
     t : Array
-        Source nodes t of shape (...,).
-    tau : float
-        Target node tau of shape (...,).
-    k : float
-        Wave number k of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization x of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative dx of the parametrization of (...,) -> (..., 2).
+        Target nodes $t$ of shape (...,).
+    tau : Array
+        Source nodes $\tau$ of shape (...,).
+    k : Array
+        Wave number $k$ of shape (...,).
+    x_t, x_tau : Array
+        Boundary positions $x(t)$ and $x(\tau)$ of shape (..., 2).
+    dx_tau : Array
+        Boundary derivative $x'(\tau)$ of shape (..., 2).
     eps : float
-        If ``abs(t - tau) <= eps``, replace the singular value of S(t, tau).
+        If ``abs(t - tau) <= eps``, replace the singular value of $S(t, \tau)$.
 
     Returns
     -------
@@ -106,26 +91,11 @@ def slp_kernel_split(
         Analytic remainder of $S(t, \tau)$ of shape (...,).
 
     """
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-    dx_tau = dx(tau)
-    jac_tau = xp.sqrt(xp.sum(dx_tau**2, axis=-1))
-
-    def fval(t_in: Array) -> Array:
-        diff = x_t - x(t_in)
-        r = xp.sqrt(xp.sum(diff**2, axis=-1))
-        return k * r
-
-    h1, h2 = hankel_h1_h2(
-        tau,
-        order=0,
-        f=fval,
-        fprime0=k * jac_tau,
-        eps=eps,
-        t_singularity=t,
-    )
-    jac_tau = xp.sqrt(xp.sum(dx(tau) ** 2, axis=-1))
-    return (1j / 4) * h1 * jac_tau, (1j / 4) * h2 * jac_tau
+    xp = array_namespace(t, tau, k, x_t, x_tau, dx_tau)
+    jac = xp.linalg.vector_norm(dx_tau, axis=-1)
+    argument = k * xp.linalg.vector_norm(x_t - x_tau, axis=-1)
+    h1, h2 = hankel_h1_h2(tau, order=0, f=argument, fprime0=k * jac, eps=eps, t_singularity=t)
+    return (1j / 4) * h1 * jac, (1j / 4) * h2 * jac
 
 
 def dlp_kernel_split(
@@ -133,9 +103,10 @@ def dlp_kernel_split(
     t: Array,
     tau: Array,
     k: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    ddx: Callable[[Array], Array],
+    x_t: Array,
+    x_tau: Array,
+    dx_tau: Array,
+    ddx_tau: Array,
     eps: float = 0,
 ) -> tuple[Array, Array]:
     r"""
@@ -144,19 +115,17 @@ def dlp_kernel_split(
     Parameters
     ----------
     t : Array
-        Source nodes t of shape (...,).
-    tau : float
-        Target node tau of shape (...,).
-    k : float
-        Wave number k of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization x of  (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative dx of the parametrization of (...,) -> (..., 2).
-    ddx : Callable[[Array], Array]
-        Second derivative ddx of the parametrization of (...,) -> (..., 2).
+        Target nodes $t$ of shape (...,).
+    tau : Array
+        Source nodes $\tau$ of shape (...,).
+    k : Array
+        Wave number $k$ of shape (...,).
+    x_t, x_tau : Array
+        Boundary positions $x(t)$ and $x(\tau)$ of shape (..., 2).
+    dx_tau, ddx_tau : Array
+        Boundary derivatives $x'(\tau)$ and $x''(\tau)$ of shape (..., 2).
     eps : float
-        If ``abs(t - tau) <= eps``, replace the singular value of D(t, tau).
+        If ``abs(t - tau) <= eps``, replace the singular value of $D(t, \tau)$.
 
     Returns
     -------
@@ -166,80 +135,8 @@ def dlp_kernel_split(
         Analytic remainder of $D(t, \tau)$ of shape (...,).
 
     """
-    xp = array_namespace(t, tau)
-    x_t = x(t)
-
-    def fval(t_in: Array) -> Array:
-        diff = x_t - x(t_in)
-        r = xp.sqrt(xp.sum(diff**2, axis=-1))
-        return k * r
-
-    h1, h2 = hankel_h1_h2(
-        tau,
-        order=1,
-        f=fval,
-        fprime0=None,
-        eps=eps,
-        t_singularity=t,
-    )
-    a1 = A1(
-        t=t,
-        tau=tau,
-        x=x,
-        dx=dx,
-        ddx=ddx,
-        eps=eps,
-    )
+    xp = array_namespace(t, tau, k, x_t, x_tau, dx_tau, ddx_tau)
+    argument = k * xp.linalg.vector_norm(x_t - x_tau, axis=-1)
+    h1, h2 = hankel_h1_h2(tau, order=1, f=argument, fprime0=None, eps=eps, t_singularity=t)
+    a1 = A1(t=t, tau=tau, x_t=x_t, x_tau=x_tau, dx_tau=dx_tau, ddx_tau=ddx_tau, eps=eps)
     return (1j / 4) * h1 * a1, (1j / 4) * h2 * a1
-
-
-def dlp_adjoint_kernel_split(
-    *,
-    t: Array,
-    tau: Array,
-    k: Array,
-    x: Callable[[Array], Array],
-    dx: Callable[[Array], Array],
-    ddx: Callable[[Array], Array],
-    eps: float = 0,
-) -> tuple[Array, Array]:
-    r"""
-    Split the adjoint double-layer kernel into log-singular and analytic parts.
-
-    The adjoint double-layer kernel $\mathcal{D}^*$ is the kernel of the
-    operator adjoint with respect to the $L^2$ bilinear form
-    $\langle f,g\rangle = \int f g$.  It is obtained by swapping
-    $t$ and $\tau$ in the pointwise kernel
-
-    $$
-    D^*(t, \tau) = D(\tau, t).
-    $$
-
-    Parameters
-    ----------
-    t : Array
-        Source nodes $t$ of shape (...,).
-    tau : Array
-        Target nodes $\tau$ of shape (...,).
-    k : Array
-        Wave number $k$ of shape (...,).
-    x : Callable[[Array], Array]
-        Boundary parametrization $x$ of (...,) -> (..., 2).
-    dx : Callable[[Array], Array]
-        First derivative $x'$ of the parametrization of (...,) -> (..., 2).
-    ddx : Callable[[Array], Array]
-        Second derivative $x''$ of the parametrization of (...,) -> (..., 2).
-    eps : float
-        If ``abs(t - tau) <= eps``, replace singular values by their diagonal limits.
-
-    Returns
-    -------
-    Array
-        Log-singular coefficient of $D^*(t, \tau)$ of shape (...,).
-    Array
-        Analytic remainder of $D^*(t, \tau)$ of shape (...,).
-
-    """
-    # The adjoint kernel D* is just D with swapped arguments.
-    # Delegate to the regular DLP split with (t, tau) swapped.
-    return dlp_kernel_split(t=tau, tau=t, k=k, x=x, dx=dx, ddx=ddx, eps=eps)

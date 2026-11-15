@@ -11,13 +11,13 @@
       "source": "34j/skills",
       "sourceType": "github",
       "skillPath": "general/SKILL.md",
-      "computedHash": "dc90ff6259505d665bc0c6e355f29d3e6708daac8247c3dce88981e0e3cec808"
+      "computedHash": "c73ad46c3d782c4513178682c9a9529479d73065fe51f1b088f07bd20c182d52"
     },
     "python": {
       "source": "34j/skills",
       "sourceType": "github",
       "skillPath": "python/SKILL.md",
-      "computedHash": "92a4dde8dc01bffc33f63f500eee9eaf35d9625602c16946848211966e88fe56"
+      "computedHash": "2cf4397b85d1207b638a19912993f10a81d8fa8a71f279533b456816cf62ebd7"
     }
   }
 }

@@ -21,14 +21,11 @@ def test_three_circles(xp: ArrayNamespace, dtype: Any, device: Any) -> None:
     k = xp.asarray(1.2, dtype=dtype, device=device)
     alpha = xp.asarray(1, dtype=dtype, device=device)
     eta = xp.asarray(1, dtype=dtype, device=device)
-    shapes = [
-        ParameterShape(
-            center=centers[i],
-            cos_coefs=radii[i : i + 1],
-            sin_coefs=xp.zeros(0, dtype=dtype, device=device),
-        )
-        for i in range(3)
-    ]
+    shapes = ParameterShape(
+        center=centers,
+        cos_coefs=radii[:, None],
+        sin_coefs=xp.zeros((3, 0), dtype=dtype, device=device),
+    )
     density = scattering_dirichlet(
         k=k, shape=shapes, incident_field=plane_wave(k, direction), alpha=alpha, eta=eta, n=16
     )

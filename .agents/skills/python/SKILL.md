@@ -9,3 +9,8 @@ description: "Best practices for python code"
 - Do not import within function. If the package is not installed in the current environment, install them via `uv add <package>` or tell the user to do so.
 - To run python commands, use `uv run python`, `uv run pytest`, etc. Never run `python` directly. You may run `uv run pytest` on your own.
 - After the work is done, run `prek run -a`, and fix the linting errors prioritizing the ones introduced by your work.
+- Naming:
+  - Name `tqdm.tqdm` instance `pbar`. For multiple, `pbar_xxx`, etc.
+  - Name `DataFrame` instance `df`. For multiple, `df_xxx`, etc.
+  - But do not name arrays `array_xxx`.
+- Use `attrs.frozen()` instead of `dataclass` / `NamedTuple`, install if not installed and needed.

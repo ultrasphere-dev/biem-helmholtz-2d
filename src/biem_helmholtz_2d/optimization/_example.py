@@ -6,11 +6,12 @@ import pathlib
 from pathlib import Path
 from typing import Any
 
+import array_api_compat.numpy as np_compat
 import orjson
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
-from ie_circle import NystromInterpolant
+from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
@@ -20,8 +21,13 @@ from biem_helmholtz_2d._acoustic import (
     plot_near_field_prepare,
     scattering_dirichlet,
 )
+from biem_helmholtz_2d._adjoint import solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import point_objective_shape_derivative
+from biem_helmholtz_2d._objective import (
+    point_field_adjoint_derivative,
+    point_field_density_gradient,
+)
+from biem_helmholtz_2d._pairs import off_diagonal_indices
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -170,10 +176,12 @@ def example_optimization(
         raise ValueError("at least one center is required")
     if not bool(xp.all(xp.isfinite(centers))):
         raise ValueError("centers must be finite")
-    for i in range(n_scatterers):
-        for j in range(i):
-            if float(xp.linalg.vector_norm(centers[i] - centers[j])) <= 4:
-                raise ValueError("centers must be separated by more than 4")
+    rows, columns = off_diagonal_indices(n_scatterers, xp=xp, device=device)
+    separation = xp.linalg.vector_norm(
+        xp.take(centers, rows, axis=0) - xp.take(centers, columns, axis=0), axis=-1
+    )
+    if bool(xp.any(separation <= 4)):
+        raise ValueError("centers must be separated by more than 4")
     path.mkdir(parents=True, exist_ok=True)
     k = xp.asarray(k, device=device, dtype=xp.result_type(dtype, k))
     eta = xp.asarray(eta, device=device, dtype=xp.result_type(dtype, eta))
@@ -190,23 +198,24 @@ def example_optimization(
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
 
-    # Unit perturbations of the cosine and sine coefficients.
-    center_zero = xp.zeros(2, dtype=dtype, device=device)
-    eye = xp.eye(n_modes, dtype=dtype, device=device)
-    zero = xp.zeros(n_modes, dtype=dtype, device=device)
-    zero_shape = ParameterShape(
-        cos_coefs=xp.zeros(n_modes + 1, dtype=dtype, device=device),
-        sin_coefs=zero,
-        center=center_zero,
-    )
+    # Each perturbation batch varies the same Fourier coefficient on each boundary.
+    eye_modes = xp.eye(n_modes, dtype=dtype, device=device)
+    eye_bodies = xp.eye(n_scatterers, dtype=dtype, device=device)
+    zeros = xp.zeros((n_scatterers, n_scatterers, n_modes), dtype=dtype, device=device)
+    zero_constant = xp.zeros((n_scatterers, n_scatterers, 1), dtype=dtype, device=device)
+    zero_centers = xp.zeros((n_scatterers, n_scatterers, 2), dtype=dtype, device=device)
     basis = [
         (
             ParameterShape(
-                cos_coefs=xp.concat([xp.zeros(1, dtype=dtype, device=device), eye[m]]),
-                sin_coefs=zero,
-                center=center_zero,
+                cos_coefs=xp.concat([zero_constant, eye_bodies[..., None] * eye_modes[m]], axis=-1),
+                sin_coefs=zeros,
+                center=zero_centers,
             ),
-            ParameterShape(cos_coefs=zero_shape.cos_coefs, sin_coefs=eye[m], center=center_zero),
+            ParameterShape(
+                cos_coefs=xp.concat([zero_constant, zeros], axis=-1),
+                sin_coefs=eye_bodies[..., None] * eye_modes[m],
+                center=zero_centers,
+            ),
         )
         for m in range(n_modes)
     ]
@@ -217,14 +226,11 @@ def example_optimization(
         )
         return cos, x[..., 1]
 
-    def make_shapes(x: Array, /) -> list[ParameterShape]:
+    def make_shapes(x: Array, /) -> ParameterShape:
         cos, sin = unpack(x)
-        return [
-            ParameterShape(cos_coefs=cos[i], sin_coefs=sin[i], center=centers[i])
-            for i in range(n_scatterers)
-        ]
+        return ParameterShape(cos_coefs=cos, sin_coefs=sin, center=centers)
 
-    def solve(x: Array, /) -> tuple[list[ParameterShape], NystromInterpolant, Array]:
+    def solve(x: Array, /) -> tuple[ParameterShape, NystromInterpolant, Array]:
         shapes = make_shapes(x)
         phi = scattering_dirichlet(
             k=k, shape=shapes, incident_field=incident_field, alpha=alpha, eta=eta, n=n
@@ -242,31 +248,43 @@ def example_optimization(
         if n_modes == 0:
             return xp.zeros_like(x)
         shapes, phi, field = solve(x)
-        derivative = point_objective_shape_derivative(
+        field_gradient = 2 * (field - target)
+        adjoint = solve_adjoint(
             shape=shapes,
-            density=phi,
-            field=field,
-            point=point,
-            target=target,
             k=k,
             alpha=alpha,
             eta=eta,
-            incident_field_grad=incident_field_grad,
-            n_solve=n,
-            n_quad=n_quad,
+            n=n,
+            grad_phi_j=point_field_density_gradient(
+                point, field_gradient, shape=shapes, k=k, alpha=alpha, eta=eta
+            ),
         )
-        body_derivatives = []
-        for body in range(n_scatterers):
-            mode_derivatives = []
-            for pair in basis:
-                pair_derivatives = []
-                for h in pair:
-                    perturbations = [zero_shape] * n_scatterers
-                    perturbations[body] = h
-                    pair_derivatives.append(derivative(perturbations, [body]))
-                mode_derivatives.append(xp.stack(pair_derivatives))
-            body_derivatives.append(xp.stack(mode_derivatives))
-        return xp.stack(body_derivatives)
+        t, _ = trapezoidal_quadrature(
+            n_quad,
+            xp=xp,
+            device=device,
+            dtype=xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta)),
+        )
+        incident_grad = incident_field_grad(shapes.x(t))
+
+        def directional(h: ParameterShape, /) -> Array:
+            return point_field_adjoint_derivative(
+                phi,
+                adjoint,
+                point=point,
+                field_gradient=field_gradient,
+                incident_gradient=incident_grad,
+                shape=shapes,
+                h_shape=h,
+                k=k,
+                alpha=alpha,
+                eta=eta,
+                n=n_quad,
+            )
+
+        return xp.moveaxis(
+            xp.stack([xp.stack([directional(h) for h in pair]) for pair in basis]), -1, 0
+        )
 
     # The Euclidean derivative remains distinct from the Hilbert Riesz gradient.
     modes = xp.arange(1, n_modes + 1, dtype=dtype, device=device)
@@ -311,13 +329,11 @@ def example_optimization(
     shapes_opt = make_shapes(x)
 
     t_plot = xp.linspace(0, 2 * xp.pi, 10000, dtype=dtype, device=device)
-    x_plot = xp.asarray(xp.stack([shape.x(t_plot) for shape in shapes_opt]), device="cpu")
+    x_plot = xp.asarray(xp.moveaxis(shapes_opt.x(t_plot), -2, 0), device="cpu")
     centers_cpu = xp.asarray(centers, device="cpu")
 
     def real_array_to_list(values: Array, /) -> Any:
-        if values.ndim == 0:
-            return float(values)
-        return [real_array_to_list(values[i]) for i in range(values.shape[0])]
+        return np_compat.asarray(xp.asarray(values, device="cpu")).tolist()
 
     # Optimization history
     k_value, alpha_value, eta_value = complex(k), complex(alpha), complex(eta)
@@ -425,10 +441,20 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     cos_coefs = history["final_parameters"]["cos_coefs"]
     if cos_coefs and isinstance(cos_coefs[0], (int, float)):
         cos_coefs, sin_coefs = [cos_coefs], [sin_coefs]
-    for i, (cos, sin) in enumerate(zip(cos_coefs, sin_coefs, strict=True)):
-        m = range(1, len(sin) + 1)
-        ax.plot(m, [abs(value) for value in cos[1:]], "o-", label=f"body {i + 1} cosine")
-        ax.plot(m, [abs(value) for value in sin], "o-", label=f"body {i + 1} sine")
+    cos, sin = np_compat.asarray(cos_coefs), np_compat.asarray(sin_coefs)
+    m = range(1, sin.shape[1] + 1)
+    ax.plot(
+        m,
+        np_compat.moveaxis(np_compat.abs(cos[:, 1:]), 0, -1),
+        "o-",
+        label=[f"body {i + 1} cosine" for i in range(cos.shape[0])],
+    )
+    ax.plot(
+        m,
+        np_compat.moveaxis(np_compat.abs(sin), 0, -1),
+        "o-",
+        label=[f"body {i + 1} sine" for i in range(sin.shape[0])],
+    )
     ax.set_yscale("log")
     ax.set_xlabel("Mode number")
     ax.set_ylabel("Magnitude")
@@ -443,8 +469,10 @@ def example_optimization_plot(path: pathlib.Path) -> None:
     x_shapes, y_shapes = shape_data["x"], shape_data["y"]
     if x_shapes and isinstance(x_shapes[0], (int, float)):
         x_shapes, y_shapes = [x_shapes], [y_shapes]
-    for x, y in zip(x_shapes, y_shapes, strict=True):
-        ax.plot(x, y)
+    ax.plot(
+        np_compat.moveaxis(np_compat.asarray(x_shapes), 0, -1),
+        np_compat.moveaxis(np_compat.asarray(y_shapes), 0, -1),
+    )
     ax.set_aspect("equal")
     ax.set_title("Optimized shape")
     fig.tight_layout()

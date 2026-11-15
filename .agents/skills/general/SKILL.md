@@ -25,7 +25,8 @@ description: "The attitude towards solving the problem"
   - user: It should be comma-separated
   - you: "The command syntax is `command --flag 1,2` **instead of `command --flag 1 --flag 2`**" <- This bold part is strictly prohibited, it is so terrible, you NEVER should "log" our conversation, just write "The command syntax is `command --flag 1,2`"
 - Documentation:
-  - Documentation should be extremely simple, that is, who the heck will read your redundant ai slop? And your lengthy details and documentation will almost always expired after any tiny code change.
+  - Documentation should be extremely simple, that is, who the heck will read your redundant ai slop? And your lengthy details and documentation will almost always expired after any tiny code change. No one asked for explanation on edge cases, only basic purpose is required.
+  - And you are generally not allowed to newly add or edit / shrink documentation, unless the documentation would be obsolete if you do not do so. Again, who would consume time to your lengthy, terrible and meaningless ai-generated text? Reading source code is faster. Don't get cocky for an AI, you are always too confident.
 - Tests:
   - Do not add useless tests because you have "found" something, you are "surprised", or user said something "new".
   - Tests should be canonical and simple, and tests should not be added to ban / force something.
@@ -69,3 +70,8 @@ description: "The attitude towards solving the problem"
   - Consider a bit before asking questions.
   - Set timeout for `ask_user` to 30s. If reached to timeout, it will say "Cancelled", if so reconsider and pick the best.
   - The `ask_user` is not intended for "confirmation for doing something heavy", you are meant to work autonomously as much as possible.
+- Memory:
+  - Canonically write MEMORY.md the plans, scopes, findings and never make the same mistake again. so that fresh new agent can understand. It's not only for you, your writing skill is so bad, put maximum effort to make it short and concise, behave yourself.
+- Bug fixing:
+  - Investigate the root cause first.
+  - You are not allowed to apply multiple "potential fixes" at once and lazily leave everything, because "code works is good". You are too concerned about "solving" the problem and not actually canonically solving, the root cause is still mystery if you leave and mess like that. For example, if you are blocked from a website using html access, you may want to try changing to browser access, adding user agent, increasing retry count, changing IP address, check internet connection, etc. But only the one best solution can be finnaly left, you cannot lazily leave every "fix" in the code.

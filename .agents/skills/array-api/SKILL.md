@@ -48,7 +48,6 @@ description: Conventions that MUST be followed when implementing array API compa
     ```python
     from array_api.latest import Array, ArrayNamespace
 
-
     def func(x: Array, power: Array) -> Array:
         """
         Computes $x^p$.

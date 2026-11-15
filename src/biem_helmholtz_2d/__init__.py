@@ -1,12 +1,18 @@
 """Two-dimensional Helmholtz boundary-integral methods."""
 
 from ._accuracy import accuracy
-from ._objective import point_objective_shape_derivative
-from ._sensitivity import SensitivityResult, adjoint_central_derivative
+from ._adjoint import objective_derivative, solve_adjoint
+from ._objective import (
+    point_field_adjoint_derivative,
+    point_field_density_gradient,
+    point_field_shape_derivative,
+)
 
 __all__ = [
-    "SensitivityResult",
     "accuracy",
-    "adjoint_central_derivative",
-    "point_objective_shape_derivative",
+    "objective_derivative",
+    "point_field_adjoint_derivative",
+    "point_field_density_gradient",
+    "point_field_shape_derivative",
+    "solve_adjoint",
 ]

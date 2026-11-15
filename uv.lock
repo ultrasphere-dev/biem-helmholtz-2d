@@ -203,7 +203,7 @@ requires-dist = [
     { name = "array-api-shape-check", specifier = ">=1.0.1" },
     { name = "attrs", specifier = ">=25.3.0" },
     { name = "cyclopts", specifier = ">=5.5,<6" },
-    { name = "ie-circle", specifier = ">=1.0.1" },
+    { name = "ie-circle", git = "https://github.com/ultrasphere-dev/ie-circle.git?rev=d325cce7d11e9500cd47dd1199d08bf411eff199" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "orjson", specifier = ">=3.12.0" },
     { name = "pandas", specifier = ">=3.0.3" },
@@ -733,8 +733,8 @@ wheels = [
 
 [[package]]
 name = "ie-circle"
-version = "1.0.1"
-source = { registry = "https://pypi.org/simple" }
+version = "1.1.0"
+source = { git = "https://github.com/ultrasphere-dev/ie-circle.git?rev=d325cce7d11e9500cd47dd1199d08bf411eff199#d325cce7d11e9500cd47dd1199d08bf411eff199" }
 dependencies = [
     { name = "array-api-compat" },
     { name = "array-api-shape-check" },
@@ -743,10 +743,6 @@ dependencies = [
     { name = "numpy" },
     { name = "sympy" },
     { name = "types-array-api" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/e5/86dc4b677505a281d1b6bb812b8b78f72ac3bd1b4fb85f6083e1e6a7e569/ie_circle-1.0.1.tar.gz", hash = "sha256:646908a8a53cba086b15511abb5573910f93c853fef311319d54e219f623da7c", size = 15343, upload-time = "2026-11-10T05:05:53.037Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/09/a212615dab8eaa8ee60453b09e7dadf3eaa485651fe8d32550cd423a795f/ie_circle-1.0.1-py3-none-any.whl", hash = "sha256:626cced5f0e592f3965eb6a420496e28e098240311b88755a540f675d34d0120", size = 14883, upload-time = "2026-11-10T05:05:51.46Z" },
 ]
 
 [[package]]

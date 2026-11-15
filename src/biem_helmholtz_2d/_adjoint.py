@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 
 from array_api.latest import Array
 from array_api_compat import array_namespace
@@ -15,6 +15,7 @@ from ie_circle import (
 )
 
 from ._acoustic import _coupled_kernels
+from ._pairs import off_diagonal_indices, off_diagonal_matrix
 from ._potential_inner_derivative import dlp_shape_derivative_kernel, slp_shape_derivative_kernel
 from ._potential_shape_derivative import dlp_shape_derivative_split, slp_shape_derivative_split
 
@@ -22,7 +23,7 @@ from ._potential_shape_derivative import dlp_shape_derivative_split, slp_shape_d
 def solve_adjoint(
     *,
     k: Array,
-    shape: Sequence[Shape],
+    shape: Shape,
     alpha: Array,
     eta: Array,
     n: int,
@@ -39,8 +40,8 @@ def solve_adjoint(
     ----------
     k, alpha, eta : Array
         Wave number and coupling parameters of broadcastable shape (...(B),).
-    shape : Sequence[Shape]
-        Nonempty sequence of disjoint boundaries of (...) -> (..., 2).
+    shape : Shape
+        Disjoint boundaries of (...) -> (..., C, 2).
     n : int
         Quadrature parameter, with $Q=2n-1$ nodes.
     grad_phi_j : Callable[[Array], Array]
@@ -53,12 +54,13 @@ def solve_adjoint(
         Adjoint density of (...) -> (..., ...(B), C).
 
     """
-    if not shape:
-        raise ValueError("At least one boundary is required")
     xp = array_namespace(k, alpha, eta)
     k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
-    info = check_shapes("*B,*B,*B", k, alpha, eta, names="k,alpha,eta")
-    batch_shape = info.unique["B"].shape_broadcasted
+    batch_shape = k.shape
+    dtype = xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
+    count = shape.x(xp.asarray(0, dtype=dtype, device=k.device)).shape[-2]
+    if count == 0:
+        raise ValueError("At least one boundary is required")
     forward = _coupled_kernels(shape=shape, k=k, alpha=alpha, eta=eta)
 
     def k_log(t: Array, tau: Array) -> Array:
@@ -69,16 +71,14 @@ def solve_adjoint(
 
     def coefficient(t: Array) -> Array:
         value = xp.broadcast_to(xp.conj(alpha) / 2, (*t.shape, *batch_shape))
-        return value[..., None] * xp.ones(len(shape), device=t.device, dtype=t.dtype)
+        return value[..., None] * xp.ones(count, device=t.device, dtype=t.dtype)
 
     def rhs(t: Array) -> Array:
         gradient = grad_phi_j(t)
-        check_shapes(
-            "...*BC,...,*B,C", gradient, t, alpha, (len(shape),), names="grad_phi_j,t,alpha,C"
-        )
-        if gradient.shape[: t.ndim] != t.shape or gradient.shape[-1] != len(shape):
+        check_shapes("...*BC,...,*B,C", gradient, t, alpha, (count,), names="grad_phi_j,t,alpha,C")
+        if gradient.shape[: t.ndim] != t.shape or gradient.shape[-1] != count:
             raise ValueError("grad_phi_j must have one value per parameter and scatterer")
-        return -xp.broadcast_to(gradient, (*t.shape, *batch_shape, len(shape)))
+        return -xp.broadcast_to(gradient, (*t.shape, *batch_shape, count))
 
     return nystrom(
         coefficient,
@@ -91,17 +91,10 @@ def solve_adjoint(
     )
 
 
-def _relative_motion(source: Shape, target: Shape, t: Array, /) -> Callable[[Array], Array]:
-    def motion(parameter: Array, /) -> Array:
-        return source.x(parameter) - target.x(t)
-
-    return motion
-
-
 def objective_derivative(
     *,
     k: Array,
-    shape: Sequence[Shape],
+    shape: Shape,
     alpha: Array,
     eta: Array,
     n: int,
@@ -109,7 +102,7 @@ def objective_derivative(
     adjoint: NystromInterpolant,
     dr_j: Array,
     dr_g: Array,
-    h_shape: Sequence[Shape],
+    h_shape: Shape,
     eps: float = 0,
 ) -> Array:
     r"""
@@ -134,8 +127,8 @@ def objective_derivative(
     ----------
     k : Array
         Wave number of shape (...(B),).
-    shape : Sequence[Shape]
-        Disjoint boundary parametrisations of (...,) -> (..., 2).
+    shape : Shape
+        Disjoint boundary parametrisations of (...) -> (..., C, 2).
     alpha : Array
         Coupling parameter $\alpha$ of shape (...(B),).
     eta : Array
@@ -152,9 +145,8 @@ def objective_derivative(
         Value $D_r j(r,\phi_r)[h]$ of shape (...(B),).
     dr_g : Array
         Shape derivative $D_r g[h]$ at quadrature nodes of shape ``(Q, ...(B), C)``.
-    h_shape : Sequence[Shape]
-        Shape perturbations $h$, each providing $h(t)$, $h'(t)$ and $h''(t)$
-        of (...,) -> (..., 2), in boundary order.
+    h_shape : Shape
+        Shape perturbations $h$ of (...) -> (..., C, 2), in boundary order.
     eps : float
         Tolerance for switching to diagonal limit in singular kernel evaluations.
 
@@ -172,39 +164,40 @@ def objective_derivative(
     >>> shape = CircleShape(rho)
     >>> a = xp.asarray(1.0); e = xp.asarray(0.0)
     >>> def inc(x): return xp.exp(1j * k * x[..., 0])
-    >>> phi = scattering_dirichlet(k=k, shape=[shape], incident_field=inc, alpha=a, eta=e, n=8)
+    >>> phi = scattering_dirichlet(k=k, shape=shape, incident_field=inc, alpha=a, eta=e, n=8)
     >>> class _ZeroShape:
-    ...     def x(self, t, /): return xp.zeros((*t.shape, 2))
-    ...     def dx(self, t, /): return xp.zeros((*t.shape, 2))
-    ...     def ddx(self, t, /): return xp.zeros((*t.shape, 2))
+    ...     def x(self, t, /): return xp.zeros((*t.shape, 1, 2))
+    ...     def dx(self, t, /): return xp.zeros((*t.shape, 1, 2))
+    ...     def ddx(self, t, /): return xp.zeros((*t.shape, 1, 2))
     >>> from ie_circle import trapezoidal_quadrature
     >>> t, _ = trapezoidal_quadrature(8, xp=xp, device='cpu', dtype=xp.float64)
     >>> dr_g = xp.zeros((2 * 8 - 1, 1))
     >>> def gj(t): return xp.zeros_like(t)[..., None]
-    >>> psi = solve_adjoint(k=k, shape=[shape], alpha=a, eta=e, n=8, grad_phi_j=gj)
+    >>> psi = solve_adjoint(k=k, shape=shape, alpha=a, eta=e, n=8, grad_phi_j=gj)
     >>> objective_derivative(
-    ...     k=k, shape=[shape], alpha=a, eta=e, n=8,
+    ...     k=k, shape=shape, alpha=a, eta=e, n=8,
     ...     phi=phi, adjoint=psi, dr_j=xp.asarray(0),
-    ...     dr_g=dr_g, h_shape=[_ZeroShape()],
+    ...     dr_g=dr_g, h_shape=_ZeroShape(),
     ... )
     np.float64(0.0)
 
     """
-    if not shape or len(shape) != len(h_shape):
-        raise ValueError("shape and h_shape must have the same nonzero length")
     xp = array_namespace(k, alpha, eta, dr_j, dr_g)
     t, w = trapezoidal_quadrature(
         n, xp=xp, device=k.device, dtype=xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
     )
     n_nodes = 2 * n - 1
+    count = shape.x(t[:1]).shape[-2]
+    if count == 0 or h_shape.x(t[:1]).shape[-2] != count:
+        raise ValueError("shape and h_shape must have the same nonzero length")
     phi_t, psi_t = phi(t), adjoint(t)
     values_and_names = ((phi_t, "phi"), (psi_t, "adjoint"), (dr_g, "dr_g"))
     infos = [
-        check_shapes("Q*BC,QC", values, (n_nodes, len(shape)), names=f"{name},expected")
+        check_shapes("Q*BC,QC", values, (n_nodes, count), names=f"{name},expected")
         for values, name in values_and_names
     ]
     for values, name in values_and_names:
-        if values.shape[0] != n_nodes or values.shape[-1] != len(shape):
+        if values.shape[0] != n_nodes or values.shape[-1] != count:
             raise ValueError(f"{name} must have one value per quadrature node and scatterer")
     k, alpha, eta, _, _, _, dr_j = xp.broadcast_arrays(
         k, alpha, eta, phi_t[0, ..., 0], psi_t[0, ..., 0], dr_g[0, ..., 0], dr_j
@@ -215,7 +208,7 @@ def objective_derivative(
     for (values, _), info in zip(values_and_names, infos, strict=True):
         missing = batch_ndim - len(info.unique["B"].shape_broadcasted)
         values = values[(slice(None),) + (None,) * missing + (...,)]
-        broadcasted.append(xp.broadcast_to(values, (n_nodes, *batch_shape, len(shape))))
+        broadcasted.append(xp.broadcast_to(values, (n_nodes, *batch_shape, count)))
     phi_t, psi_t, dr_g = broadcasted
     check_shapes(
         "Q*BC,Q*BC,Q*BC,*B,*B,*B,*B,QC",
@@ -226,7 +219,7 @@ def objective_derivative(
         alpha,
         eta,
         dr_j,
-        (n_nodes, len(shape)),
+        (n_nodes, count),
         names="phi,adjoint,dr_g,k,alpha,eta,dr_j,expected",
     )
     _, weights = log_cot_power_quadrature(n, 0, xp=xp, device=k.device, dtype=t.dtype)
@@ -234,56 +227,58 @@ def objective_derivative(
         xp.arange(n_nodes, device=k.device, dtype=xp.int64)[None, :]
         - xp.arange(n_nodes, device=k.device, dtype=xp.int64)[:, None]
     ) % n_nodes
-    weights = weights[indices][(...,) + (None,) * batch_ndim]
+    weights = weights[indices][(...,) + (None,) * (batch_ndim + 1)]
     t_row = t[(slice(None), None) + (None,) * batch_ndim]
     tau = t[(None, slice(None)) + (None,) * batch_ndim]
-    rows = []
-    for i, target in enumerate(shape):
-        contributions = []
-        for j, source in enumerate(shape):
-            h = h_shape[j]
-            if i == j:
-                sl = slp_shape_derivative_split(
-                    t=t_row, tau=tau, k=k, x=source.x, dx=source.dx, h=h.x, dh=h.dx, eps=eps
-                )
-                dl = dlp_shape_derivative_split(
-                    t=t_row,
-                    tau=tau,
-                    k=k,
-                    x=source.x,
-                    dx=source.dx,
-                    ddx=source.ddx,
-                    h=h.x,
-                    dh=h.dx,
-                    ddh=h.ddx,
-                    eps=eps,
-                )
-                kernel = (alpha * dl[0] - 1j * eta * sl[0]) * weights
-                kernel += (alpha * dl[1] - 1j * eta * sl[1]) * w[0]
-            else:
-                # Simultaneous translations leave a cross kernel unchanged.
-                relative_motion = _relative_motion(h, h_shape[i], t_row)
-                point = target.x(t_row)
-                sl = slp_shape_derivative_kernel(
-                    point,
-                    shape_x=source.x,
-                    shape_dx=source.dx,
-                    h=relative_motion,
-                    dh=h.dx,
-                    k=k,
-                    tau=tau,
-                )
-                dl = dlp_shape_derivative_kernel(
-                    point,
-                    shape_x=source.x,
-                    shape_dx=source.dx,
-                    h=relative_motion,
-                    dh=h.dx,
-                    k=k,
-                    tau=tau,
-                )
-                kernel = (alpha * dl - 1j * eta * sl) * w[0]
-            contributions.append(xp.sum(kernel * phi_t[None, ..., j], axis=1))
-        rows.append(sum(contributions))
-    residual = xp.stack(rows, axis=-1) - dr_g
+    x_t, x_tau = shape.x(t_row), shape.x(tau)
+    dx_tau, ddx_tau = shape.dx(tau), shape.ddx(tau)
+    h_t, h_tau = h_shape.x(t_row), h_shape.x(tau)
+    dh_tau, ddh_tau = h_shape.dx(tau), h_shape.ddx(tau)
+    sl = slp_shape_derivative_split(
+        t=t_row[..., None],
+        tau=tau[..., None],
+        k=k[..., None],
+        x_t=x_t,
+        x_tau=x_tau,
+        dx_tau=dx_tau,
+        h_t=h_t,
+        h_tau=h_tau,
+        dh_tau=dh_tau,
+        eps=eps,
+    )
+    dl = dlp_shape_derivative_split(
+        t=t_row[..., None],
+        tau=tau[..., None],
+        k=k[..., None],
+        x_t=x_t,
+        x_tau=x_tau,
+        dx_tau=dx_tau,
+        ddx_tau=ddx_tau,
+        h_t=h_t,
+        h_tau=h_tau,
+        dh_tau=dh_tau,
+        ddh_tau=ddh_tau,
+        eps=eps,
+    )
+    diagonal = (alpha[..., None] * dl[0] - 1j * eta[..., None] * sl[0]) * weights
+    diagonal += (alpha[..., None] * dl[1] - 1j * eta[..., None] * sl[1]) * w[0]
+    residual = xp.sum(diagonal * phi_t[None, ...], axis=1)
+    if count > 1:
+        rows, cols = off_diagonal_indices(count, xp=xp, device=k.device)
+        point = xp.take(x_t, rows, axis=-2)
+        source = xp.take(x_tau, cols, axis=-2)
+        source_dx = xp.take(dx_tau, cols, axis=-2)
+        motion = xp.take(h_tau, cols, axis=-2) - xp.take(h_t, rows, axis=-2)
+        motion_dx = xp.take(dh_tau, cols, axis=-2)
+        sl_cross = slp_shape_derivative_kernel(
+            point, shape_x=source, shape_dx=source_dx, h=motion, dh=motion_dx, k=k[..., None]
+        )
+        dl_cross = dlp_shape_derivative_kernel(
+            point, shape_x=source, shape_dx=source_dx, h=motion, dh=motion_dx, k=k[..., None]
+        )
+        cross = off_diagonal_matrix(
+            (alpha[..., None] * dl_cross - 1j * eta[..., None] * sl_cross) * w[0], count
+        )
+        residual = residual + xp.sum(cross * phi_t[None, ..., None, :], axis=(1, -1))
+    residual = residual - dr_g
     return dr_j + xp.real(xp.sum(psi_t * xp.conj(residual), axis=(0, -1)) * w[0])
