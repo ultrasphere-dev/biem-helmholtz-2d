@@ -1,4 +1,4 @@
-"""Convergence study for point-field and shape-sensitivity quadratures."""
+"""Convergence studies for scattered fields and shape derivatives."""
 
 from __future__ import annotations
 
@@ -6,18 +6,25 @@ import json
 import math
 import random
 from collections.abc import Sequence
+from functools import cache
 from pathlib import Path
+from typing import Any
 
 import array_api_compat.numpy as np_compat
 import orjson
 from array_api.latest import Array
 from array_api_compat import array_namespace
-from ie_circle import trapezoidal_quadrature
+from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from matplotlib.ticker import NullLocator
 
 from biem_helmholtz_2d import accuracy
-from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
+from biem_helmholtz_2d._acoustic import (
+    near_field,
+    plot_near_field,
+    plot_near_field_prepare,
+    scattering_dirichlet,
+)
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
 from biem_helmholtz_2d._objective import field_objective_derivative
 from biem_helmholtz_2d._potential_inner import kernel as near_kernel
@@ -39,23 +46,20 @@ def example_accuracy(
     step: float,
     n_modes: int,
     seed: int,
-    n_quad_ref: int | None = None,
+    n_reference: int | None = None,
 ) -> None:
-    """
-    Study random feasible shapes with highest-mode and random perturbations.
-
-    Each body's Fourier coefficient pairs are scaled to the constraint boundary.
-    Both cases use the same shapes and have unit perturbation coefficient norm
-    per body. The random samples are reproducible from ``seed``; they are stress
-    cases, not a proof of the global worst case. Each case is saved in its own
-    directory with its coefficients and numerical reference.
-    """
+    """Study a scattered field and two shape perturbations on independent grids."""
     if centers.ndim != 2 or centers.shape[1] != 2 or centers.shape[0] == 0:
         raise ValueError("centers must have shape (n_scatterers, 2) with n_scatterers > 0")
-    if n_modes < 1:
-        raise ValueError("n_modes must be positive")
-    if step <= 0 or not math.isfinite(step):
-        raise ValueError("step must be positive and finite")
+    if n_modes < 1 or step <= 0 or not math.isfinite(step):
+        raise ValueError("n_modes and step must be positive and step must be finite")
+    steps = [step * 10**power for power in range(-3, 4)]
+    if any(h <= 0 or not math.isfinite(h) for h in steps):
+        raise ValueError("central-difference steps must be positive and finite")
+    if not n_solve or not n_quad:
+        raise ValueError("n_solve and n_quad must be nonempty")
+    if n_reference is None:
+        n_reference = (3 * max(*n_solve, *n_quad) + 1) // 2
     xp = array_namespace(centers)
     dtype, device = centers.dtype, centers.device
     point = xp.asarray(target_point, dtype=dtype, device=device)
@@ -81,10 +85,12 @@ def example_accuracy(
 
     def shapes(coefficients: Array, *, perturbation: bool) -> ParameterShape:
         constant = xp.full(
-            (centers.shape[0], 1), 0 if perturbation else 1, dtype=dtype, device=device
+            (*coefficients.shape[:-2], 1), 0 if perturbation else 1, dtype=dtype, device=device
         )
         return ParameterShape(
-            center=xp.zeros_like(centers) if perturbation else centers,
+            center=xp.zeros((*coefficients.shape[:-2], 2), dtype=dtype, device=device)
+            if perturbation
+            else centers,
             cos_coefs=xp.concat([constant, coefficients[..., 0]], axis=-1),
             sin_coefs=coefficients[..., 1],
         )
@@ -103,93 +109,132 @@ def example_accuracy(
         ),
         coefficients.shape,
     )
+    perturbations = xp.stack([highest, random_coefficients()])
+    shape = shapes(coefficients, perturbation=False)
+    h_shape = shapes(perturbations, perturbation=True)
 
-    def study(case: str, perturbation: Array, /) -> None:
-        shape = shapes(coefficients, perturbation=False)
-        h_shape = shapes(perturbation, perturbation=True)
+    @cache
+    def solve(n: int, /) -> NystromInterpolant:
+        return scattering_dirichlet(
+            k=wave_number,
+            shape=shape,
+            incident_field=incident,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n=n,
+        )
 
-        def evaluate(solve: int, quad: int, /) -> dict[str, Array]:
-            def field_for(boundary: ParameterShape, /) -> Array:
-                density = scattering_dirichlet(
-                    k=wave_number,
-                    shape=boundary,
-                    incident_field=incident,
-                    alpha=coupling_alpha,
-                    eta=coupling_eta,
-                    n=solve,
-                )
-                return near_field(
-                    density,
-                    point,
-                    shape=boundary,
-                    k=wave_number,
-                    alpha=coupling_alpha,
-                    eta=coupling_eta,
-                    n=quad,
-                )
+    @cache
+    def field(solve_n: int, quad_n: int, /) -> Array:
+        return near_field(
+            solve(solve_n),
+            point,
+            shape=shape,
+            k=wave_number,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n=quad_n,
+        )
 
-            density = scattering_dirichlet(
-                k=wave_number,
-                shape=shape,
-                incident_field=incident,
-                alpha=coupling_alpha,
-                eta=coupling_eta,
-                n=solve,
-            )
-            field = near_field(
-                density,
-                point,
-                shape=shape,
-                k=wave_number,
-                alpha=coupling_alpha,
-                eta=coupling_eta,
-                n=quad,
-            )
-            t, _ = trapezoidal_quadrature(
-                quad,
-                xp=xp,
-                device=device,
-                dtype=xp.result_type(
-                    xp.real(wave_number), xp.real(coupling_alpha), xp.real(coupling_eta)
-                ),
-            )
-            _, directional = field_objective_derivative(
-                density,
-                point[None, :],
-                (2 * (field - target))[None],
-                shape=shape,
-                incident_gradient=incident_grad(shape.x(t)),
-                k=wave_number,
-                alpha=coupling_alpha,
-                eta=coupling_eta,
-                n_solve=solve,
-                n_quad=quad,
-                kernel=near_kernel,
-                derivative_kernel=near_derivative_kernel,
-            )
-            derivative = directional(h_shape)
-            field_plus = field_for(shapes(coefficients + step * perturbation, perturbation=False))
-            field_minus = field_for(shapes(coefficients - step * perturbation, perturbation=False))
-            return {
-                "field": field,
-                "field_derivative": (field_plus - field_minus) / (2 * step),
-                "objective_derivative": derivative,
-                "objective_central": (
-                    xp.abs(field_plus - target) ** 2 - xp.abs(field_minus - target) ** 2
-                )
-                / (2 * step),
-            }
+    def derivative(solve_n: int, quad_n: int, /) -> Array:
+        density = solve(solve_n)
+        field_value = field(solve_n, quad_n)
+        t, _ = trapezoidal_quadrature(quad_n, xp=xp, device=device, dtype=dtype)
+        _, directional = field_objective_derivative(
+            density,
+            point[None, :],
+            (2 * (field_value - target))[None],
+            shape=shape,
+            incident_gradient=incident_grad(shape.x(t)),
+            k=wave_number,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n_solve=solve_n,
+            n_quad=quad_n,
+            kernel=near_kernel,
+            derivative_kernel=near_derivative_kernel,
+        )
+        return directional(h_shape)
 
-        data = accuracy(evaluate, n_solve=n_solve, n_quad=n_quad, n_quad_ref=n_quad_ref)
-        data["settings"]["step"] = step
-        data["settings"].update({
-            "centers": np_compat.asarray(xp.asarray(centers, device="cpu")).tolist(),
-            "coefficients": np_compat.asarray(xp.asarray(coefficients, device="cpu")).tolist(),
-            "perturbation_coefficients": np_compat.asarray(
-                xp.asarray(perturbation, device="cpu")
-            ).tolist(),
-            "case": case,
+    field_reference, field_values = accuracy(
+        field, n_solve=n_solve, n_quad=n_quad, n_reference=n_reference
+    )
+    derivative_reference, derivative_values = accuracy(
+        derivative, n_solve=n_solve, n_quad=n_quad, n_reference=n_reference
+    )
+
+    def perturbed_objective(coefficients: Array, /) -> Array:
+        boundary = shapes(coefficients, perturbation=False)
+        density = scattering_dirichlet(
+            k=wave_number,
+            shape=boundary,
+            incident_field=incident,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n=n_reference,
+        )
+        value = near_field(
+            density,
+            point,
+            shape=boundary,
+            k=wave_number,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n=n_reference,
+        )
+        return xp.abs(value - target) ** 2
+
+    central = xp.stack([
+        xp.stack([
+            (
+                perturbed_objective(coefficients + h * perturbation)
+                - perturbed_objective(coefficients - h * perturbation)
+            )
+            / (2 * h)
+            for perturbation in perturbations
+        ])
+        for h in steps
+    ])
+
+    xlim = (
+        min(float(xp.min(centers[:, 0])) - 3, target_point[0] - 1),
+        max(float(xp.max(centers[:, 0])) + 3, target_point[0] + 1),
+    )
+    ylim = (
+        min(float(xp.min(centers[:, 1])) - 3, target_point[1] - 1),
+        max(float(xp.max(centers[:, 1])) + 3, target_point[1] + 1),
+    )
+    wave = plot_near_field_prepare(
+        solve(n_reference),
+        incident,
+        xlim=xlim,
+        ylim=ylim,
+        shape=shape,
+        k=wave_number,
+        alpha=coupling_alpha,
+        eta=coupling_eta,
+        n=n_reference,
+        n_plot=200,
+        isin_shape_n_quad=max(n_reference, 4 * n_modes),
+        isin_shape_tol=1e-5,
+    )["utot"]["re"]
+    t_plot = xp.linspace(0, 2 * xp.pi, 1000, dtype=dtype, device=device)
+
+    def serialize(value: Array, /) -> Any:
+        if xp.isdtype(value.dtype, "complex floating"):
+            return {"real": serialize(xp.real(value)), "imag": serialize(xp.imag(value))}
+        return np_compat.asarray(xp.asarray(value, device="cpu")).tolist()
+
+    data = {
+        "settings": {
+            "n_reference": n_reference,
+            "n_solve": list(n_solve),
+            "n_quad": list(n_quad),
+            "step": step,
             "seed": seed,
+            "centers": serialize(centers),
+            "coefficients": serialize(coefficients),
+            "perturbation_coefficients": serialize(perturbations),
             "k": k,
             "alpha": alpha,
             "eta": eta,
@@ -198,18 +243,109 @@ def example_accuracy(
                 "real": desired_total_field.real,
                 "imag": desired_total_field.imag,
             },
-        })
-        directory = path / case
-        directory.mkdir(parents=True, exist_ok=True)
-        (directory / "accuracy.json").write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
-
-    study("highest_mode", highest)
-    study("random", random_coefficients())
+        },
+        "field": {"reference": serialize(field_reference), "values": serialize(field_values)},
+        "derivative": {
+            "reference": serialize(derivative_reference),
+            "values": serialize(derivative_values),
+        },
+        "central_difference": {"steps": steps, "values": serialize(central)},
+        "total_field": {**wave, "data": serialize(wave["data"])},
+        "boundaries": serialize(xp.moveaxis(shape.x(t_plot), -2, 0)),
+    }
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "accuracy.json").write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+    example_accuracy_plot(path)
 
 
 def example_accuracy_plot(path: Path, /) -> None:
-    """Plot absolute errors from the ``accuracy.json`` study in ``path``."""
+    """Plot saved convergence studies and the scattered wave."""
     data = json.loads((path / "accuracy.json").read_text())
+    if "wave" not in data and "total_field" not in data:
+        _legacy_accuracy_plot(data, path)
+        return
+    settings = data["settings"]
+    n_solve, n_quad = settings["n_solve"], settings["n_quad"]
+
+    def error_plot(values: Any, reference: Any, title: str, destination: Path) -> None:
+        fig, ax = plt.subplots()
+        for solve, row in zip(n_solve, values, strict=True):
+            samples = sorted(zip(n_quad, row, strict=True), key=lambda sample: sample[0])
+            orders, sampled_values = zip(*samples, strict=True)
+            errors = np_compat.maximum(
+                np_compat.abs(np_compat.asarray(sampled_values) - reference), 1e-300
+            )
+            ax.loglog(orders, errors, "o-", label=f"solve n={solve}")
+        ticks = sorted(set(n_quad))
+        ax.set_xticks(ticks, [str(n) for n in ticks])
+        ax.xaxis.set_minor_locator(NullLocator())
+        ax.set_xlabel("Integration n (2n-1 nodes)")
+        ax.set_ylabel("Absolute error vs. numerical reference")
+        ax.set_title(title)
+        ax.grid(True, which="both", alpha=0.3)
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(destination)
+        plt.close(fig)
+
+    reference = data["field"]["reference"]
+    field_reference = reference["real"] + 1j * reference["imag"]
+    field_values = data["field"]["values"]
+    field_values = np_compat.asarray(field_values["real"]) + 1j * np_compat.asarray(
+        field_values["imag"]
+    )
+    error_plot(field_values, field_reference, "Scattered field", path / "scattered_field.svg")
+    derivative_reference = np_compat.asarray(data["derivative"]["reference"])
+    derivative_values = np_compat.asarray(data["derivative"]["values"])
+    central = np_compat.asarray(data["central_difference"]["values"])
+    for index, case in enumerate(("highest_mode", "random")):
+        directory = path / case
+        directory.mkdir(exist_ok=True)
+        error_plot(
+            derivative_values[..., index],
+            derivative_reference[index],
+            f"Objective shape derivative: {case}",
+            directory / "shape_derivative.svg",
+        )
+        fig, ax = plt.subplots()
+        ax.loglog(
+            data["central_difference"]["steps"],
+            np_compat.maximum(
+                np_compat.abs(central[:, index] - derivative_reference[index]), 1e-300
+            ),
+            "o-",
+        )
+        ax.set_xlabel("Central-difference step")
+        ax.set_ylabel("Absolute difference from reference adjoint")
+        ax.set_title(f"Central difference: {case}")
+        ax.grid(True, which="both", alpha=0.3)
+        fig.tight_layout()
+        fig.savefig(directory / "central_difference.svg")
+        plt.close(fig)
+
+    if "total_field" in data:
+        fig, ax = plt.subplots()
+        plot_near_field({"utot": {"re": data["total_field"]}}, ax_utot_re=ax)
+        axes = [ax]
+        filename = "total_field.svg"
+    else:
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+        plot_near_field(
+            {"uscat": data["wave"]}, ax_uscat_re=axes[0], ax_uscat_im=axes[1], ax_uscat_abs=axes[2]
+        )
+        filename = "scattered_wave.svg"
+    for ax in axes:
+        for boundary in data["boundaries"]:
+            ax.plot(
+                [point[0] for point in boundary], [point[1] for point in boundary], color="black"
+            )
+        ax.plot(*settings["target_point"], marker="x", color="yellow")
+    fig.tight_layout()
+    fig.savefig(path / filename)
+    plt.close(fig)
+
+
+def _legacy_accuracy_plot(data: dict[str, Any], path: Path, /) -> None:
     for row in data["records"]:
         if "n_quad" not in row:
             row["n_quad"] = row["n_quadrature"]

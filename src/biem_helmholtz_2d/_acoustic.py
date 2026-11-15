@@ -232,12 +232,27 @@ def plot_near_field_prepare(
     y = xp.linspace(ylim[0], ylim[1], n_plot, device=device, dtype=dtype)
     x, y = xp.broadcast_arrays(x[:, None], y[None, :])
     xy = xp.stack([x, y], axis=-1)
-    uscat = near_field(density, xy, n=n, shape=shape, k=k, alpha=alpha, eta=eta)
+    uscat = xp.concat(
+        [
+            near_field(density, xy[i : i + 8], n=n, shape=shape, k=k, alpha=alpha, eta=eta)
+            for i in range(0, n_plot, 8)
+        ],
+        axis=0,
+    )
     batch_ndim = uscat.ndim - (xy.ndim - 1)
     uin = incident_field(xy[(...,) + (None,) * batch_ndim + (slice(None),)])
     uin = xp.broadcast_to(uin, uscat.shape)
     utot = uscat + uin
-    inside = xp.any(isin_shape(xy, shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol), axis=-1)
+    inside = xp.concat(
+        [
+            xp.any(
+                isin_shape(xy[i : i + 8], shape, n_quad=isin_shape_n_quad, tol=isin_shape_tol),
+                axis=-1,
+            )
+            for i in range(0, n_plot, 8)
+        ],
+        axis=0,
+    )
     inside = inside[(...,) + (None,) * batch_ndim]
     uscat = xp.where(inside, xp.nan, uscat)
     uin = xp.where(inside, xp.nan, uin)

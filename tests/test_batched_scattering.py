@@ -83,14 +83,32 @@ def test_batched_scattering_and_adjoint(
         alpha=alpha_input,
         eta=eta_input,
         n=n,
-        n_plot=8,
+        n_plot=9,
         xlim=(-3, 7),
         ylim=(-4, 4),
     )
     assert all(
-        entry["data"].shape == (8, 8, *batch_shape)
+        entry["data"].shape == (9, 9, *batch_shape)
         for components in plotted.values()
         for entry in components.values()
+    )
+    plot_point = xp.asarray([7, 2], dtype=dtype, device=device)
+    plot_field = near_field(
+        phi, plot_point, k=k_input, shape=shape, alpha=alpha_input, eta=eta_input, n=n
+    )
+    assert bool(
+        xp.all(
+            xp.abs(plotted["uscat"]["re"]["data"][-1, 6] - xp.real(plot_field))
+            < 500 * xp.finfo(dtype).eps
+        )
+    )
+    assert bool(
+        xp.all(
+            xp.abs(
+                plotted["utot"]["re"]["data"][-1, 6] - xp.real(plot_field + incident(plot_point))
+            )
+            < 500 * xp.finfo(dtype).eps
+        )
     )
     tau = t[(...,) + (None,) * len(batch_shape)]
     boundary_points = xp.moveaxis(shape.x(tau), -2, 0)

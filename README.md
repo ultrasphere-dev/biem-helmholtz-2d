@@ -51,11 +51,11 @@ Install this via pip (or your favourite package manager):
 ```sh
 uv run biem-helmholtz-2d optimize
 uv run biem-helmholtz-2d plot
-uv run biem-helmholtz-2d accuracy --n-solve 8,16 --n-quad 8,16 --n-quad-ref 24
+uv run biem-helmholtz-2d accuracy --n-solve 8,16 --n-quad 8,16 --n-reference 24
 uv run biem-helmholtz-2d plot-accuracy
 ```
 
-For CUDA, run `nix develop` and `uv sync --extra cuda`, then add `--device cuda`.
+For CUDA, run `nix develop` and `uv sync --extra cuda`. The CLI uses CUDA when available; pass `--device cpu` to use the CPU.
 
 ## Contributors ✨
 

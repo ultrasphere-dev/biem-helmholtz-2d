@@ -1,10 +1,10 @@
 import pathlib
 from datetime import datetime
 from logging import DEBUG, INFO, basicConfig, getLogger
-from typing import Any, Self
+from typing import Annotated, Any, Self
 
 import array_api_compat.numpy as xp
-from cyclopts import App
+from cyclopts import App, Parameter
 from rich.logging import RichHandler
 
 from biem_helmholtz_2d.optimization._accuracy import example_accuracy, example_accuracy_plot
@@ -67,13 +67,13 @@ class Values(str):
         return result
 
 
-_CPU = Device("cpu")
+_DEFAULT_DEVICE = Device("cuda" if torch_xp is not None and torch_xp.cuda.is_available() else "cpu")
 
 
 @app.command()
 def optimize(
     *,
-    device: Device = _CPU,
+    device: Device = _DEFAULT_DEVICE,
     n_quad: int | None = None,
     verbose: bool = False,
 ) -> None:
@@ -118,8 +118,8 @@ def optimize(
 @app.command()
 def accuracy(
     *,
-    n_quad_ref: int | None = None,
-    device: Device = _CPU,
+    n_quad_ref: Annotated[int | None, Parameter(name=("--n-reference", "--n-quad-ref"))] = None,
+    device: Device = _DEFAULT_DEVICE,
     n_solve: Values | None = None,
     n_quad: Values | None = None,
     step: float = 1e-5,
@@ -140,7 +140,7 @@ def accuracy(
     n_quad : Values or None
         Comma-separated integration parameters; defaults to the same values.
     step : float
-        Central-difference step.
+        Central-difference step at the center of the logarithmic sweep.
     seed : int
         Random seed for reproducible stress cases.
     verbose : bool
@@ -162,7 +162,7 @@ def accuracy(
         desired_total_field=_DESIRED_TOTAL_FIELD,
         n_solve=n_solve.values if n_solve is not None else default_values,
         n_quad=n_quad.values if n_quad is not None else default_values,
-        n_quad_ref=n_quad_ref,
+        n_reference=n_quad_ref,
         step=step,
         n_modes=_N_MODES,
         seed=seed,
@@ -190,7 +190,7 @@ def plot_accuracy(*, path: pathlib.Path | None = None, verbose: bool = False) ->
         return
     for directory in paths:
         example_accuracy_plot(directory)
-        LOG.info("Saved %s", directory / "accuracy.svg")
+        LOG.info("Plotted %s", directory)
 
 
 _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_near_field.json")
