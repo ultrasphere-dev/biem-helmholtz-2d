@@ -18,12 +18,10 @@ from matplotlib.ticker import NullLocator
 
 from biem_helmholtz_2d import accuracy
 from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
-from biem_helmholtz_2d._adjoint import solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import (
-    point_field_adjoint_derivative,
-    point_field_density_gradient,
-)
+from biem_helmholtz_2d._objective import field_objective_derivative
+from biem_helmholtz_2d._potential_inner import kernel as near_kernel
+from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -147,22 +145,6 @@ def example_accuracy(
                 eta=coupling_eta,
                 n=quad,
             )
-            field_gradient = 2 * (field - target)
-            adjoint = solve_adjoint(
-                k=wave_number,
-                shape=shape,
-                alpha=coupling_alpha,
-                eta=coupling_eta,
-                n=solve,
-                grad_phi_j=point_field_density_gradient(
-                    point,
-                    field_gradient,
-                    shape=shape,
-                    k=wave_number,
-                    alpha=coupling_alpha,
-                    eta=coupling_eta,
-                ),
-            )
             t, _ = trapezoidal_quadrature(
                 quad,
                 xp=xp,
@@ -171,19 +153,21 @@ def example_accuracy(
                     xp.real(wave_number), xp.real(coupling_alpha), xp.real(coupling_eta)
                 ),
             )
-            derivative = point_field_adjoint_derivative(
+            _, directional = field_objective_derivative(
                 density,
-                adjoint,
-                point=point,
-                field_gradient=field_gradient,
-                incident_gradient=incident_grad(shape.x(t)),
+                point[None, :],
+                (2 * (field - target))[None],
                 shape=shape,
-                h_shape=h_shape,
+                incident_gradient=incident_grad(shape.x(t)),
                 k=wave_number,
                 alpha=coupling_alpha,
                 eta=coupling_eta,
-                n=quad,
+                n_solve=solve,
+                n_quad=quad,
+                kernel=near_kernel,
+                derivative_kernel=near_derivative_kernel,
             )
+            derivative = directional(h_shape)
             field_plus = field_for(shapes(coefficients + step * perturbation, perturbation=False))
             field_minus = field_for(shapes(coefficients - step * perturbation, perturbation=False))
             return {

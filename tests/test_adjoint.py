@@ -4,15 +4,15 @@ import pytest
 from array_api.latest import Array
 from attrs import frozen
 from ie_circle import CircleShape, Shape, trapezoidal_quadrature
+from scipy.special import hankel1, jv
 
-from biem_helmholtz_2d._acoustic import near_field, scattering_dirichlet
-from biem_helmholtz_2d._adjoint import solve_adjoint
+from biem_helmholtz_2d._acoustic import far_field, near_field, scattering_dirichlet
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import (
-    point_field_adjoint_derivative,
-    point_field_density_gradient,
-    point_field_shape_derivative,
-)
+from biem_helmholtz_2d._objective import field_objective_derivative, scattering_cross_section
+from biem_helmholtz_2d._potential_far import kernel as far_kernel
+from biem_helmholtz_2d._potential_far_derivative import kernel as far_derivative_kernel
+from biem_helmholtz_2d._potential_inner import kernel as near_kernel
+from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 
 
 @frozen
@@ -49,6 +49,8 @@ class _TestShape:
         (2, 1, 4, 1 + 0.1j, 0.8 - 0.2j, 0.2 + 0.1j, "squared", "shape"),
         (3, 2, 0, 1, 1, 0, "real", "shape"),
         (2, 0, 0, 1, 1, 0, "squared", "translation"),
+        (1, 0, 0, 1, 1, 0, "cross_section", "shape"),
+        (2, 1, 4, 1 + 0.1j, 0.8 - 0.2j, 0, "cross_section", "shape"),
     ],
 )
 def test_adjoint_central_derivative(
@@ -89,53 +91,75 @@ def test_adjoint_central_derivative(
     plus_shape = _TestShape(base_shape, shape_h, step * h_amplitude, centers + step * h_centers)
     minus_shape = _TestShape(base_shape, shape_h, -step * h_amplitude, centers - step * h_centers)
     quad = n + quadrature_offset
+    t, _ = trapezoidal_quadrature(quad, xp=xp, device=device, dtype=dtype)
+    directions = xp.stack([xp.cos(t), xp.sin(t)], axis=-1)
+    observations = directions if objective == "cross_section" else point[None, :]
+    kernel, derivative_kernel = (
+        (far_kernel, far_derivative_kernel)
+        if objective == "cross_section"
+        else (near_kernel, near_derivative_kernel)
+    )
 
     def field_for(boundary: Shape, /) -> Any:
         density = scattering_dirichlet(
             k=k, shape=boundary, incident_field=incident, alpha=alpha, eta=eta, n=n
         )
-        return near_field(density, point, shape=boundary, k=k, alpha=alpha, eta=eta, n=quad)
+        evaluator = far_field if objective == "cross_section" else near_field
+        return evaluator(density, observations, shape=boundary, k=k, alpha=alpha, eta=eta, n=quad)
 
     density = scattering_dirichlet(
         k=k, shape=shape, incident_field=incident, alpha=alpha, eta=eta, n=n
     )
-    field = near_field(density, point, shape=shape, k=k, alpha=alpha, eta=eta, n=quad)
-    field_gradient = 2 * (field - target) if objective == "squared" else xp.ones_like(field)
-    adjoint = solve_adjoint(
-        k=k,
-        shape=shape,
-        alpha=alpha,
-        eta=eta,
-        n=n,
-        grad_phi_j=point_field_density_gradient(
-            point, field_gradient, shape=shape, k=k, alpha=alpha, eta=eta
-        ),
-    )
-    t, _ = trapezoidal_quadrature(quad, xp=xp, device=device, dtype=dtype)
-    actual = point_field_adjoint_derivative(
+    evaluator = far_field if objective == "cross_section" else near_field
+    field = evaluator(density, observations, shape=shape, k=k, alpha=alpha, eta=eta, n=quad)
+    if objective == "cross_section":
+        field_gradient = 2 * field * (2 * xp.pi / directions.shape[0])
+    elif objective == "squared":
+        field_gradient = 2 * (field - target)
+    else:
+        field_gradient = xp.ones_like(field)
+    _, directional = field_objective_derivative(
         density,
-        adjoint,
-        point=point,
-        field_gradient=field_gradient,
+        observations,
+        field_gradient,
         incident_gradient=incident_grad(shape.x(t)),
         shape=shape,
-        h_shape=h_shape,
         k=k,
         alpha=alpha,
         eta=eta,
-        n=quad,
+        n_solve=n,
+        n_quad=quad,
+        kernel=kernel,
+        derivative_kernel=derivative_kernel,
     )
+    actual = directional(h_shape)
     plus, minus = field_for(plus_shape), field_for(minus_shape)
-    if objective == "squared":
-        expected = (xp.abs(plus - target) ** 2 - xp.abs(minus - target) ** 2) / (2 * step)
+    if objective == "cross_section":
+        expected = (scattering_cross_section(plus) - scattering_cross_section(minus)) / (2 * step)
+        if n_scatterers == 1 and isinstance(base_shape, CircleShape):
+            reference = 4 * sum(abs(jv(m, 1) / hankel1(m, 1)) ** 2 for m in range(-30, 31))
+            assert float(scattering_cross_section(field)) == pytest.approx(reference, rel=1e-11)
+    elif objective == "squared":
+        expected = (xp.abs(plus[0] - target) ** 2 - xp.abs(minus[0] - target) ** 2) / (2 * step)
     else:
-        expected = xp.real(plus - minus) / (2 * step)
+        expected = xp.real(plus[0] - minus[0]) / (2 * step)
     assert float(actual) == pytest.approx(float(expected), rel=1e-5, abs=1e-8)
     if n_scatterers == 1:
         point32 = xp.astype(point, xp.float32)
-        direct = point_field_shape_derivative(
-            density, point32, shape=shape, h_shape=h_shape, k=k, alpha=alpha, eta=eta, n=36
+        t_field, w_field = trapezoidal_quadrature(
+            36, xp=xp, device=device, dtype=xp.result_type(point32, xp.real(k))
         )
+        direct_kernel = near_derivative_kernel(
+            point32,
+            shape_x=shape.x(t_field),
+            shape_dx=shape.dx(t_field),
+            h=h_shape.x(t_field),
+            dh=h_shape.dx(t_field),
+            k=k,
+            alpha=alpha,
+            eta=eta,
+        )
+        direct = xp.sum(direct_kernel * density(t_field), axis=(0, -1)) * w_field[0]
         plus = near_field(
             density,
             point32,

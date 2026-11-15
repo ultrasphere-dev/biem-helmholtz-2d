@@ -146,6 +146,26 @@ def dlp_shape_derivative_kernel(
     )
 
 
+def kernel(
+    point: Array,
+    /,
+    *,
+    shape_x: Array,
+    shape_dx: Array,
+    h: Array,
+    dh: Array,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> Array:
+    r"""Shape derivative of the near-field kernel in direction $h$."""
+    return alpha * dlp_shape_derivative_kernel(
+        point, shape_x=shape_x, shape_dx=shape_dx, h=h, dh=dh, k=k
+    ) - 1j * eta * slp_shape_derivative_kernel(
+        point, shape_x=shape_x, shape_dx=shape_dx, h=h, dh=dh, k=k
+    )
+
+
 def potential_shape_derivative(
     x: Array,
     func: Array,

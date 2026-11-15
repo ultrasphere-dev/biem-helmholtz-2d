@@ -12,7 +12,9 @@ from matplotlib.axes import Axes
 
 from ._pairs import off_diagonal_indices, off_diagonal_matrix
 from ._potential import dlp_kernel_split, slp_kernel_split
+from ._potential_far import kernel as far_kernel
 from ._potential_inner import dlp_kernel, slp_kernel
+from ._potential_inner import kernel as near_kernel
 
 
 def _coupled_kernels(*, shape: Shape, k: Array, alpha: Array, eta: Array) -> Kernels:
@@ -459,12 +461,15 @@ def near_field(
         density, x, n=n, n_scatterers=count, k=k, alpha=alpha, eta=eta
     )
     x_t, dx_t = shape.x(t), shape.dx(t)
-    dlp_ = dlp_kernel(point[..., None, :], shape_x=x_t, shape_dx=dx_t, k=k[..., None])
-    slp_ = slp_kernel(point[..., None, :], shape_x=x_t, shape_dx=dx_t, k=k[..., None])
-    return xp.sum(
-        (alpha[..., None] * dlp_ - 1j * eta[..., None] * slp_) * values * w[..., None],
-        axis=(-2, -1),
+    kernel = near_kernel(
+        point[..., None, :],
+        shape_x=x_t,
+        shape_dx=dx_t,
+        k=k[..., None],
+        alpha=alpha[..., None],
+        eta=eta[..., None],
     )
+    return xp.sum(kernel * values * w[..., None], axis=(-2, -1))
 
 
 def far_field(
@@ -511,20 +516,13 @@ def far_field(
     direction, t, w, k, alpha, eta, values = _field_quadrature(
         density, direction, n=n, n_scatterers=count, k=k, alpha=alpha, eta=eta
     )
-    coef = (1 - 1j) / xp.sqrt(16 * xp.pi * k)
-    direction_normalized = direction / xp.linalg.vector_norm(direction, axis=-1, keepdims=True)
     x_t, dx_t = shape.x(t), shape.dx(t)
-    normal = xp.stack([dx_t[..., 1], -dx_t[..., 0]], axis=-1)
-    jacobian = xp.linalg.vector_norm(normal, axis=-1)
-    normal = normal / jacobian[..., None]
-    kernel = (
-        (
-            alpha[..., None]
-            * k[..., None]
-            * xp.sum(normal * direction_normalized[..., None, :], axis=-1)
-            + eta[..., None]
-        )
-        * xp.exp(-1j * k[..., None] * xp.sum(x_t * direction_normalized[..., None, :], axis=-1))
-        * jacobian
+    kernel = far_kernel(
+        direction[..., None, :],
+        shape_x=x_t,
+        shape_dx=dx_t,
+        k=k[..., None],
+        alpha=alpha[..., None],
+        eta=eta[..., None],
     )
-    return xp.sum(coef[..., None] * kernel * values * w[..., None], axis=(-2, -1))
+    return xp.sum(kernel * values * w[..., None], axis=(-2, -1))

@@ -21,13 +21,11 @@ from biem_helmholtz_2d._acoustic import (
     plot_near_field_prepare,
     scattering_dirichlet,
 )
-from biem_helmholtz_2d._adjoint import solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import (
-    point_field_adjoint_derivative,
-    point_field_density_gradient,
-)
+from biem_helmholtz_2d._objective import field_objective_derivative
 from biem_helmholtz_2d._pairs import off_diagonal_indices
+from biem_helmholtz_2d._potential_inner import kernel as near_kernel
+from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -248,39 +246,26 @@ def example_optimization(
         if n_modes == 0:
             return xp.zeros_like(x)
         shapes, phi, field = solve(x)
-        field_gradient = 2 * (field - target)
-        adjoint = solve_adjoint(
-            shape=shapes,
-            k=k,
-            alpha=alpha,
-            eta=eta,
-            n=n,
-            grad_phi_j=point_field_density_gradient(
-                point, field_gradient, shape=shapes, k=k, alpha=alpha, eta=eta
-            ),
-        )
         t, _ = trapezoidal_quadrature(
             n_quad,
             xp=xp,
             device=device,
             dtype=xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta)),
         )
-        incident_grad = incident_field_grad(shapes.x(t))
-
-        def directional(h: ParameterShape, /) -> Array:
-            return point_field_adjoint_derivative(
-                phi,
-                adjoint,
-                point=point,
-                field_gradient=field_gradient,
-                incident_gradient=incident_grad,
-                shape=shapes,
-                h_shape=h,
-                k=k,
-                alpha=alpha,
-                eta=eta,
-                n=n_quad,
-            )
+        _, directional = field_objective_derivative(
+            phi,
+            point[None, :],
+            (2 * (field - target))[None],
+            shape=shapes,
+            incident_gradient=incident_field_grad(shapes.x(t)),
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            n_solve=n,
+            n_quad=n_quad,
+            kernel=near_kernel,
+            derivative_kernel=near_derivative_kernel,
+        )
 
         return xp.moveaxis(
             xp.stack([xp.stack([directional(h) for h in pair]) for pair in basis]), -1, 0

@@ -95,6 +95,22 @@ def slp_kernel(
     return (1j / 4) * h0 * jac
 
 
+def kernel(
+    point: Array,
+    /,
+    *,
+    shape_x: Array,
+    shape_dx: Array,
+    k: Array,
+    alpha: Array,
+    eta: Array,
+) -> Array:
+    r"""Near-field kernel of $\alpha\mathrm{DL}-i\eta\mathrm{SL}$."""
+    return alpha * dlp_kernel(
+        point, shape_x=shape_x, shape_dx=shape_dx, k=k
+    ) - 1j * eta * slp_kernel(point, shape_x=shape_x, shape_dx=shape_dx, k=k)
+
+
 def potential(
     x: Array,
     func: Array,

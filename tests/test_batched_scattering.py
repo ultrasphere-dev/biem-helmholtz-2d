@@ -13,18 +13,24 @@ from biem_helmholtz_2d._acoustic import (
 )
 from biem_helmholtz_2d._adjoint import objective_derivative, solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import (
-    point_field_adjoint_derivative,
-    point_field_density_gradient,
-    point_field_shape_derivative,
-)
+from biem_helmholtz_2d._objective import field_objective_derivative, scattering_cross_section
+from biem_helmholtz_2d._potential_far import kernel as far_kernel
+from biem_helmholtz_2d._potential_far_derivative import kernel as far_derivative_kernel
+from biem_helmholtz_2d._potential_inner import kernel as near_kernel
+from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
 @pytest.mark.parametrize("batch_kind", ["eta", "mixed"])
+@pytest.mark.parametrize("objective", ["point", "cross_section", "linear"])
 def test_batched_scattering_and_adjoint(
-    xp: ArrayNamespace, dtype: Any, device: Any, n_scatterers: int, batch_kind: str
+    xp: ArrayNamespace,
+    dtype: Any,
+    device: Any,
+    n_scatterers: int,
+    batch_kind: str,
+    objective: str,
 ) -> None:
     centers = xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device)[:n_scatterers]
     sin_coefs = xp.zeros((n_scatterers, 0), dtype=dtype, device=device)
@@ -54,7 +60,7 @@ def test_batched_scattering_and_adjoint(
     k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
     batch_shape = k.shape
     n = 6
-    t, _ = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
+    t, w = trapezoidal_quadrature(n, xp=xp, device=device, dtype=dtype)
     incident = plane_wave(k_input, direction)
     phi = scattering_dirichlet(
         k=k_input, shape=shape, incident_field=incident, alpha=alpha_input, eta=eta_input, n=n
@@ -86,54 +92,85 @@ def test_batched_scattering_and_adjoint(
         for components in plotted.values()
         for entry in components.values()
     )
-    adjoint = solve_adjoint(
-        k=k_input,
-        shape=shape,
-        alpha=alpha_input,
-        eta=eta_input,
-        n=n,
-        grad_phi_j=point_field_density_gradient(
-            point, 2 * field, shape=shape, k=k, alpha=alpha, eta=eta
-        ),
-    )
     tau = t[(...,) + (None,) * len(batch_shape)]
     boundary_points = xp.moveaxis(shape.x(tau), -2, 0)
     incident_gradient = xp.moveaxis(plane_wave_grad(k, direction)(boundary_points), 0, -2)
     dr_g = -xp.sum(incident_gradient * perturbation.x(tau), axis=-1)
-    dfield = point_field_shape_derivative(
-        phi, point, shape=shape, h_shape=perturbation, k=k, alpha=alpha, eta=eta, n=n
-    )
-    dr_j = 2 * xp.real(xp.conj(field) * dfield)
-    derivative = point_field_adjoint_derivative(
+    if objective == "cross_section":
+        observations = xp.stack([xp.cos(t), xp.sin(t)], axis=-1)
+        objective_field = far_field(phi, observations, k=k, shape=shape, alpha=alpha, eta=eta, n=n)
+        field_gradient = 2 * objective_field * (2 * xp.pi / observations.shape[0])
+        kernel, derivative_kernel = far_kernel, far_derivative_kernel
+        assert scattering_cross_section(objective_field).shape == batch_shape
+        constant_cross_section = scattering_cross_section(xp.ones_like(objective_field))
+        assert bool(xp.all(xp.abs(constant_cross_section - 2 * xp.pi) < 500 * xp.finfo(dtype).eps))
+    elif objective == "linear":
+        observations = xp.concat([points, point[None, :]], axis=0)
+        field_gradient = xp.ones(observations.shape[0], dtype=dtype, device=device)
+        kernel, derivative_kernel = near_kernel, near_derivative_kernel
+    else:
+        observations = point[None, :]
+        field_gradient = (2 * field)[None, ...]
+        kernel, derivative_kernel = near_kernel, near_derivative_kernel
+    adjoint, directional = field_objective_derivative(
         phi,
-        adjoint,
-        point=point,
-        field_gradient=2 * field,
+        observations,
+        field_gradient,
         incident_gradient=incident_gradient,
         shape=shape,
-        h_shape=perturbation,
         k=k_input,
         alpha=alpha_input,
         eta=eta_input,
-        n=n,
+        n_solve=n,
+        n_quad=n,
+        kernel=kernel,
+        derivative_kernel=derivative_kernel,
     )
+    derivative = directional(perturbation)
     assert derivative.shape == batch_shape
+    if objective == "linear":
+        field_gradient = xp.broadcast_to(
+            field_gradient[(slice(None),) + (None,) * len(batch_shape)],
+            (observations.shape[0], *batch_shape),
+        )
+    points_expanded = observations[
+        (None,) * (len(batch_shape) + 1) + (slice(None), None, slice(None))
+    ]
+    kernel_h = derivative_kernel(
+        points_expanded,
+        shape_x=shape.x(tau)[..., None, :, :],
+        shape_dx=shape.dx(tau)[..., None, :, :],
+        h=perturbation.x(tau)[..., None, :, :],
+        dh=perturbation.dx(tau)[..., None, :, :],
+        k=k[..., None, None],
+        alpha=alpha[..., None, None],
+        eta=eta[..., None, None],
+    )
+    dfield = xp.sum(kernel_h * phi(t)[..., None, :], axis=(0, -1)) * w[0]
+    dr_j = xp.real(xp.sum(xp.conj(xp.moveaxis(field_gradient, 0, -1)) * dfield, axis=-1))
 
     for index in product(*(range(size) for size in batch_shape)):
         ks, alphas, etas = k[index], alpha[index], eta[index]
         single_phi = scattering_dirichlet(
             k=ks, shape=shape, incident_field=plane_wave(ks, direction), alpha=alphas, eta=etas, n=n
         )
-        single_field = near_field(single_phi, point, k=ks, shape=shape, alpha=alphas, eta=etas, n=n)
+        single_kernel = kernel(
+            observations[None, :, None, :],
+            shape_x=shape.x(t)[:, None, :, :],
+            shape_dx=shape.dx(t)[:, None, :, :],
+            k=ks,
+            alpha=alphas,
+            eta=etas,
+        )
+        single_gradient = field_gradient[slice(None), *index]
+        grad_phi_j = xp.sum(single_gradient[None, :, None] * xp.conj(single_kernel), axis=1)
         single_adjoint = solve_adjoint(
             k=ks,
             shape=shape,
             alpha=alphas,
             eta=etas,
             n=n,
-            grad_phi_j=point_field_density_gradient(
-                point, 2 * single_field, shape=shape, k=ks, alpha=alphas, eta=etas
-            ),
+            grad_phi_j=grad_phi_j,
         )
         single_derivative = objective_derivative(
             k=ks,

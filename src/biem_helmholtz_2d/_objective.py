@@ -7,34 +7,20 @@ from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
 from ie_circle import NystromInterpolant, Shape, trapezoidal_quadrature
 
-from ._adjoint import objective_derivative
-from ._potential_inner import dlp_kernel, slp_kernel
-from ._potential_inner_derivative import dlp_shape_derivative_kernel, slp_shape_derivative_kernel
+from ._adjoint import objective_derivative, solve_adjoint
 
 
-def abs2_scattered_field(target: Array, /, *, field_value: Array) -> Array:
-    r"""
-    Objective function $j(\phi) = |u(x_0) - c|^2$.
-
-    Parameters
-    ----------
-    target : Array
-        Target value $c$ of shape (...,).
-    field_value : Array
-        Scattered field $u(x_0)$ of shape (...,).
-
-    Returns
-    -------
-    Array
-        Objective value $j(\phi)$ of shape (...,).
-
-    """
-    xp = array_namespace(target, field_value)
-    return xp.abs(field_value - target) ** 2
+def scattering_cross_section(far_field: Array, /) -> Array:
+    r"""Integrate $|u^\infty|^2$ over a full turn of equally spaced samples (M, ...)."""
+    if far_field.ndim == 0 or far_field.shape[0] == 0:
+        raise ValueError("far_field must contain at least one direction")
+    xp = array_namespace(far_field)
+    return xp.sum(xp.abs(far_field) ** 2, axis=0) * (2 * xp.pi / far_field.shape[0])
 
 
-def point_field_density_gradient(
-    point: Array,
+def _field_adjoint(
+    t: Array,
+    observations: Array,
     field_gradient: Array,
     /,
     *,
@@ -42,141 +28,161 @@ def point_field_density_gradient(
     k: Array,
     alpha: Array,
     eta: Array,
-) -> Callable[[Array], Array]:
-    r"""
-    Return the density gradient for a real objective depending on a point field.
-
-    ``field_gradient`` is $\partial J/\partial\operatorname{Re}u +
-    i\partial J/\partial\operatorname{Im}u$.
-    """
-    check_shapes("D,D", point, (2,), names="point,coordinate_dimension")
-    if point.shape != (2,):
-        raise ValueError("point must have shape (2,)")
-    xp = array_namespace(point, field_gradient, k, alpha, eta)
-    k, alpha, eta, field_gradient = xp.broadcast_arrays(k, alpha, eta, field_gradient)
-    batch_ndim = k.ndim
-
-    def gradient(t: Array, /) -> Array:
-        parameter = t[(...,) + (None,) * batch_ndim]
-        x_t, dx_t = shape.x(parameter), shape.dx(parameter)
-        sl = slp_kernel(point, shape_x=x_t, shape_dx=dx_t, k=k[..., None])
-        dl = dlp_kernel(point, shape_x=x_t, shape_dx=dx_t, k=k[..., None])
-        return field_gradient[..., None] * xp.conj(alpha[..., None] * dl - 1j * eta[..., None] * sl)
-
-    return gradient
-
-
-def point_field_shape_derivative(
-    density: NystromInterpolant,
-    point: Array,
-    /,
-    *,
-    shape: Shape,
-    h_shape: Shape,
-    k: Array,
-    alpha: Array,
-    eta: Array,
-    n: int,
+    kernel: Callable[..., Array],
+    h_shape: Shape | None,
 ) -> Array:
-    """Return the point-field derivative with respect to shape at fixed density."""
-    check_shapes("D,D", point, (2,), names="point,coordinate_dimension")
-    if point.shape != (2,):
-        raise ValueError("point must have shape (2,)")
-    xp = array_namespace(point, k, alpha, eta)
-    t, weights = trapezoidal_quadrature(
-        n, xp=xp, device=point.device, dtype=xp.result_type(point, xp.real(k))
-    )
-    count = shape.x(t[0]).shape[-2]
-    h_values = h_shape.x(t[0])
-    if count == 0 or h_values.shape[-2] != count:
-        raise ValueError("shape and h_shape must have the same nonzero length")
-    values = density(t)
-    check_shapes("Q*BC,QC", values, (t.shape[0], count), names="density,expected")
-    if values.shape[0] != t.shape[0] or values.shape[-1] != count:
-        raise ValueError("density must have one value per quadrature node and scatterer")
-    h_batch = h_values.shape[:-2]
-    k, alpha, eta, _, _ = xp.broadcast_arrays(
-        k, alpha, eta, values[0, ..., 0], xp.zeros(h_batch, dtype=point.dtype, device=point.device)
+    r"""
+    Apply a sampled field kernel's adjoint to an objective's field gradient.
+
+    ``field_gradient`` has shape (M, ...batch) and includes the observation
+    integration factor. ``observations`` has shape (M, 2). If ``h_shape`` is
+    supplied, ``kernel`` is the corresponding shape-derivative kernel.
+    """
+    check_shapes("Q,MD,M*B,D", t, observations, field_gradient, (2,))
+    if (
+        t.ndim != 1
+        or t.shape[0] == 0
+        or observations.ndim != 2
+        or observations.shape[0] == 0
+        or observations.shape[-1] != 2
+        or field_gradient.shape[0] != observations.shape[0]
+    ):
+        raise ValueError("expected nodes (Q,), observations (M, 2), and gradient (M, ...)")
+    xp = array_namespace(t, observations, field_gradient, k, alpha, eta)
+    shape_values = shape.x(t[0])
+    if shape_values.shape[-2] == 0:
+        raise ValueError("at least one boundary is required")
+    h_values = h_shape.x(t[0]) if h_shape is not None else shape_values
+    if h_values.shape[-2] != shape_values.shape[-2]:
+        raise ValueError("shape and h_shape must have the same number of boundaries")
+    k, alpha, eta, _, _, _ = xp.broadcast_arrays(
+        k,
+        alpha,
+        eta,
+        field_gradient[0],
+        xp.zeros(shape_values.shape[:-2], device=t.device, dtype=t.dtype),
+        xp.zeros(h_values.shape[:-2], device=t.device, dtype=t.dtype),
     )
     parameter = t[(...,) + (None,) * k.ndim]
-    x_t, dx_t = shape.x(parameter), shape.dx(parameter)
-    h_t, dh_t = h_shape.x(parameter), h_shape.dx(parameter)
-    sl = slp_shape_derivative_kernel(
-        point, shape_x=x_t, shape_dx=dx_t, h=h_t, dh=dh_t, k=k[..., None]
+    points = observations[(None,) * (k.ndim + 1) + (slice(None), None, slice(None))]
+    geometry = {
+        "shape_x": shape.x(parameter)[..., None, :, :],
+        "shape_dx": shape.dx(parameter)[..., None, :, :],
+    }
+    if h_shape is not None:
+        geometry.update({
+            "h": h_shape.x(parameter)[..., None, :, :],
+            "dh": h_shape.dx(parameter)[..., None, :, :],
+        })
+    values = kernel(
+        points,
+        **geometry,
+        k=k[..., None, None],
+        alpha=alpha[..., None, None],
+        eta=eta[..., None, None],
     )
-    dl = dlp_shape_derivative_kernel(
-        point, shape_x=x_t, shape_dx=dx_t, h=h_t, dh=dh_t, k=k[..., None]
-    )
-    weights = weights[(slice(None),) + (None,) * (k.ndim + 1)]
-    values = values[(slice(None),) + (None,) * (k.ndim - values.ndim + 2) + (...,)]
-    return xp.sum(
-        (alpha[..., None] * dl - 1j * eta[..., None] * sl) * values * weights, axis=(0, -1)
-    )
+    gradient = xp.moveaxis(field_gradient, 0, -1)
+    return xp.sum(gradient[..., None] * xp.conj(values), axis=-2)
 
 
-def point_field_adjoint_derivative(
+def field_objective_derivative(
     density: NystromInterpolant,
-    adjoint: NystromInterpolant,
+    observations: Array,
+    field_gradient: Array,
     /,
     *,
-    point: Array,
-    field_gradient: Array,
-    incident_gradient: Array,
     shape: Shape,
-    h_shape: Shape,
+    incident_gradient: Array,
     k: Array,
     alpha: Array,
     eta: Array,
-    n: int,
-) -> Array:
-    """
-    Return an adjoint derivative for a real objective depending on a point field.
+    n_solve: int,
+    n_quad: int,
+    kernel: Callable[..., Array],
+    derivative_kernel: Callable[..., Array],
+) -> tuple[NystromInterpolant, Callable[[Shape], Array]]:
+    r"""
+    Solve an adjoint and return directional derivatives for a field objective.
 
-    ``incident_gradient`` contains the incident-field gradient at the ``n``
-    integration nodes, with shape (Q, ...batch, C, 2).
+    ``observations`` has shape (M, 2). ``field_gradient`` has shape
+    (M, ...batch) and contains $\partial J/\partial\mathrm{Re}\,u_m +
+    i\partial J/\partial\mathrm{Im}\,u_m$, including observation quadrature
+    factors. For the cross section this is $(4\pi/M)u^\infty$.
+
+    ``incident_gradient`` is the incident field's spatial gradient, sampled
+    at the ``n_quad`` nodes with shape (2*n_quad-1, ...batch, C, 2). ``kernel``
+    and ``derivative_kernel`` evaluate the field kernel and its shape
+    derivative. The returned pair is the adjoint density and a callable that
+    evaluates the objective derivative for a perturbation ``Shape``.
     """
-    xp = array_namespace(point, field_gradient, incident_gradient, k, alpha, eta)
-    t, _ = trapezoidal_quadrature(
-        n,
-        xp=xp,
-        device=point.device,
-        dtype=xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta)),
-    )
+    xp = array_namespace(observations, field_gradient, incident_gradient, k, alpha, eta)
+    dtype = xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
+    t_solve, _ = trapezoidal_quadrature(n_solve, xp=xp, device=k.device, dtype=dtype)
+    t, _ = trapezoidal_quadrature(n_quad, xp=xp, device=k.device, dtype=dtype)
     count = shape.x(t[0]).shape[-2]
-    h_values = h_shape.x(t[0])
-    if h_values.shape[-2] != count:
-        raise ValueError("shape and h_shape must have the same number of boundaries")
     if (
         incident_gradient.ndim < 3
         or incident_gradient.shape[0] != t.shape[0]
         or incident_gradient.shape[-2:] != (count, 2)
     ):
         raise ValueError("incident_gradient must have shape (Q, ...batch, C, 2)")
-    h_batch = h_values.shape[:-2]
-    k, alpha, eta, field_gradient, _, _ = xp.broadcast_arrays(
-        k,
-        alpha,
-        eta,
+    t_field, w = trapezoidal_quadrature(
+        n_quad, xp=xp, device=observations.device, dtype=xp.result_type(observations, xp.real(k))
+    )
+    phi_field = density(t_field)
+    if field_gradient.ndim == 0:
+        raise ValueError("field_gradient must have a leading observation axis")
+    batch, _, _, _, _ = xp.broadcast_arrays(
+        k, alpha, eta, incident_gradient[0, ..., 0, 0], phi_field[0, ..., 0]
+    )
+    missing = max(0, batch.ndim - (field_gradient.ndim - 1))
+    field_gradient = field_gradient[(slice(None),) + (None,) * missing + (...,)]
+    field_gradient, _ = xp.broadcast_arrays(field_gradient, batch[None, ...])
+    grad_phi_j = _field_adjoint(
+        t_solve,
+        observations,
         field_gradient,
-        incident_gradient[0, ..., 0, 0],
-        xp.zeros(h_batch, dtype=point.dtype, device=point.device),
-    )
-    parameter = t[(...,) + (None,) * k.ndim]
-    missing = k.ndim - (incident_gradient.ndim - 3)
-    incident_gradient = incident_gradient[(slice(None),) + (None,) * missing + (...,)]
-    dr_g = -xp.sum(incident_gradient * h_shape.x(parameter), axis=-1)
-    direct = point_field_shape_derivative(
-        density, point, shape=shape, h_shape=h_shape, k=k, alpha=alpha, eta=eta, n=n
-    )
-    return objective_derivative(
-        k=k,
         shape=shape,
+        k=k,
         alpha=alpha,
         eta=eta,
-        n=n,
-        phi=density,
-        adjoint=adjoint,
-        dr_j=xp.real(xp.conj(field_gradient) * direct),
-        dr_g=dr_g,
-        h_shape=h_shape,
+        kernel=kernel,
+        h_shape=None,
     )
+    adjoint = solve_adjoint(
+        shape=shape, k=k, alpha=alpha, eta=eta, n=n_solve, grad_phi_j=grad_phi_j
+    )
+
+    def derivative(h_shape: Shape, /) -> Array:
+        direct = _field_adjoint(
+            t_field,
+            observations,
+            field_gradient,
+            shape=shape,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            kernel=derivative_kernel,
+            h_shape=h_shape,
+        )
+        phi = phi_field[(slice(None),) + (None,) * (direct.ndim - phi_field.ndim) + (...,)]
+        dr_j = xp.real(xp.sum(direct * xp.conj(phi), axis=(0, -1)) * w[0])
+        h_t = h_shape.x(t[(...,) + (None,) * (direct.ndim - 2)])
+        grad = incident_gradient[
+            (slice(None),) + (None,) * (h_t.ndim - incident_gradient.ndim) + (...,)
+        ]
+        dr_g = -xp.sum(grad * h_t, axis=-1)
+        return objective_derivative(
+            k=k,
+            shape=shape,
+            alpha=alpha,
+            eta=eta,
+            n=n_quad,
+            phi=density,
+            adjoint=adjoint,
+            dr_j=dr_j,
+            dr_g=dr_g,
+            h_shape=h_shape,
+        )
+
+    return adjoint, derivative

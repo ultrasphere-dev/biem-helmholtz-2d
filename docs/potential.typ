@@ -279,6 +279,41 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
 ]
 
 
+#let slfar = $op("sl")^infinity$
+#let dlfar = $op("dl")^infinity$
+#definition[Far-field pattern][
+  Let $k > 0$ and let $u$ satisfy the Sommerfeld radiation condition. Its far-field pattern $u^infinity: SS^1 -> CC$ is defined by
+  $
+    u(R hat(xi)) = (e^(i k R))/sqrt(R) (u^(infinity)(hat(xi)) + O(R^(-1))) quad (R -> infinity, hat(xi) in SS^1).
+  $
+]
+#theorem[Far-field kernels and their shape derivatives][
+  Let $x in B$, $h in c2pi^2 (RR)^2$, $hat(xi) in SS^1$ and $c_k := e^(i pi / 4) / sqrt(8 pi k)$.
+  The far-field kernels of $sl_x$ and $dl_x$ are
+  $
+    slfar_x (hat(xi), tau) &:= c_k e^(-i k hat(xi) dot x(tau)) abs(x'(tau)), \
+    dlfar_x (hat(xi), tau) &:= -i k c_k e^(-i k hat(xi) dot x(tau)) hat(xi) dot n_x^*(tau).
+  $
+  Their shape derivatives are
+  $
+    (slfar_x)'[h](hat(xi), tau)
+      &= c_k e^(-i k hat(xi) dot x(tau)) \
+      &quad times ((x'(tau) dot h'(tau)) / abs(x'(tau)) - i k (hat(xi) dot h(tau)) abs(x'(tau))), \
+    (dlfar_x)'[h](hat(xi), tau)
+      &= -i k c_k e^(-i k hat(xi) dot x(tau)) \
+      &quad times (hat(xi) dot (n_x^*)'[h](tau) - i k (hat(xi) dot h(tau)) (hat(xi) dot n_x^*(tau))),
+  $
+  where $(n_x^*)'[h](tau) = (h'_2(tau), -h'_1(tau))$.
+]
+#proof[
+  The Hankel asymptotic and its derivative give
+  $
+    G(R hat(xi), x(tau)) & = (e^(i k R))/sqrt(R) (c_k e^(-i k hat(xi) dot x(tau)) + O(R^(-1))), \
+    grad_y G(R hat(xi), x(tau)) & = (e^(i k R))/sqrt(R) (-i k hat(xi) c_k e^(-i k hat(xi) dot x(tau)) + O(R^(-1))).
+  $
+  Substitution in the layer potentials gives the kernels. The displayed shape derivatives follow from the product rule and $(abs(x'))'[h] = x' dot h' / abs(x')$.
+]
+
 = Optimization under Boundary integral equation @colton_inverse_2019 @matsushima_2023
 
 #definition[Sesquilinear form][
@@ -403,6 +438,43 @@ Shape derivatives of $slp$ and $dlp$ may be expressed by $ht1 (f(z)), dxapdxa$ a
       & = Re integral_0^(2 pi) (pdv(ju, x_1) + i pdv(ju, x_2))(u(x_0)) overline(K_a (x_0, tau)) overline(h_a (tau)) dd(tau).
   $
   Comparing with $Re dp(grad_(psi_a) J, h_a)$ proves the result for every $a in I$.
+]
+
+#definition[Scattering cross section][
+  Let $I$ and $x := (x_a)_(a in I)$ be those in @bie. Let $psi := (psi_a)_(a in I) in c2pi(CC)^I$ and $alpha, eta in CC$.
+  For $hat(xi) in SS^1$, define
+  $
+    K_a^(infinity)(hat(xi), tau) &:= alpha dlfar_(x_a) (hat(xi), tau) - i eta slfar_(x_a) (hat(xi), tau), \
+    u^(infinity)(hat(xi)) &:= sum_(a in I) integral_0^(2 pi) K_a^(infinity)(hat(xi), tau) psi_a(tau) dd(tau).
+  $
+  The scattering cross section and its objective are
+  $
+    sigma := integral_0^(2 pi) abs(u^(infinity)(cos(theta), sin(theta)))^2 dd(theta),
+    quad J(x, psi) := sigma.
+  $
+]
+#theorem[Riesz representation for scattering cross section][
+  For the sesquilinear form $dp(f, g) = integral_0^(2 pi) f(t) overline(g(t)) dd(t)$ and $d(theta) := (cos(theta), sin(theta))$, the density gradient is
+  $
+    grad_(psi_a) J(x, psi)(tau)
+      = 2 integral_0^(2 pi) u^(infinity)(d(theta)) overline(K_a^(infinity)(d(theta), tau)) dd(theta) quad (a in I).
+  $
+  The shape derivative at fixed density is
+  $
+    D_(x_a) J(x, psi)[h_a]
+      = 2 Re integral_0^(2 pi) overline(u^(infinity)(d(theta)))
+        integral_0^(2 pi) (K_a^(infinity))'[h_a](d(theta), tau) psi_a(tau) dd(tau) dd(theta).
+  $
+]
+#proof[
+  For a perturbation $v_a$ of the density,
+  $
+    D_(psi_a) J(x, psi)[v_a]
+      &= 2 Re integral_0^(2 pi) overline(u^(infinity)(d(theta)))
+        integral_0^(2 pi) K_a^(infinity)(d(theta), tau) v_a(tau) dd(tau) dd(theta) \
+      &= Re dp(grad_(psi_a) J(x, psi), v_a).
+  $
+  Differentiating $u^infinity$ at fixed density and applying the real chain rule gives the shape derivative.
 ]
 
 == Reguralization

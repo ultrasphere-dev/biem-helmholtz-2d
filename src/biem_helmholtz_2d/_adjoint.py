@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from array_api.latest import Array
 from array_api_compat import array_namespace
 from array_api_shape_check import check_shapes
@@ -27,7 +25,7 @@ def solve_adjoint(
     alpha: Array,
     eta: Array,
     n: int,
-    grad_phi_j: Callable[[Array], Array],
+    grad_phi_j: Array,
 ) -> NystromInterpolant:
     r"""
     Solve $A^*\psi=-\operatorname{grad}_\phi J$ for the coupled system.
@@ -44,8 +42,8 @@ def solve_adjoint(
         Disjoint boundaries of (...) -> (..., C, 2).
     n : int
         Quadrature parameter, with $Q=2n-1$ nodes.
-    grad_phi_j : Callable[[Array], Array]
-        Density gradient under parameter measure of (...) -> (..., ...(B), C),
+    grad_phi_j : Array
+        Density gradient at the solve nodes of shape (Q, ...(B), C),
         where $C$ is the number of boundaries.
 
     Returns
@@ -54,13 +52,18 @@ def solve_adjoint(
         Adjoint density of (...) -> (..., ...(B), C).
 
     """
-    xp = array_namespace(k, alpha, eta)
-    k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
-    batch_shape = k.shape
+    xp = array_namespace(k, alpha, eta, grad_phi_j)
     dtype = xp.result_type(xp.real(k), xp.real(alpha), xp.real(eta))
     count = shape.x(xp.asarray(0, dtype=dtype, device=k.device)).shape[-2]
     if count == 0:
         raise ValueError("At least one boundary is required")
+    check_shapes("Q*BC,QC", grad_phi_j, (2 * n - 1, count), names="grad_phi_j,expected")
+    if grad_phi_j.shape[0] != 2 * n - 1 or grad_phi_j.shape[-1] != count:
+        raise ValueError("grad_phi_j must have one value per parameter and scatterer")
+    k, alpha, eta, _ = xp.broadcast_arrays(k, alpha, eta, grad_phi_j[0, ..., 0])
+    batch_shape = k.shape
+    missing = k.ndim - (grad_phi_j.ndim - 2)
+    grad_phi_j = grad_phi_j[(slice(None),) + (None,) * missing + (...,)]
     forward = _coupled_kernels(shape=shape, k=k, alpha=alpha, eta=eta)
 
     def k_log(t: Array, tau: Array) -> Array:
@@ -74,11 +77,7 @@ def solve_adjoint(
         return value[..., None] * xp.ones(count, device=t.device, dtype=t.dtype)
 
     def rhs(t: Array) -> Array:
-        gradient = grad_phi_j(t)
-        check_shapes("...*BC,...,*B,C", gradient, t, alpha, (count,), names="grad_phi_j,t,alpha,C")
-        if gradient.shape[: t.ndim] != t.shape or gradient.shape[-1] != count:
-            raise ValueError("grad_phi_j must have one value per parameter and scatterer")
-        return -xp.broadcast_to(gradient, (*t.shape, *batch_shape, count))
+        return -xp.broadcast_to(grad_phi_j, (*t.shape, *batch_shape, count))
 
     return nystrom(
         coefficient,
@@ -172,7 +171,7 @@ def objective_derivative(
     >>> from ie_circle import trapezoidal_quadrature
     >>> t, _ = trapezoidal_quadrature(8, xp=xp, device='cpu', dtype=xp.float64)
     >>> dr_g = xp.zeros((2 * 8 - 1, 1))
-    >>> def gj(t): return xp.zeros_like(t)[..., None]
+    >>> gj = xp.zeros_like(t)[..., None]
     >>> psi = solve_adjoint(k=k, shape=shape, alpha=a, eta=e, n=8, grad_phi_j=gj)
     >>> objective_derivative(
     ...     k=k, shape=shape, alpha=a, eta=e, n=8,

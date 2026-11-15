@@ -2,17 +2,12 @@
 
 from ._accuracy import accuracy
 from ._adjoint import objective_derivative, solve_adjoint
-from ._objective import (
-    point_field_adjoint_derivative,
-    point_field_density_gradient,
-    point_field_shape_derivative,
-)
+from ._objective import field_objective_derivative, scattering_cross_section
 
 __all__ = [
     "accuracy",
+    "field_objective_derivative",
     "objective_derivative",
-    "point_field_adjoint_derivative",
-    "point_field_density_gradient",
-    "point_field_shape_derivative",
+    "scattering_cross_section",
     "solve_adjoint",
 ]
