@@ -197,8 +197,8 @@ def example_accuracy(
     ])
 
     xlim = (
-        min(float(xp.min(centers[:, 0])) - 3, target_point[0] - 1),
-        max(float(xp.max(centers[:, 0])) + 3, target_point[0] + 1),
+        min(float(xp.min(centers[:, 0])) - 2.5, target_point[0] - 1),
+        max(float(xp.max(centers[:, 0])) + 2.5, target_point[0] + 1),
     )
     ylim = (
         min(float(xp.min(centers[:, 1])) - 3, target_point[1] - 1),
@@ -339,7 +339,12 @@ def example_accuracy_plot(path: Path, /) -> None:
             ax.plot(
                 [point[0] for point in boundary], [point[1] for point in boundary], color="black"
             )
-        ax.plot(*settings["target_point"], marker="x", color="yellow")
+        ax.plot(
+            *settings["target_point"],
+            marker="x",
+            markersize=4 * plt.rcParams["lines.markersize"],
+            color="yellow",
+        )
     fig.tight_layout()
     fig.savefig(path / filename)
     plt.close(fig)

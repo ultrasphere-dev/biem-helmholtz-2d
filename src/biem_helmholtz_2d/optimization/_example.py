@@ -17,7 +17,6 @@ from tqdm import tqdm
 
 from biem_helmholtz_2d._acoustic import (
     near_field,
-    plot_near_field,
     plot_near_field_prepare,
     scattering_dirichlet,
 )
@@ -363,8 +362,8 @@ def example_optimization(
         density_opt,
         incident_field,
         xlim=(
-            min(float(xp.min(centers_cpu[:, 0])) - 3, target_point[0] - 1),
-            max(float(xp.max(centers_cpu[:, 0])) + 3, target_point[0] + 1),
+            min(float(xp.min(centers_cpu[:, 0])) - 2.5, target_point[0] - 1),
+            max(float(xp.max(centers_cpu[:, 0])) + 2.5, target_point[0] + 1),
         ),
         ylim=(
             min(float(xp.min(centers_cpu[:, 1])) - 3, target_point[1] - 1),
@@ -392,98 +391,83 @@ def example_optimization(
     (path / "optimized_near_field.json").write_bytes(orjson.dumps(field_json))
 
 
-def example_optimization_plot(path: pathlib.Path) -> None:
-    """
-    Generate plots from JSON data saved by :func:`example_optimization`.
+def example_optimization_plot(path: pathlib.Path, /) -> None:
+    """Compare optimized shapes, coefficients, and histories for one regularization value."""
+    files = list(path.glob("n_modes_*/optimization_history.json"))
+    if not files:
+        files = [path / "optimization_history.json"]
+    results = [
+        (
+            json.loads(file.read_text()),
+            json.loads((file.parent / "optimized_shape.json").read_text()),
+        )
+        for file in files
+    ]
+    results.sort(key=lambda result: result[0]["n_modes"])
+    alpha = results[0][0]["alpha_reg"]
+    if any(history["alpha_reg"] != alpha for history, _ in results):
+        raise ValueError("All runs must have the same alpha_reg")
+    extent = json.loads((files[0].parent / "optimized_near_field.json").read_text())["utot"]["re"][
+        "extent"
+    ]
 
-    Parameters
-    ----------
-    path : pathlib.Path
-        Directory containing ``optimization_history.json``,
-        ``optimized_shape.json``, and ``optimized_near_field.json``.
-
-    """
-    # Load data
-    history = json.loads((path / "optimization_history.json").read_text())
-    shape_data = json.loads((path / "optimized_shape.json").read_text())
-    field_data = json.loads((path / "optimized_near_field.json").read_text())
-    alpha = history["alpha_reg"]
-
-    # Optimization history plot
-    fig, ax = plt.subplots(figsize=(4, 3))
-    ax.plot(history["val_hist"])
-    ax.set_yscale("log")
-    ax.set_xlabel("Iteration")
-    ax.set_ylabel("Objective value")
-    ax.set_title(f"Optimization history (alpha={history['alpha_reg']})")
-    fig.tight_layout()
-    fig.savefig(path / f"optimization_history_{alpha}.svg")
-    plt.close(fig)
-
-    # Magnitude of coefficients plot
-    fig, ax = plt.subplots(figsize=(4, 3))
-    sin_coefs = history["final_parameters"]["sin_coefs"]
-    cos_coefs = history["final_parameters"]["cos_coefs"]
-    if cos_coefs and isinstance(cos_coefs[0], (int, float)):
-        cos_coefs, sin_coefs = [cos_coefs], [sin_coefs]
-    cos, sin = np_compat.asarray(cos_coefs), np_compat.asarray(sin_coefs)
-    m = range(1, sin.shape[1] + 1)
-    ax.plot(
-        m,
-        np_compat.moveaxis(np_compat.abs(cos[:, 1:]), 0, -1),
-        "o-",
-        label=[f"body {i + 1} cosine" for i in range(cos.shape[0])],
+    fig, axes = plt.subplots(
+        1, len(results), figsize=(4 * len(results), 3), sharex=True, sharey=True, squeeze=False
     )
-    ax.plot(
-        m,
-        np_compat.moveaxis(np_compat.abs(sin), 0, -1),
-        "o-",
-        label=[f"body {i + 1} sine" for i in range(sin.shape[0])],
-    )
-    ax.set_yscale("log")
-    ax.set_xlabel("Mode number")
-    ax.set_ylabel("Magnitude")
-    ax.set_title("Optimized Fourier coefficients")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(path / f"optimized_coefficients_{alpha}.svg")
-    plt.close(fig)
-
-    # Optimized shape plot
-    fig, ax = plt.subplots()
-    x_shapes, y_shapes = shape_data["x"], shape_data["y"]
-    if x_shapes and isinstance(x_shapes[0], (int, float)):
-        x_shapes, y_shapes = [x_shapes], [y_shapes]
-    ax.plot(
-        np_compat.moveaxis(np_compat.asarray(x_shapes), 0, -1),
-        np_compat.moveaxis(np_compat.asarray(y_shapes), 0, -1),
-    )
-    ax.set_aspect("equal")
-    ax.set_title("Optimized shape")
+    for ax, (history, shape) in zip(axes[0], results, strict=True):
+        xs, ys = shape["x"], shape["y"]
+        if xs and isinstance(xs[0], (int, float)):
+            xs, ys = [xs], [ys]
+        for x, y in zip(xs, ys, strict=True):
+            ax.plot(x, y, color="black")
+        if "target_point" in history:
+            ax.plot(
+                *history["target_point"],
+                "X",
+                markersize=4 * plt.rcParams["lines.markersize"],
+                markerfacecolor="black",
+                markeredgewidth=2,
+                markeredgecolor="white",
+            )
+        ax.set(xlim=extent[:2], ylim=extent[2:], xlabel="x", title=f"{history['n_modes']} modes")
+        ax.set_aspect("equal")
+    axes[0, 0].set_ylabel("y")
+    fig.suptitle(f"Optimized shapes (alpha={alpha})")
     fig.tight_layout()
     fig.savefig(path / f"optimized_shape_{alpha}.svg")
     plt.close(fig)
 
-    # Near-field plot
-    fig, ax = plt.subplots(1, 2, figsize=(7, 3.5))
-    plot_near_field(
-        field_data,
-        ax_utot_re=ax[0],
-        ax_utot_im=None,
-        ax_utot_abs=ax[1],
+    fig, axes = plt.subplots(
+        1, len(results), figsize=(4 * len(results), 3), sharex=True, sharey=True, squeeze=False
     )
-    for a in ax:
-        a.plot(
-            history["target_point"][0],
-            history["target_point"][1],
-            "X",
-            markersize=15,
-            markerfacecolor="black",
-            markeredgewidth=2,
-            markeredgecolor="white",
-            label="Point to minimize",
-        )
-        a.legend()
+    for ax, (history, _) in zip(axes[0], results, strict=True):
+        cos = np_compat.asarray(history["final_parameters"]["cos_coefs"])
+        sin = np_compat.asarray(history["final_parameters"]["sin_coefs"])
+        if cos.ndim == 1:
+            cos, sin = cos[None, :], sin[None, :]
+        modes = range(1, sin.shape[1] + 1)
+        for i in range(cos.shape[0]):
+            ax.semilogy(
+                modes, np_compat.abs(cos[i, 1:]), "o-", color=f"C{i}", label=f"body {i + 1} cos"
+            )
+            ax.semilogy(
+                modes, np_compat.abs(sin[i]), "o--", color=f"C{i}", label=f"body {i + 1} sin"
+            )
+        ax.set(xlabel="Mode number", title=f"{history['n_modes']} modes")
+    axes[0, 0].set_ylabel("Coefficient magnitude")
+    axes[0, 0].legend()
+    fig.suptitle(f"Optimized Fourier coefficients (alpha={alpha})")
     fig.tight_layout()
-    fig.savefig(path / f"optimized_near_field_{alpha}.svg")
+    fig.savefig(path / f"optimized_coefficients_{alpha}.svg")
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    for history, _ in results:
+        ax.semilogy(history["val_hist"], label=f"{history['n_modes']} modes")
+    ax.set(
+        xlabel="Iteration", ylabel="Objective value", title=f"Optimization history (alpha={alpha})"
+    )
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(path / f"optimization_history_{alpha}.svg")
     plt.close(fig)

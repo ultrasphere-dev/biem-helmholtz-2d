@@ -21,11 +21,11 @@ app = App(name="biem-helmholtz-2d")
 
 LOG = getLogger(__name__)
 
-_CENTERS = [[0, 0], [5, 0]]
+_CENTERS = [[-2.5, 0], [2.5, 0]]
 _K = 5
 _ALPHA = 1
 _ETA = 1
-_TARGET_POINT = (-3, 3)
+_TARGET_POINT = (0, 0)
 _DESIRED_TOTAL_FIELD = 0
 _N_SOLVE = 200
 _N_MODES = 10
@@ -93,26 +93,22 @@ def optimize(
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     namespace = _namespace(device)
     dtype = namespace.float64
-    for alpha_reg in [
-        0,
-        1,
-        1e-2,
-        1e-4,
-    ]:
-        example_optimization(
-            k=_K,
-            centers=namespace.asarray(_CENTERS, dtype=dtype, device=device),
-            n=_N_SOLVE,
-            n_quad=n_quad,
-            alpha=_ALPHA,
-            eta=_ETA,
-            n_modes=_N_MODES,
-            n_steps=20,
-            target_point=_TARGET_POINT,
-            desired_total_field=_DESIRED_TOTAL_FIELD,
-            alpha_reg=alpha_reg,
-            path=path / f"alpha_reg_{alpha_reg}",
-        )
+    for alpha_reg in (0, 1, 1e-2, 1e-4):
+        for n_modes in (5, 10, 20):
+            example_optimization(
+                k=_K,
+                centers=namespace.asarray(_CENTERS, dtype=dtype, device=device),
+                n=_N_SOLVE,
+                n_quad=n_quad,
+                alpha=_ALPHA,
+                eta=_ETA,
+                n_modes=n_modes,
+                n_steps=20,
+                target_point=_TARGET_POINT,
+                desired_total_field=_DESIRED_TOTAL_FIELD,
+                alpha_reg=alpha_reg,
+                path=path / f"alpha_reg_{alpha_reg}" / f"n_modes_{n_modes}",
+            )
 
 
 @app.command()
@@ -197,38 +193,34 @@ _JSON_FILES = ("optimization_history.json", "optimized_shape.json", "optimized_n
 
 
 @app.command()
-def plot(*, verbose: bool = False) -> None:
+def plot_optimize(*, path: pathlib.Path | None = None, verbose: bool = False) -> None:
     """
-    Plot optimization runs that have JSON data but missing SVG files.
+    Plot unplotted optimization comparisons under a directory.
 
     Parameters
     ----------
+    path : pathlib.Path or None
+        Directory to search; defaults to optimization/.
     verbose : bool
         Enable debug logging.
 
     """
-    optimization_dir = pathlib.Path("optimization")
-    if not optimization_dir.is_dir():
-        LOG.warning("No optimization/ directory found.")
-        return
-
-    unplotted = []
-    for subdir in sorted(optimization_dir.rglob("*")):
-        if not subdir.is_dir():
+    root = path if path is not None else pathlib.Path("optimization")
+    groups = {
+        file.parent.parent if file.parent.name.startswith("n_modes_") else file.parent
+        for file in root.rglob("optimization_history.json")
+    }
+    for group in sorted(groups):
+        if any(group.glob("*.svg")):
             continue
-        has_all_json = all((subdir / j).exists() for j in _JSON_FILES)
-        has_any_svg = any(subdir.rglob("*.svg"))
-        if has_all_json and not has_any_svg:
-            unplotted.append(subdir)
-
-    if not unplotted:
-        LOG.info("No unplotted optimization runs found.")
-        return
-
-    LOG.info("Plotting %d run(s)...", len(unplotted))
-    for d in unplotted:
-        LOG.info("Plotting %s", d.name)
-        example_optimization_plot(d)
+        cases = [file.parent for file in group.glob("n_modes_*/optimization_history.json")] or [
+            group
+        ]
+        if any(not all((case / name).is_file() for name in _JSON_FILES) for case in cases):
+            LOG.warning("Incomplete optimization data in %s", group)
+            continue
+        example_optimization_plot(group)
+        LOG.info("Plotted %s", group)
 
 
 def main() -> None:

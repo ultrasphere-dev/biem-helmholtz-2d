@@ -50,7 +50,7 @@ Install this via pip (or your favourite package manager):
 
 ```sh
 uv run biem-helmholtz-2d optimize
-uv run biem-helmholtz-2d plot
+uv run biem-helmholtz-2d plot-optimize
 uv run biem-helmholtz-2d accuracy --n-solve 8,16 --n-quad 8,16 --n-reference 24
 uv run biem-helmholtz-2d plot-accuracy
 ```

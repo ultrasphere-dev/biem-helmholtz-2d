@@ -1,13 +1,19 @@
+import math
 from itertools import product
 from typing import Any
 
 import pytest
 from array_api.latest import ArrayNamespace
 from ie_circle import trapezoidal_quadrature
+from matplotlib import pyplot as plt
+from matplotlib.colors import to_rgba
 
 from biem_helmholtz_2d._acoustic import (
+    FieldData,
     far_field,
+    isin_shape,
     near_field,
+    plot_near_field,
     plot_near_field_prepare,
     scattering_dirichlet,
 )
@@ -19,6 +25,50 @@ from biem_helmholtz_2d._potential_far_derivative import kernel as far_derivative
 from biem_helmholtz_2d._potential_inner import kernel as near_kernel
 from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 from biem_helmholtz_2d.optimization._shape import ParameterShape
+
+
+def test_masked_plot_is_gray() -> None:
+    fig, ax = plt.subplots()
+    field: FieldData = {
+        "uscat": {"re": {"data": [[None], [1]], "extent": [0, 1, 0, 1], "vmin": -1, "vmax": 1}}
+    }
+    plot_near_field(field, ax_uscat_re=ax)
+    assert tuple(ax.images[0].get_cmap().get_bad()) == to_rgba("gray")
+    assert bool(ax.images[0].get_array().mask[0, 0])
+    plt.close(fig)
+
+
+def test_isin_shape_near_boundaries(xp: ArrayNamespace, dtype: Any, device: Any) -> None:
+    centers = xp.asarray([[-2.5, 0], [2.5, 0]], dtype=dtype, device=device)
+    shape = ParameterShape(
+        cos_coefs=xp.ones((2, 1), dtype=dtype, device=device),
+        sin_coefs=xp.zeros((2, 0), dtype=dtype, device=device),
+        center=centers,
+    )
+    n = 32
+    angle = math.pi / (2 * n - 1)
+    direction = xp.asarray([math.cos(angle), math.sin(angle)], dtype=dtype, device=device)
+    points = xp.stack([
+        centers[0],
+        centers[1],
+        centers[0] + 0.99 * direction,
+        centers[0] + 1.01 * direction,
+        centers[1] + 0.99 * direction,
+        centers[1] + 1.01 * direction,
+    ])
+    expected = xp.asarray(
+        [
+            [True, False],
+            [False, True],
+            [True, False],
+            [False, False],
+            [False, True],
+            [False, False],
+        ],
+        dtype=xp.bool,
+        device=device,
+    )
+    assert bool(xp.all(isin_shape(points, shape, n_quad=n) == expected))
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
@@ -92,6 +142,8 @@ def test_batched_scattering_and_adjoint(
         for components in plotted.values()
         for entry in components.values()
     )
+    # The grid point (-0.5, 0) lies inside the first unit circle.
+    assert bool(xp.all(xp.isnan(plotted["uscat"]["re"]["data"][2, 4])))
     plot_point = xp.asarray([7, 2], dtype=dtype, device=device)
     plot_field = near_field(
         phi, plot_point, k=k_input, shape=shape, alpha=alpha_input, eta=eta_input, n=n

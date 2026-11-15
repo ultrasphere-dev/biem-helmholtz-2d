@@ -5,11 +5,8 @@ from typing import Any
 import pytest
 from array_api.latest import ArrayNamespace
 
-from biem_helmholtz_2d.optimization._example import (
-    example_optimization,
-    example_optimization_plot,
-    project_coefficients,
-)
+from biem_helmholtz_2d.cli import app
+from biem_helmholtz_2d.optimization._example import example_optimization, project_coefficients
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
@@ -19,35 +16,51 @@ def test_optimization(
     parameters = []
     centers = xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device)[:n_scatterers]
     for alpha_reg in (0, 0.1):
-        path = tmp_path / str(alpha_reg)
-        example_optimization(
-            k=1,
-            centers=centers,
-            n_modes=3,
-            n_steps=2,
-            alpha=1,
-            eta=1,
-            n=16,
-            alpha_reg=alpha_reg,
-            path=path,
+        path = tmp_path / f"alpha_reg_{alpha_reg}"
+        for n_modes in (2, 3, 4):
+            case = path / f"n_modes_{n_modes}"
+            example_optimization(
+                k=1,
+                centers=centers,
+                n_modes=n_modes,
+                n_steps=2,
+                alpha=1,
+                eta=1,
+                n=16,
+                alpha_reg=alpha_reg,
+                path=case,
+            )
+            assert (case / "optimization_history.json").is_file()
+            assert (case / "optimized_shape.json").is_file()
+            assert (case / "optimized_near_field.json").is_file()
+            field = json.loads((case / "optimized_near_field.json").read_text())
+            assert field["utot"]["re"]["extent"] == [-3, 2.5 if n_scatterers == 1 else 7.5, -3, 4]
+            history = json.loads((case / "optimization_history.json").read_text())
+            assert history["alpha_reg"] == alpha_reg
+            assert all(
+                b <= a for a, b in zip(history["val_hist"], history["val_hist"][1:], strict=False)
+            )
+            cos = xp.asarray(history["final_parameters"]["cos_coefs"], dtype=dtype, device=device)[
+                :, 1:
+            ]
+            sin = xp.asarray(history["final_parameters"]["sin_coefs"], dtype=dtype, device=device)
+            assert cos.shape == (n_scatterers, n_modes)
+            assert bool(xp.all(xp.sum(xp.sqrt(cos**2 + sin**2), axis=-1) <= 1 + 1e-12))
+            if n_modes == 3:
+                parameters.append(xp.stack([cos, sin]))
+        app(
+            ["plot-optimize", "--path", str(path)],
+            exit_on_error=False,
+            result_action="return_value",
         )
-        assert (path / "optimization_history.json").is_file()
-        assert (path / "optimized_shape.json").is_file()
-        assert (path / "optimized_near_field.json").is_file()
-        history = json.loads((path / "optimization_history.json").read_text())
-        assert history["alpha_reg"] == alpha_reg
-        assert all(
-            b <= a for a, b in zip(history["val_hist"], history["val_hist"][1:], strict=False)
-        )
-        cos = xp.asarray(history["final_parameters"]["cos_coefs"], dtype=dtype, device=device)[
-            :, 1:
-        ]
-        sin = xp.asarray(history["final_parameters"]["sin_coefs"], dtype=dtype, device=device)
-        assert cos.shape == (n_scatterers, 3)
-        assert bool(xp.all(xp.sum(xp.sqrt(cos**2 + sin**2), axis=-1) <= 1 + 1e-12))
-        parameters.append(xp.stack([cos, sin]))
-        example_optimization_plot(path)
-        assert (path / f"optimized_shape_{alpha_reg}.svg").is_file()
+        figures = list(path.rglob("*.svg"))
+        assert {figure.name for figure in figures} == {
+            f"optimized_shape_{alpha_reg}.svg",
+            f"optimized_coefficients_{alpha_reg}.svg",
+            f"optimization_history_{alpha_reg}.svg",
+        }
+        for figure in figures:
+            assert all(f"{n_modes} modes" in figure.read_text() for n_modes in (2, 3, 4))
     assert bool(xp.any(xp.abs(parameters[0] - parameters[1]) > 1e-8))
 
 

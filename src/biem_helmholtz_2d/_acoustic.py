@@ -136,17 +136,16 @@ def scattering_dirichlet(
 
 
 def isin_shape(x: Array, shape: Shape, /, n_quad: int, tol: float = 1e-5) -> Array:
+    """Classify points using the winding number of the sampled boundary polygon."""
     xp = array_namespace(x)
-    t, w = trapezoidal_quadrature(n_quad, xp=xp, device=x.device, dtype=x.dtype)
-    x_t = shape.x(t)
-    nx_t_unnormalized = xp.stack([shape.dx(t)[..., 1], -shape.dx(t)[..., 0]], axis=-1)
-    diff = x_t - x[..., None, None, :]
-    lower = xp.sum(diff**2, axis=-1)
-    upper = xp.sum(nx_t_unnormalized * diff, axis=-1)
-    integrand = upper / lower
-    integral = xp.sum(integrand * w[..., None], axis=-2)
-    winding_number = integral / (2 * math.pi)
-    return xp.abs(winding_number) > tol
+    t, _ = trapezoidal_quadrature(n_quad, xp=xp, device=x.device, dtype=x.dtype)
+    boundary = shape.x(t)
+    start = boundary - x[..., None, None, :]
+    end = xp.roll(boundary, -1, axis=0) - x[..., None, None, :]
+    cross = start[..., 0] * end[..., 1] - start[..., 1] * end[..., 0]
+    dot = xp.sum(start * end, axis=-1)
+    winding_number = xp.sum(xp.atan2(cross, dot), axis=-2) / (2 * math.pi)
+    return xp.abs(winding_number) > max(0.5, tol)
 
 
 FieldKind = Literal["uin", "uscat", "utot"]
@@ -214,7 +213,7 @@ def plot_near_field_prepare(
     n_plot : int
         Number of grid points per axis.
     isin_shape_tol : float
-        Winding-number threshold for the inside-shape test.
+        Winding-number threshold for the inside-shape test, with a minimum of 0.5.
 
     Returns
     -------
@@ -368,7 +367,7 @@ def plot_near_field(
             check_shapes("IJ", data, names="field_data")
             xp = array_namespace(data)
             data = xp.permute_dims(xp.asarray(data, device="cpu"), (1, 0))
-        cmap = "inferno" if key[1] == "abs" else "seismic"
+        cmap = plt.get_cmap("inferno" if key[1] == "abs" else "seismic").with_extremes(bad="gray")
         im = ax.imshow(
             data,
             extent=entry["extent"],

@@ -18,6 +18,7 @@ def test_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert "biem-helmholtz-2d" in output
     assert "accuracy" in output
     assert "plot-accuracy" in output
+    assert "plot-optimize" in output
     expected_device = "cuda" if torch_xp is not None and torch_xp.cuda.is_available() else "cpu"
     for name in ("accuracy", "optimize"):
         _, bound, _ = app.parse_args([name], exit_on_error=False, print_error=False)
@@ -49,7 +50,9 @@ def test_accuracy_and_plot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     assert data["settings"]["n_reference"] == 8
     assert data["settings"]["n_solve"] == [3, 4]
     assert data["settings"]["n_quad"] == [3, 5]
-    assert "total_field" in data
+    assert data["settings"]["centers"] == [[-2.5, 0], [2.5, 0]]
+    assert data["settings"]["target_point"] == [0, 0]
+    assert data["total_field"]["extent"] == [-5, 5, -3, 3]
     assert len(data["central_difference"]["steps"]) == 7
     assert len(data["central_difference"]["values"]) == 7
     assert all(len(values) == 2 for values in data["central_difference"]["values"])
