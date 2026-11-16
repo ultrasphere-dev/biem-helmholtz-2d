@@ -5,13 +5,19 @@
       "source": "34j/skills",
       "sourceType": "github",
       "skillPath": "array-api/SKILL.md",
-      "computedHash": "63e114763b4fd5a305d46a25e1fd699461d8e409d5f985291018f838a93301ba"
+      "computedHash": "2d571874a349b1209be3aa0ac8ff6efa8a145421bbfaac1e197708722b03991d"
     },
     "general": {
       "source": "34j/skills",
       "sourceType": "github",
       "skillPath": "general/SKILL.md",
       "computedHash": "c73ad46c3d782c4513178682c9a9529479d73065fe51f1b088f07bd20c182d52"
+    },
+    "hpc-miyabi-g": {
+      "source": "34j/skills",
+      "sourceType": "github",
+      "skillPath": "hpc-miyabi-g/SKILL.md",
+      "computedHash": "7187593e04ed224ff94ca59aeb0772ce873020db5a3ca89948c6bd94e642dd5a"
     },
     "python": {
       "source": "34j/skills",

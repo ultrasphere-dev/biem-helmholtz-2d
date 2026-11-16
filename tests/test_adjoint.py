@@ -8,7 +8,11 @@ from scipy.special import hankel1, jv
 
 from biem_helmholtz_2d._acoustic import far_field, near_field, scattering_dirichlet
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import field_objective_derivative, scattering_cross_section
+from biem_helmholtz_2d._objective import (
+    field_objective,
+    field_objective_derivative,
+    scattering_cross_section,
+)
 from biem_helmholtz_2d._potential_far import kernel as far_kernel
 from biem_helmholtz_2d._potential_far_derivative import kernel as far_derivative_kernel
 from biem_helmholtz_2d._potential_inner import kernel as near_kernel
@@ -30,6 +34,74 @@ class _TestShape:
 
     def ddx(self, t: Array, /) -> Array:
         return self.base.ddx(t) + self.amplitude[..., None] * self.perturbation.ddx(t)
+
+
+@pytest.mark.parametrize(("n_scatterers", "quadrature_offset"), [(1, 0), (2, 4)])
+def test_cloaking_derivative(
+    xp: Any,
+    shape: Shape,
+    shape_h: Shape,
+    device: Any,
+    dtype: Any,
+    n_scatterers: int,
+    quadrature_offset: int,
+) -> None:
+    n, step, weight_target = 32, 1e-5, 2.5
+    k, alpha, eta = (xp.asarray(v, dtype=dtype, device=device) for v in (1, 1, 1))
+    target = xp.asarray([[3, 3], [-2, 3], [0, 3]], dtype=dtype, device=device)
+    centers = xp.asarray([[0, 0], [6, 0]], dtype=dtype, device=device)[:n_scatterers]
+    mask = xp.astype(xp.arange(n_scatterers, device=device) == n_scatterers - 1, dtype)
+    zeros = xp.zeros_like(centers)
+    boundary = _TestShape(shape, shape_h, xp.zeros_like(mask), centers)
+    perturbation = _TestShape(CircleShape(0), shape_h, mask, zeros)
+    incident = plane_wave(k, xp.asarray([1, 0], dtype=dtype, device=device))
+    incident_grad = plane_wave_grad(k, xp.asarray([1, 0], dtype=dtype, device=device))
+    quad = n + quadrature_offset
+    t, _ = trapezoidal_quadrature(quad, xp=xp, device=device, dtype=dtype)
+
+    def evaluate(boundary_shape: Shape, /) -> tuple[Any, Any, Any]:
+        density = scattering_dirichlet(
+            k=k, shape=boundary_shape, incident_field=incident, alpha=alpha, eta=eta, n=n
+        )
+        value, terms = field_objective(
+            density,
+            target=target,
+            weight_target=weight_target,
+            include_cross_section=True,
+            shape=boundary_shape,
+            incident_field=incident,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            n_quad=quad,
+        )
+        return density, value, terms
+
+    density, value, terms = evaluate(boundary)
+    directions = xp.stack([xp.cos(t), xp.sin(t)], axis=-1)
+    far = far_field(density, directions, k=k, shape=boundary, alpha=alpha, eta=eta, n=quad)
+    total = incident(target) + near_field(
+        density, target, k=k, shape=boundary, alpha=alpha, eta=eta, n=quad
+    )
+    expected_value = scattering_cross_section(far) + weight_target * xp.sum(xp.abs(total) ** 2) / 3
+    assert float(value) == pytest.approx(float(expected_value), rel=1e-13, abs=1e-13)
+    _, derivative = field_objective_derivative(
+        density,
+        terms,
+        shape=boundary,
+        incident_gradient=incident_grad(boundary.x(t)),
+        k=k,
+        alpha=alpha,
+        eta=eta,
+        n_solve=n,
+        n_quad=quad,
+    )
+    plus = _TestShape(shape, shape_h, step * mask, centers)
+    minus = _TestShape(shape, shape_h, -step * mask, centers)
+    finite_difference = (evaluate(plus)[1] - evaluate(minus)[1]) / (2 * step)
+    assert float(derivative(perturbation)) == pytest.approx(
+        float(finite_difference), rel=1e-5, abs=1e-8
+    )
 
 
 @pytest.mark.parametrize(
@@ -120,8 +192,7 @@ def test_adjoint_central_derivative(
         field_gradient = xp.ones_like(field)
     _, directional = field_objective_derivative(
         density,
-        observations,
-        field_gradient,
+        [(observations, field_gradient, kernel, derivative_kernel)],
         incident_gradient=incident_grad(shape.x(t)),
         shape=shape,
         k=k,
@@ -129,8 +200,6 @@ def test_adjoint_central_derivative(
         eta=eta,
         n_solve=n,
         n_quad=quad,
-        kernel=kernel,
-        derivative_kernel=derivative_kernel,
     )
     actual = directional(h_shape)
     plus, minus = field_for(plus_shape), field_for(minus_shape)

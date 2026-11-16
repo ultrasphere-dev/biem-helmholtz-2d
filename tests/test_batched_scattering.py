@@ -19,7 +19,11 @@ from biem_helmholtz_2d._acoustic import (
 )
 from biem_helmholtz_2d._adjoint import objective_derivative, solve_adjoint
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import field_objective_derivative, scattering_cross_section
+from biem_helmholtz_2d._objective import (
+    field_objective,
+    field_objective_derivative,
+    scattering_cross_section,
+)
 from biem_helmholtz_2d._potential_far import kernel as far_kernel
 from biem_helmholtz_2d._potential_far_derivative import kernel as far_derivative_kernel
 from biem_helmholtz_2d._potential_inner import kernel as near_kernel
@@ -69,6 +73,71 @@ def test_isin_shape_near_boundaries(xp: ArrayNamespace, dtype: Any, device: Any)
         device=device,
     )
     assert bool(xp.all(isin_shape(points, shape, n_quad=n) == expected))
+
+
+@pytest.mark.parametrize("n_scatterers", [1, 2])
+def test_batched_cloaking(xp: ArrayNamespace, dtype: Any, device: Any, n_scatterers: int) -> None:
+    centers = xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device)[:n_scatterers]
+    shape = ParameterShape(
+        cos_coefs=xp.ones((n_scatterers, 1), dtype=dtype, device=device),
+        sin_coefs=xp.zeros((n_scatterers, 0), dtype=dtype, device=device),
+        center=centers,
+    )
+    perturbation = ParameterShape(
+        cos_coefs=xp.astype(xp.arange(n_scatterers, device=device) == 0, dtype)[:, None],
+        sin_coefs=xp.zeros((n_scatterers, 0), dtype=dtype, device=device),
+        center=xp.zeros_like(centers),
+    )
+    k = xp.asarray([[0.8, 1.1]], dtype=dtype, device=device)
+    alpha = xp.asarray([[0.9], [1.2]], dtype=dtype, device=device)
+    eta = xp.asarray([[0.7, 1.3], [1.1, 0.8]], dtype=dtype, device=device)
+    target = xp.asarray([[2, 3], [-3, 2], [2, -3]], dtype=dtype, device=device)
+    direction = xp.asarray([1, 0], dtype=dtype, device=device)
+    n, quad = 8, 10
+    t, _ = trapezoidal_quadrature(quad, xp=xp, device=device, dtype=dtype)
+
+    def evaluate(k: Any, alpha: Any, eta: Any) -> tuple[Any, Any]:
+        incident = plane_wave(k, direction)
+        density = scattering_dirichlet(
+            k=k, shape=shape, incident_field=incident, alpha=alpha, eta=eta, n=n
+        )
+        value, terms = field_objective(
+            density,
+            target=target,
+            weight_target=0.7,
+            include_cross_section=True,
+            shape=shape,
+            incident_field=incident,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            n_quad=quad,
+        )
+        batch_shape = xp.broadcast_arrays(k, alpha, eta)[0].shape
+        tau = t[(...,) + (None,) * len(batch_shape)]
+        boundary = xp.moveaxis(shape.x(tau), -2, 0)
+        gradient = xp.moveaxis(plane_wave_grad(k, direction)(boundary), 0, -2)
+        _, derivative = field_objective_derivative(
+            density,
+            terms,
+            shape=shape,
+            incident_gradient=gradient,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            n_solve=n,
+            n_quad=quad,
+        )
+        return value, derivative(perturbation)
+
+    value, actual = evaluate(k, alpha, eta)
+    k, alpha, eta = xp.broadcast_arrays(k, alpha, eta)
+    assert value.shape == actual.shape == k.shape
+    for index in product(*(range(size) for size in k.shape)):
+        single_value, single_derivative = evaluate(k[index], alpha[index], eta[index])
+        tolerance = 500 * xp.finfo(dtype).eps
+        assert float(xp.abs(value[index] - single_value)) < tolerance
+        assert float(xp.abs(actual[index] - single_derivative)) < tolerance
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
@@ -184,8 +253,7 @@ def test_batched_scattering_and_adjoint(
         kernel, derivative_kernel = near_kernel, near_derivative_kernel
     adjoint, directional = field_objective_derivative(
         phi,
-        observations,
-        field_gradient,
+        [(observations, field_gradient, kernel, derivative_kernel)],
         incident_gradient=incident_gradient,
         shape=shape,
         k=k_input,
@@ -193,8 +261,6 @@ def test_batched_scattering_and_adjoint(
         eta=eta_input,
         n_solve=n,
         n_quad=n,
-        kernel=kernel,
-        derivative_kernel=derivative_kernel,
     )
     derivative = directional(perturbation)
     assert derivative.shape == batch_shape

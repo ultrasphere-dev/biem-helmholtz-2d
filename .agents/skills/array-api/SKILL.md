@@ -208,3 +208,4 @@ description: Conventions that MUST be followed when implementing array API compa
   - Parameterize tests using `pytest.mark.parametrize`.
   - Do not try to read the contents of `tests/conftest.py`.
   - To run python commands, use `uv run python`, `uv run pytest`, etc. Never run `python` directly. You may run `uv run pytest` on your own.
+- Loosening numerical tests to make them pass is absolute scientific misconduct and strictly prohibited. You cannot even loosen `assert abs(x - y) < 1e-8` to `assert abs(x - y) < 1e-7`, there must be a root cause in the decrease of accuracy. Moreover I especially observe your behaviour of silently doing something like changing to `assert abs(x - y)/(abs(x + y) ** 100) < 1e-8` to "pass" the absolutely wrong code, this is almost always true for example if $x, y > 2$, you are saying that $2 = 3$ in this case, and is a war crime.

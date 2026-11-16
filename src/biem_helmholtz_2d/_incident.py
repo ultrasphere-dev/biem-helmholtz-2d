@@ -89,6 +89,6 @@ def plane_wave_grad(k: Array, direction: Array, /) -> Callable[[Array], Array]:
     def _pwg(x: Array) -> Array:
         xp = array_namespace(k, x, direction)
         pw = xp.exp(1j * k * xp.sum(d_hat * x, axis=-1))
-        return 1j * k * d_hat * pw[..., None]
+        return 1j * k[..., None] * d_hat * pw[..., None]
 
     return _pwg

@@ -26,9 +26,7 @@ from biem_helmholtz_2d._acoustic import (
     scattering_dirichlet,
 )
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import field_objective_derivative
-from biem_helmholtz_2d._potential_inner import kernel as near_kernel
-from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
+from biem_helmholtz_2d._objective import field_objective, field_objective_derivative
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -39,7 +37,9 @@ def example_accuracy(
     k: float,
     alpha: float,
     eta: float,
-    target_point: tuple[float, float],
+    target: Array,
+    weight_target: float,
+    include_cross_section: bool,
     desired_total_field: complex,
     n_solve: Sequence[int],
     n_quad: Sequence[int],
@@ -53,6 +53,10 @@ def example_accuracy(
         raise ValueError("centers must have shape (n_scatterers, 2) with n_scatterers > 0")
     if n_modes < 1 or step <= 0 or not math.isfinite(step):
         raise ValueError("n_modes and step must be positive and step must be finite")
+    if not math.isfinite(weight_target) or weight_target < 0:
+        raise ValueError("weight_target must be finite and nonnegative")
+    if include_cross_section and desired_total_field != 0:
+        raise ValueError("the cloaking objective minimizes the total field itself")
     steps = [step * 10**power for power in range(-3, 4)]
     if any(h <= 0 or not math.isfinite(h) for h in steps):
         raise ValueError("central-difference steps must be positive and finite")
@@ -60,16 +64,20 @@ def example_accuracy(
         raise ValueError("n_solve and n_quad must be nonempty")
     if n_reference is None:
         n_reference = (3 * max(*n_solve, *n_quad) + 1) // 2
-    xp = array_namespace(centers)
+    xp = array_namespace(centers, target)
     dtype, device = centers.dtype, centers.device
-    point = xp.asarray(target_point, dtype=dtype, device=device)
+    if target.ndim != 2 or target.shape[0] == 0 or target.shape[1] != 2:
+        raise ValueError("target must have shape (n_targets, 2) with n_targets > 0")
+    if not xp.isdtype(target.dtype, "real floating") or not bool(xp.all(xp.isfinite(target))):
+        raise ValueError("target must contain finite real floating-point coordinates")
+    if bool(xp.any(xp.linalg.vector_norm(centers[None, :, :] - target[:, None, :], axis=-1) <= 2)):
+        raise ValueError("each target must be more than 2 from every center")
     wave_number = xp.asarray(k, dtype=dtype, device=device)
     coupling_alpha = xp.asarray(alpha, dtype=dtype, device=device)
     coupling_eta = xp.asarray(eta, dtype=dtype, device=device)
     direction = xp.asarray([1, 0], dtype=dtype, device=device)
     incident = plane_wave(wave_number, direction)
     incident_grad = plane_wave_grad(wave_number, direction)
-    target = desired_total_field - incident(point)
     rng = random.Random(seed)  # ruff: ignore[suspicious-non-cryptographic-random-usage]  # Reproducible numerical samples, not security.
 
     def random_coefficients() -> Array:
@@ -128,7 +136,7 @@ def example_accuracy(
     def field(solve_n: int, quad_n: int, /) -> Array:
         return near_field(
             solve(solve_n),
-            point,
+            target,
             shape=shape,
             k=wave_number,
             alpha=coupling_alpha,
@@ -138,12 +146,23 @@ def example_accuracy(
 
     def derivative(solve_n: int, quad_n: int, /) -> Array:
         density = solve(solve_n)
-        field_value = field(solve_n, quad_n)
+        _, terms = field_objective(
+            density,
+            target=target,
+            weight_target=weight_target,
+            include_cross_section=include_cross_section,
+            shape=shape,
+            incident_field=incident,
+            k=wave_number,
+            alpha=coupling_alpha,
+            eta=coupling_eta,
+            n_quad=quad_n,
+            desired_total_field=desired_total_field,
+        )
         t, _ = trapezoidal_quadrature(quad_n, xp=xp, device=device, dtype=dtype)
         _, directional = field_objective_derivative(
             density,
-            point[None, :],
-            (2 * (field_value - target))[None],
+            terms,
             shape=shape,
             incident_gradient=incident_grad(shape.x(t)),
             k=wave_number,
@@ -151,8 +170,6 @@ def example_accuracy(
             eta=coupling_eta,
             n_solve=solve_n,
             n_quad=quad_n,
-            kernel=near_kernel,
-            derivative_kernel=near_derivative_kernel,
         )
         return directional(h_shape)
 
@@ -173,16 +190,20 @@ def example_accuracy(
             eta=coupling_eta,
             n=n_reference,
         )
-        value = near_field(
+        value, _ = field_objective(
             density,
-            point,
+            target=target,
+            weight_target=weight_target,
+            include_cross_section=include_cross_section,
             shape=boundary,
+            incident_field=incident,
             k=wave_number,
             alpha=coupling_alpha,
             eta=coupling_eta,
-            n=n_reference,
+            n_quad=n_reference,
+            desired_total_field=desired_total_field,
         )
-        return xp.abs(value - target) ** 2
+        return value
 
     central = xp.stack([
         xp.stack([
@@ -197,12 +218,12 @@ def example_accuracy(
     ])
 
     xlim = (
-        min(float(xp.min(centers[:, 0])) - 2.5, target_point[0] - 1),
-        max(float(xp.max(centers[:, 0])) + 2.5, target_point[0] + 1),
+        min(float(xp.min(centers[:, 0])) - 2.5, float(xp.min(target[:, 0])) - 1),
+        max(float(xp.max(centers[:, 0])) + 2.5, float(xp.max(target[:, 0])) + 1),
     )
     ylim = (
-        min(float(xp.min(centers[:, 1])) - 3, target_point[1] - 1),
-        max(float(xp.max(centers[:, 1])) + 3, target_point[1] + 1),
+        min(float(xp.min(centers[:, 1])) - 3, float(xp.min(target[:, 1])) - 1),
+        max(float(xp.max(centers[:, 1])) + 3, float(xp.max(target[:, 1])) + 1),
     )
     wave = plot_near_field_prepare(
         solve(n_reference),
@@ -238,7 +259,9 @@ def example_accuracy(
             "k": k,
             "alpha": alpha,
             "eta": eta,
-            "target_point": target_point,
+            "target": serialize(target),
+            "weight_target": weight_target,
+            "include_cross_section": include_cross_section,
             "desired_total_field": {
                 "real": desired_total_field.real,
                 "imag": desired_total_field.imag,
@@ -259,7 +282,7 @@ def example_accuracy(
 
 
 def example_accuracy_plot(path: Path, /) -> None:
-    """Plot saved convergence studies and the scattered wave."""
+    """Plot saved convergence studies and the field."""
     data = json.loads((path / "accuracy.json").read_text())
     if "wave" not in data and "total_field" not in data:
         _legacy_accuracy_plot(data, path)
@@ -272,10 +295,10 @@ def example_accuracy_plot(path: Path, /) -> None:
         for solve, row in zip(n_solve, values, strict=True):
             samples = sorted(zip(n_quad, row, strict=True), key=lambda sample: sample[0])
             orders, sampled_values = zip(*samples, strict=True)
-            errors = np_compat.maximum(
-                np_compat.abs(np_compat.asarray(sampled_values) - reference), 1e-300
-            )
-            ax.loglog(orders, errors, "o-", label=f"solve n={solve}")
+            errors = np_compat.abs(np_compat.asarray(sampled_values) - reference)
+            if errors.ndim > 1:
+                errors = np_compat.max(errors, axis=tuple(range(1, errors.ndim)))
+            ax.loglog(orders, np_compat.maximum(errors, 1e-300), "o-", label=f"solve n={solve}")
         ticks = sorted(set(n_quad))
         ax.set_xticks(ticks, [str(n) for n in ticks])
         ax.xaxis.set_minor_locator(NullLocator())
@@ -289,12 +312,15 @@ def example_accuracy_plot(path: Path, /) -> None:
         plt.close(fig)
 
     reference = data["field"]["reference"]
-    field_reference = reference["real"] + 1j * reference["imag"]
+    field_reference = np_compat.asarray(reference["real"]) + 1j * np_compat.asarray(
+        reference["imag"]
+    )
     field_values = data["field"]["values"]
     field_values = np_compat.asarray(field_values["real"]) + 1j * np_compat.asarray(
         field_values["imag"]
     )
-    error_plot(field_values, field_reference, "Scattered field", path / "scattered_field.svg")
+    title = "Scattered field (max over targets)" if field_reference.size > 1 else "Scattered field"
+    error_plot(field_values, field_reference, title, path / "scattered_field.svg")
     derivative_reference = np_compat.asarray(data["derivative"]["reference"])
     derivative_values = np_compat.asarray(data["derivative"]["values"])
     central = np_compat.asarray(data["central_difference"]["values"])
@@ -339,12 +365,17 @@ def example_accuracy_plot(path: Path, /) -> None:
             ax.plot(
                 [point[0] for point in boundary], [point[1] for point in boundary], color="black"
             )
-        ax.plot(
-            *settings["target_point"],
-            marker="x",
-            markersize=4 * plt.rcParams["lines.markersize"],
-            color="yellow",
-        )
+        targets = settings["target"] if "target" in settings else [settings["target_point"]]
+        if len(targets) > 1:
+            points = np_compat.asarray(targets)
+            ax.plot(points[:, 0], points[:, 1], ".", color="black", markersize=3)
+        else:
+            ax.plot(
+                *targets[0],
+                marker="x",
+                markersize=4 * plt.rcParams["lines.markersize"],
+                color="yellow",
+            )
     fig.tight_layout()
     fig.savefig(path / filename)
     plt.close(fig)

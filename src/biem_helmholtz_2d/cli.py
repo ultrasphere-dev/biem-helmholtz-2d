@@ -1,7 +1,7 @@
 import pathlib
 from datetime import datetime
 from logging import DEBUG, INFO, basicConfig, getLogger
-from typing import Annotated, Any, Self
+from typing import Annotated, Any, Literal, Self
 
 import array_api_compat.numpy as xp
 from cyclopts import App, Parameter
@@ -20,15 +20,6 @@ except ModuleNotFoundError as exc:
 app = App(name="biem-helmholtz-2d")
 
 LOG = getLogger(__name__)
-
-_CENTERS = [[-2.5, 0], [2.5, 0]]
-_K = 5
-_ALPHA = 1
-_ETA = 1
-_TARGET_POINT = (0, 0)
-_DESIRED_TOTAL_FIELD = 0
-_N_SOLVE = 200
-_N_MODES = 10
 
 
 def _namespace(device: str, /) -> Any:
@@ -67,12 +58,78 @@ class Values(str):
         return result
 
 
+class Points(str):
+    """A comma-separated list of x,y target coordinates."""
+
+    values: list[list[float]]
+
+    def __new__(cls, value: str, /) -> Self:
+        """Parse coordinates as x1,y1,x2,y2,... ."""
+        coordinates = [float(part) for part in value.split(",")]
+        if len(coordinates) < 2 or len(coordinates) % 2:
+            raise ValueError("target must contain x,y coordinate pairs")
+        result = super().__new__(cls, value)
+        result.values = [coordinates[i : i + 2] for i in range(0, len(coordinates), 2)]
+        return result
+
+
+def _configuration(
+    objective: Literal["point", "cloaking"], /, *, device: Device, target: Points | None
+) -> dict[str, Any]:
+    namespace = _namespace(device)
+    if objective == "point":
+        config = {
+            "centers": [[-2.5, 0], [2.5, 0]],
+            "k": 5,
+            "alpha": 1,
+            "eta": 1,
+            "target": [[0, 0]],
+            "desired_total_field": 0,
+            "n_solve": 200,
+            "n_modes": 10,
+            "mode_counts": (5, 10, 20),
+            "include_cross_section": False,
+        }
+    elif objective == "cloaking":
+        # Equal-area samples on a Fermat spiral in the unit disk.
+        n_targets = 16
+        i = namespace.arange(n_targets, dtype=namespace.float64, device=device)
+        radius = namespace.sqrt((i + 0.5) / n_targets)
+        angle = i * namespace.pi * (3 - 5**0.5)
+        config = {
+            "centers": [[-3.2, 0], [0, -3.2], [3.2, 0], [0, 3.2]],
+            "k": 1,
+            "alpha": 1,
+            "eta": 1,
+            "target": namespace.stack(
+                [radius * namespace.cos(angle), radius * namespace.sin(angle)], axis=-1
+            ),
+            "desired_total_field": 0,
+            "n_solve": 200,
+            "n_modes": 10,
+            "mode_counts": (5, 10, 20),
+            "include_cross_section": True,
+        }
+    else:
+        raise ValueError(f"unknown objective: {objective}")
+    config["centers"] = namespace.asarray(config["centers"], dtype=namespace.float64, device=device)
+    config["target"] = namespace.asarray(
+        target.values if target is not None else config["target"],
+        dtype=namespace.float64,
+        device=device,
+    )
+    return config
+
+
 _DEFAULT_DEVICE = Device("cuda" if torch_xp is not None and torch_xp.cuda.is_available() else "cpu")
 
 
 @app.command()
 def optimize(
     *,
+    objective: Literal["point", "cloaking"] = "point",
+    target: Points | None = None,
+    weight_target: float = 1.0,
     device: Device = _DEFAULT_DEVICE,
     n_quad: int | None = None,
     verbose: bool = False,
@@ -82,6 +139,12 @@ def optimize(
 
     Parameters
     ----------
+    objective : Literal["point", "cloaking"]
+        Minimize the total field at the target(s), optionally with the scattering cross section.
+    target : Points or None
+        Comma-separated coordinates x1,y1,x2,y2,...; defaults depend on the objective.
+    weight_target : float
+        Weight of the mean squared total field at the target points.
     device : Device
         Array device: cpu, cuda, or cuda:N.
     n_quad : int or None
@@ -91,21 +154,19 @@ def optimize(
 
     """
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-    namespace = _namespace(device)
-    dtype = namespace.float64
+    config = _configuration(objective, device=device, target=target)
+    n_solve = config.pop("n_solve")
+    config.pop("n_modes")
+    mode_counts = config.pop("mode_counts")
     for alpha_reg in (0, 1, 1e-2, 1e-4):
-        for n_modes in (5, 10, 20):
+        for n_modes in mode_counts:
             example_optimization(
-                k=_K,
-                centers=namespace.asarray(_CENTERS, dtype=dtype, device=device),
-                n=_N_SOLVE,
+                **config,
+                n=n_solve,
                 n_quad=n_quad,
-                alpha=_ALPHA,
-                eta=_ETA,
                 n_modes=n_modes,
                 n_steps=20,
-                target_point=_TARGET_POINT,
-                desired_total_field=_DESIRED_TOTAL_FIELD,
+                weight_target=weight_target,
                 alpha_reg=alpha_reg,
                 path=path / f"alpha_reg_{alpha_reg}" / f"n_modes_{n_modes}",
             )
@@ -114,6 +175,9 @@ def optimize(
 @app.command()
 def accuracy(
     *,
+    objective: Literal["point", "cloaking"] = "point",
+    target: Points | None = None,
+    weight_target: float = 1.0,
     n_quad_ref: Annotated[int | None, Parameter(name=("--n-reference", "--n-quad-ref"))] = None,
     device: Device = _DEFAULT_DEVICE,
     n_solve: Values | None = None,
@@ -127,6 +191,12 @@ def accuracy(
 
     Parameters
     ----------
+    objective : Literal["point", "cloaking"]
+        Minimize the total field at the target(s), optionally with the scattering cross section.
+    target : Points or None
+        Comma-separated coordinates x1,y1,x2,y2,...; defaults depend on the objective.
+    weight_target : float
+        Weight of the mean squared total field at the target points.
     n_quad_ref : int or None
         Reference parameter; defaults to 1.5 times the largest study parameter, rounded up.
     device : Device
@@ -143,24 +213,21 @@ def accuracy(
         Enable debug logging.
 
     """
-    namespace = _namespace(device)
-    default_values = [2**power for power in range(1, _N_SOLVE.bit_length())]
-    if not default_values or default_values[-1] != _N_SOLVE:
-        default_values.append(_N_SOLVE)
+    config = _configuration(objective, device=device, target=target)
+    default_solve = config.pop("n_solve")
+    config.pop("mode_counts")
+    default_values = [2**power for power in range(1, default_solve.bit_length())]
+    if not default_values or default_values[-1] != default_solve:
+        default_values.append(default_solve)
     path = pathlib.Path(f"accuracy/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     example_accuracy(
+        **config,
         path=path,
-        centers=namespace.asarray(_CENTERS, dtype=namespace.float64, device=device),
-        k=_K,
-        alpha=_ALPHA,
-        eta=_ETA,
-        target_point=_TARGET_POINT,
-        desired_total_field=_DESIRED_TOTAL_FIELD,
+        weight_target=weight_target,
         n_solve=n_solve.values if n_solve is not None else default_values,
         n_quad=n_quad.values if n_quad is not None else default_values,
         n_reference=n_quad_ref,
         step=step,
-        n_modes=_N_MODES,
         seed=seed,
     )
     LOG.info("Saved accuracy studies to %s", path)
@@ -206,15 +273,33 @@ def plot_optimize(*, path: pathlib.Path | None = None, verbose: bool = False) ->
 
     """
     root = path if path is not None else pathlib.Path("optimization")
-    groups = {
-        file.parent.parent if file.parent.name.startswith("n_modes_") else file.parent
-        for file in root.rglob("optimization_history.json")
-    }
+    if not root.is_dir():
+        LOG.warning("No optimization directory found: %s", root)
+        return
+    groups = set()
+    for file in root.rglob("optimization_history.json"):
+        group = file.parent
+        if group.name.startswith("n_modes_"):
+            group = group.parent
+        if group.name.startswith("alpha_reg_"):
+            group = group.parent
+        groups.add(group)
     for group in sorted(groups):
-        if any(group.glob("*.svg")):
+        if all(
+            (group / name).is_file()
+            for name in (
+                "optimized_shape.svg",
+                "optimized_coefficients.svg",
+                "optimization_history.svg",
+            )
+        ):
             continue
-        cases = [file.parent for file in group.glob("n_modes_*/optimization_history.json")] or [
-            group
+        cases = [
+            file.parent
+            for file in group.rglob("optimization_history.json")
+            if file.parent == group
+            or file.parent.parent == group
+            or file.parent.parent.parent == group
         ]
         if any(not all((case / name).is_file() for name in _JSON_FILES) for case in cases):
             LOG.warning("Incomplete optimization data in %s", group)

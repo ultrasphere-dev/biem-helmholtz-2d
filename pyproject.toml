@@ -106,6 +106,7 @@ lint.isort.known-first-party = [ "biem_helmholtz_2d", "tests" ]
 [tool.pytest.ini_options]
 addopts = """\
     -v
+    -n auto
     -Wdefault
     --cov=biem_helmholtz_2d
     --cov-report=term

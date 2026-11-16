@@ -6,7 +6,11 @@ import pytest
 from array_api.latest import ArrayNamespace
 
 from biem_helmholtz_2d.cli import app
-from biem_helmholtz_2d.optimization._example import example_optimization, project_coefficients
+from biem_helmholtz_2d.optimization._example import (
+    _two_way_backtracking,
+    example_optimization,
+    project_coefficients,
+)
 
 
 @pytest.mark.parametrize("n_scatterers", [1, 2])
@@ -22,6 +26,9 @@ def test_optimization(
             example_optimization(
                 k=1,
                 centers=centers,
+                target=xp.asarray([[-2, 3]], dtype=dtype, device=device),
+                weight_target=1.0,
+                include_cross_section=False,
                 n_modes=n_modes,
                 n_steps=2,
                 alpha=1,
@@ -48,20 +55,91 @@ def test_optimization(
             assert bool(xp.all(xp.sum(xp.sqrt(cos**2 + sin**2), axis=-1) <= 1 + 1e-12))
             if n_modes == 3:
                 parameters.append(xp.stack([cos, sin]))
-        app(
-            ["plot-optimize", "--path", str(path)],
-            exit_on_error=False,
-            result_action="return_value",
-        )
-        figures = list(path.rglob("*.svg"))
-        assert {figure.name for figure in figures} == {
-            f"optimized_shape_{alpha_reg}.svg",
-            f"optimized_coefficients_{alpha_reg}.svg",
-            f"optimization_history_{alpha_reg}.svg",
-        }
-        for figure in figures:
-            assert all(f"{n_modes} modes" in figure.read_text() for n_modes in (2, 3, 4))
+        (path / "old-plot.svg").write_text("preserve")
+    app(
+        ["plot-optimize", "--path", str(tmp_path)],
+        exit_on_error=False,
+        result_action="return_value",
+    )
+    figures = list(tmp_path.glob("*.svg"))
+    assert {figure.name for figure in figures} == {
+        "optimized_shape.svg",
+        "optimized_coefficients.svg",
+        "optimization_history.svg",
+    }
+    for figure in figures:
+        text = figure.read_text()
+        assert all(f"{n_modes} modes" in text for n_modes in (2, 3, 4))
+        assert all(f"alpha={alpha}" in text for alpha in ("0", "0.1"))
+    coefficients = (tmp_path / "optimized_coefficients.svg").read_text()
+    for body in range(n_scatterers):
+        assert all(f"Body {body + 1} |{component}|" in coefficients for component in ("cos", "sin"))
+    assert all(
+        (tmp_path / f"alpha_reg_{alpha}" / "old-plot.svg").read_text() == "preserve"
+        for alpha in (0, 0.1)
+    )
     assert bool(xp.any(xp.abs(parameters[0] - parameters[1]) > 1e-8))
+
+
+def test_cloaking_optimization(xp: ArrayNamespace, dtype: Any, device: Any, tmp_path: Path) -> None:
+    example_optimization(
+        path=tmp_path,
+        centers=xp.asarray([[0, 0], [5, 0]], dtype=dtype, device=device),
+        target=xp.asarray([[-2, 3], [2, 3]], dtype=dtype, device=device),
+        weight_target=0.7,
+        include_cross_section=True,
+        k=1,
+        alpha=1,
+        eta=1,
+        n=12,
+        n_quad=14,
+        n_modes=2,
+        n_steps=2,
+    )
+    history = json.loads((tmp_path / "optimization_history.json").read_text())
+    assert history["target"] == [[-2, 3], [2, 3]]
+    assert history["weight_target"] == pytest.approx(0.7)
+    assert history["include_cross_section"] is True
+    assert history["n"] == 12 and history["n_quad"] == 14
+    assert history["val_hist"][-1] < history["val_hist"][0]
+    assert all(b <= a for a, b in zip(history["val_hist"], history["val_hist"][1:], strict=False))
+
+
+@pytest.mark.parametrize(
+    ("start", "target", "previous_step", "expected_step"),
+    [(0, 0.135, 1, 0.125), (0, 0.135, 0.03125, 0.125), (0.8, 1.4, 1, 1)],
+)
+def test_two_way_backtracking(
+    xp: ArrayNamespace,
+    dtype: Any,
+    device: Any,
+    start: float,
+    target: float,
+    previous_step: float,
+    expected_step: float,
+) -> None:
+    x = xp.asarray([[start, 0]], dtype=dtype, device=device)
+    goal = xp.asarray([[target, 0]], dtype=dtype, device=device)
+    derivative = x - goal
+
+    def fun(candidate: Any, /) -> float:
+        return float(xp.sum((candidate - goal) ** 2) / 2)
+
+    value = fun(x)
+    result = _two_way_backtracking(
+        x,
+        fun=fun,
+        value=value,
+        derivative=derivative,
+        direction=derivative / xp.linalg.vector_norm(derivative),
+        weights=xp.ones(1, dtype=dtype, device=device),
+        step=previous_step,
+    )
+    assert result is not None
+    candidate, trial, step = result
+    assert step == pytest.approx(expected_step)
+    assert trial <= value + 0.1 * float(xp.sum(derivative * (candidate - x)))
+    assert float(xp.linalg.vector_norm(candidate)) <= 1
 
 
 @pytest.mark.parametrize(

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import math
-import pathlib
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -15,16 +15,10 @@ from ie_circle import NystromInterpolant, trapezoidal_quadrature
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from biem_helmholtz_2d._acoustic import (
-    near_field,
-    plot_near_field_prepare,
-    scattering_dirichlet,
-)
+from biem_helmholtz_2d._acoustic import plot_near_field_prepare, scattering_dirichlet
 from biem_helmholtz_2d._incident import plane_wave, plane_wave_grad
-from biem_helmholtz_2d._objective import field_objective_derivative
+from biem_helmholtz_2d._objective import field_objective, field_objective_derivative
 from biem_helmholtz_2d._pairs import off_diagonal_indices
-from biem_helmholtz_2d._potential_inner import kernel as near_kernel
-from biem_helmholtz_2d._potential_inner_derivative import kernel as near_derivative_kernel
 from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
@@ -88,10 +82,47 @@ def project_coefficients(coefficients: Array, /, *, weights: Array | None = None
     )
 
 
+def _two_way_backtracking(
+    x: Array,
+    /,
+    *,
+    fun: Callable[[Array], float],
+    value: float,
+    derivative: Array,
+    direction: Array,
+    weights: Array,
+    step: float,
+) -> tuple[Array, float, float] | None:
+    """Find a projected Armijo step, starting from the previous step size."""
+    xp = array_namespace(x, derivative, direction, weights)
+    best = None
+    shrinking = False
+    while step >= xp.finfo(x.dtype).eps:
+        candidate = project_coefficients(x - step * direction, weights=weights)
+        slope = float(xp.sum(derivative * (candidate - x)))
+        if not math.isfinite(slope) or slope >= 0:
+            break
+        trial = fun(candidate)
+        if math.isfinite(trial) and trial <= value + 0.1 * slope:
+            best = candidate, trial, step
+            if shrinking or step >= 1:
+                break
+            step = min(2 * step, 1)
+        else:
+            if best is not None:
+                break
+            shrinking = True
+            step /= 2
+    return best
+
+
 def example_optimization(
     *,
     path: Path,
     centers: Array,
+    target: Array,
+    weight_target: float,
+    include_cross_section: bool,
     k: complex,
     alpha: complex,
     eta: complex,
@@ -102,12 +133,12 @@ def example_optimization(
     alpha_reg: float = 0.1,
     k_reg: int = 3,
     desired_total_field: complex = 0j,
-    target_point: tuple[float, float] = (-2, 3),
 ) -> None:
     r"""
     Example optimization using regularized projected gradient descent.
 
-    Minimizes $|u_{\mathrm{total}}(x_0) - c|^2$ subject to
+    Minimizes the mean squared total-field error at ``target``, optionally
+    adding the scattering cross section, subject to
     $\sum \sqrt{a_n^2 + b_n^2} \le 1$, where
     $u_{\mathrm{total}} = u_{\mathrm{scat}} + u_{\mathrm{inc}}$.
     The constant Fourier coefficient is fixed to $1$ on each body. The
@@ -146,18 +177,22 @@ def example_optimization(
     k_reg : int
         Sobolev exponent $k$. $H_{2\pi}^3(\mathbb{R}) \subset C_{2\pi}^2(\mathbb{R})$.
     desired_total_field : complex
-        Desired total field value $c$ at $x_0$.
+        Desired total field value $c$ at each target.
     k : complex
         The wave number.
     alpha : complex
         The coupling parameter for the double-layer potential.
     eta : complex
         The coupling parameter for the single-layer potential.
-    target_point : tuple[float, float]
-        The point $x_0$ at which the total field is minimized.
+    target : Array
+        Observation points of shape (n_targets, 2).
+    weight_target : float
+        Weight of the mean squared point-field error.
+    include_cross_section : bool
+        Include the scattering cross section in the objective.
 
     """
-    xp = array_namespace(centers)
+    xp = array_namespace(centers, target)
     if n_quad is None:
         n_quad = n
     if n < 1 or n_quad < 1:
@@ -179,18 +214,20 @@ def example_optimization(
     )
     if bool(xp.any(separation <= 4)):
         raise ValueError("centers must be separated by more than 4")
+    if target.ndim != 2 or target.shape[0] == 0 or target.shape[1] != 2:
+        raise ValueError("target must have shape (n_targets, 2) with n_targets > 0")
+    if not xp.isdtype(target.dtype, "real floating") or not bool(xp.all(xp.isfinite(target))):
+        raise ValueError("target must contain finite real floating-point coordinates")
+    if bool(xp.any(xp.linalg.vector_norm(centers[None, :, :] - target[:, None, :], axis=-1) <= 2)):
+        raise ValueError("each target must be more than 2 from every center")
+    if not math.isfinite(weight_target) or weight_target < 0:
+        raise ValueError("weight_target must be finite and nonnegative")
+    if include_cross_section and desired_total_field != 0:
+        raise ValueError("the cloaking objective minimizes the total field itself")
     path.mkdir(parents=True, exist_ok=True)
     k = xp.asarray(k, device=device, dtype=xp.result_type(dtype, k))
     eta = xp.asarray(eta, device=device, dtype=xp.result_type(dtype, eta))
     alpha = xp.asarray(alpha, device=device, dtype=xp.result_type(dtype, alpha))
-    point = xp.asarray(target_point, device=device, dtype=dtype)
-    check_shapes("D,D", point, (2,), names="target_point,coordinate_dimension")
-    if point.shape[-1] != 2:
-        raise ValueError("target_point must contain two coordinates")
-    if not bool(xp.all(xp.isfinite(point))):
-        raise ValueError("target_point must contain finite coordinates")
-    if bool(xp.any(xp.linalg.vector_norm(centers - point, axis=-1) <= 2)):
-        raise ValueError("target_point must be more than 2 from every center")
     direction = xp.asarray([1, 0], device=device, dtype=dtype)
     incident_field = plane_wave(k, direction)
     incident_field_grad = plane_wave_grad(k, direction)
@@ -227,24 +264,33 @@ def example_optimization(
         cos, sin = unpack(x)
         return ParameterShape(cos_coefs=cos, sin_coefs=sin, center=centers)
 
-    def solve(x: Array, /) -> tuple[ParameterShape, NystromInterpolant, Array]:
+    def evaluate(x: Array, /) -> tuple[ParameterShape, NystromInterpolant, Array, Any]:
         shapes = make_shapes(x)
         phi = scattering_dirichlet(
             k=k, shape=shapes, incident_field=incident_field, alpha=alpha, eta=eta, n=n
         )
-        field = near_field(phi, point, k=k, shape=shapes, n=n_quad, alpha=alpha, eta=eta)
-        return shapes, phi, field
-
-    target = desired_total_field - incident_field(point)
+        value, terms = field_objective(
+            phi,
+            target=target,
+            weight_target=weight_target,
+            include_cross_section=include_cross_section,
+            shape=shapes,
+            incident_field=incident_field,
+            k=k,
+            alpha=alpha,
+            eta=eta,
+            n_quad=n_quad,
+            desired_total_field=desired_total_field,
+        )
+        return shapes, phi, value, terms
 
     def fun(x: Array, /) -> float:
-        _, _, field = solve(x)
-        return float(xp.abs(field - target) ** 2)
+        return float(evaluate(x)[2])
 
     def jac(x: Array, /) -> Array:
         if n_modes == 0:
             return xp.zeros_like(x)
-        shapes, phi, field = solve(x)
+        shapes, phi, _, terms = evaluate(x)
         t, _ = trapezoidal_quadrature(
             n_quad,
             xp=xp,
@@ -253,8 +299,7 @@ def example_optimization(
         )
         _, directional = field_objective_derivative(
             phi,
-            point[None, :],
-            (2 * (field - target))[None],
+            terms,
             shape=shapes,
             incident_gradient=incident_field_grad(shapes.x(t)),
             k=k,
@@ -262,8 +307,6 @@ def example_optimization(
             eta=eta,
             n_solve=n,
             n_quad=n_quad,
-            kernel=near_kernel,
-            derivative_kernel=near_derivative_kernel,
         )
 
         return xp.moveaxis(
@@ -281,6 +324,7 @@ def example_optimization(
     pbar.set_postfix_str("initial solve")
     value = fun(x)
     val_hist = [value]
+    step = 1.0
     for _ in pbar:
         pbar.set_postfix_str(f"objective={value:.3e}, gradient")
         derivative = jac(x)
@@ -291,23 +335,21 @@ def example_optimization(
         # Project in the same Hilbert metric as the Riesz direction. This
         # preserves descent even at an active constraint.
         direction = riesz / norm
-        step = 1.0
-        while step >= xp.finfo(dtype).eps:
-            pbar.set_postfix_str(f"objective={value:.3e}, line search={step:.2g}")
-            candidate = project_coefficients(x - step * direction, weights=weights)
-            slope = float(xp.sum(derivative * (candidate - x)))
-            if slope >= 0:
-                break
-            trial = fun(candidate)
-            if math.isfinite(trial) and trial <= value + 1e-4 * slope:
-                x, value = candidate, trial
-                val_hist.append(value)
-                break
-            step /= 2
-        else:
+        pbar.set_postfix_str(f"objective={value:.3e}, line search")
+        accepted = _two_way_backtracking(
+            x,
+            fun=fun,
+            value=value,
+            derivative=derivative,
+            direction=direction,
+            weights=weights,
+            step=step,
+        )
+        if accepted is None:
             break
-        if slope >= 0:
-            break
+        x, value, step = accepted
+        val_hist.append(value)
+        pbar.set_postfix_str(f"objective={value:.3e}, step={step:.2g}")
 
     cos_coefs_opt, sin_coefs_opt = unpack(x)
     shapes_opt = make_shapes(x)
@@ -331,7 +373,9 @@ def example_optimization(
             "k_reg": k_reg,
             "n_modes": n_modes,
             "n_steps": n_steps,
-            "target_point": target_point,
+            "target": real_array_to_list(target),
+            "weight_target": weight_target,
+            "include_cross_section": include_cross_section,
             "centers": real_array_to_list(centers_cpu),
             "desired_total_field": {
                 "real": float(desired_total_field.real),
@@ -362,12 +406,12 @@ def example_optimization(
         density_opt,
         incident_field,
         xlim=(
-            min(float(xp.min(centers_cpu[:, 0])) - 2.5, target_point[0] - 1),
-            max(float(xp.max(centers_cpu[:, 0])) + 2.5, target_point[0] + 1),
+            min(float(xp.min(centers_cpu[:, 0])) - 2.5, float(xp.min(target[:, 0])) - 1),
+            max(float(xp.max(centers_cpu[:, 0])) + 2.5, float(xp.max(target[:, 0])) + 1),
         ),
         ylim=(
-            min(float(xp.min(centers_cpu[:, 1])) - 3, target_point[1] - 1),
-            max(float(xp.max(centers_cpu[:, 1])) + 3, target_point[1] + 1),
+            min(float(xp.min(centers_cpu[:, 1])) - 3, float(xp.min(target[:, 1])) - 1),
+            max(float(xp.max(centers_cpu[:, 1])) + 3, float(xp.max(target[:, 1])) + 1),
         ),
         k=k,
         shape=shapes_opt,
@@ -391,11 +435,20 @@ def example_optimization(
     (path / "optimized_near_field.json").write_bytes(orjson.dumps(field_json))
 
 
-def example_optimization_plot(path: pathlib.Path, /) -> None:
-    """Compare optimized shapes, coefficients, and histories for one regularization value."""
-    files = list(path.glob("n_modes_*/optimization_history.json"))
+def example_optimization_plot(path: Path, /) -> None:
+    """Compare regularization values and mode counts in three study-level figures."""
+    files = sorted([
+        *path.glob("alpha_reg_*/n_modes_*/optimization_history.json"),
+        *path.glob("alpha_reg_*/optimization_history.json"),
+        *path.glob("n_modes_*/optimization_history.json"),
+        *(
+            [path / "optimization_history.json"]
+            if (path / "optimization_history.json").is_file()
+            else []
+        ),
+    ])
     if not files:
-        files = [path / "optimization_history.json"]
+        raise ValueError(f"No optimization data in {path}")
     results = [
         (
             json.loads(file.read_text()),
@@ -403,71 +456,121 @@ def example_optimization_plot(path: pathlib.Path, /) -> None:
         )
         for file in files
     ]
-    results.sort(key=lambda result: result[0]["n_modes"])
-    alpha = results[0][0]["alpha_reg"]
-    if any(history["alpha_reg"] != alpha for history, _ in results):
-        raise ValueError("All runs must have the same alpha_reg")
+    alphas = sorted({history["alpha_reg"] for history, _ in results})
+    modes = sorted({history["n_modes"] for history, _ in results})
+    colors = {mode: f"C{i % 10}" for i, mode in enumerate(modes)}
+    handles = [plt.Line2D([], [], color=colors[mode], label=f"{mode} modes") for mode in modes]
     extent = json.loads((files[0].parent / "optimized_near_field.json").read_text())["utot"]["re"][
         "extent"
     ]
+    count = len(alphas)
 
     fig, axes = plt.subplots(
-        1, len(results), figsize=(4 * len(results), 3), sharex=True, sharey=True, squeeze=False
+        1, count, figsize=(4 * count, 4.5), sharex=True, sharey=True, squeeze=False
     )
-    for ax, (history, shape) in zip(axes[0], results, strict=True):
-        xs, ys = shape["x"], shape["y"]
-        if xs and isinstance(xs[0], (int, float)):
-            xs, ys = [xs], [ys]
-        for x, y in zip(xs, ys, strict=True):
-            ax.plot(x, y, color="black")
-        if "target_point" in history:
+    for column, alpha in enumerate(alphas):
+        ax = axes[0, column]
+        for history, shape in results:
+            if history["alpha_reg"] != alpha:
+                continue
+            xs, ys = shape["x"], shape["y"]
+            if xs and isinstance(xs[0], (int, float)):
+                xs, ys = [xs], [ys]
+            for x, y in zip(xs, ys, strict=True):
+                ax.plot(x, y, color=colors[history["n_modes"]])
+        history = next(history for history, _ in results if history["alpha_reg"] == alpha)
+        targets = history.get("target")
+        if targets is None:
+            targets = [history["target_point"]] if history.get("target_point") is not None else []
+        if len(targets) > 1:
+            points = np_compat.asarray(targets)
+            ax.plot(points[:, 0], points[:, 1], ".", color="black", markersize=3)
+        elif targets:
             ax.plot(
-                *history["target_point"],
+                *targets[0],
                 "X",
                 markersize=4 * plt.rcParams["lines.markersize"],
                 markerfacecolor="black",
                 markeredgewidth=2,
                 markeredgecolor="white",
             )
-        ax.set(xlim=extent[:2], ylim=extent[2:], xlabel="x", title=f"{history['n_modes']} modes")
+        ax.set(xlim=extent[:2], ylim=extent[2:], xlabel="x", title=f"alpha={alpha:g}")
         ax.set_aspect("equal")
     axes[0, 0].set_ylabel("y")
-    fig.suptitle(f"Optimized shapes (alpha={alpha})")
-    fig.tight_layout()
-    fig.savefig(path / f"optimized_shape_{alpha}.svg")
+    fig.suptitle("Optimized shapes")
+    fig.legend(handles=handles, loc="lower center", ncols=len(handles))
+    fig.tight_layout(rect=(0, 0.18, 1, 0.95))
+    destination = path / "optimized_shape.svg"
+    if not destination.exists():
+        fig.savefig(destination)
+    plt.close(fig)
+
+    n_bodies = max(
+        np_compat
+        .asarray(history["final_parameters"]["cos_coefs"])
+        .reshape(-1, history["n_modes"] + 1)
+        .shape[0]
+        for history, _ in results
+    )
+    fig, axes = plt.subplots(
+        2 * n_bodies,
+        count,
+        figsize=(4 * count, 2.5 * 2 * n_bodies),
+        sharex=True,
+        sharey="row",
+        squeeze=False,
+    )
+    for column, alpha in enumerate(alphas):
+        for history, _ in results:
+            if history["alpha_reg"] != alpha:
+                continue
+            cos = np_compat.asarray(history["final_parameters"]["cos_coefs"])
+            sin = np_compat.asarray(history["final_parameters"]["sin_coefs"])
+            if cos.ndim == 1:
+                cos, sin = cos[None, :], sin[None, :]
+            frequencies = range(1, sin.shape[1] + 1)
+            for body in range(cos.shape[0]):
+                cos_magnitude = np_compat.abs(cos[body, 1:])
+                sin_magnitude = np_compat.abs(sin[body])
+                axes[2 * body, column].semilogy(
+                    frequencies,
+                    np_compat.where(cos_magnitude > 0, cos_magnitude, np_compat.nan),
+                    "o-",
+                    color=colors[history["n_modes"]],
+                )
+                axes[2 * body + 1, column].semilogy(
+                    frequencies,
+                    np_compat.where(sin_magnitude > 0, sin_magnitude, np_compat.nan),
+                    "o-",
+                    color=colors[history["n_modes"]],
+                )
+        axes[0, column].set_title(f"alpha={alpha:g}")
+        axes[-1, column].set_xlabel("Mode number")
+    for body in range(n_bodies):
+        axes[2 * body, 0].set_ylabel(f"Body {body + 1} |cos|")
+        axes[2 * body + 1, 0].set_ylabel(f"Body {body + 1} |sin|")
+    fig.suptitle("Optimized Fourier coefficient magnitudes")
+    fig.legend(handles=handles, loc="lower center", ncols=len(handles))
+    fig.tight_layout(rect=(0, 0.04, 1, 0.96))
+    destination = path / "optimized_coefficients.svg"
+    if not destination.exists():
+        fig.savefig(destination)
     plt.close(fig)
 
     fig, axes = plt.subplots(
-        1, len(results), figsize=(4 * len(results), 3), sharex=True, sharey=True, squeeze=False
+        1, count, figsize=(4 * count, 3.5), sharex=True, sharey=True, squeeze=False
     )
-    for ax, (history, _) in zip(axes[0], results, strict=True):
-        cos = np_compat.asarray(history["final_parameters"]["cos_coefs"])
-        sin = np_compat.asarray(history["final_parameters"]["sin_coefs"])
-        if cos.ndim == 1:
-            cos, sin = cos[None, :], sin[None, :]
-        modes = range(1, sin.shape[1] + 1)
-        for i in range(cos.shape[0]):
-            ax.semilogy(
-                modes, np_compat.abs(cos[i, 1:]), "o-", color=f"C{i}", label=f"body {i + 1} cos"
-            )
-            ax.semilogy(
-                modes, np_compat.abs(sin[i]), "o--", color=f"C{i}", label=f"body {i + 1} sin"
-            )
-        ax.set(xlabel="Mode number", title=f"{history['n_modes']} modes")
-    axes[0, 0].set_ylabel("Coefficient magnitude")
-    axes[0, 0].legend()
-    fig.suptitle(f"Optimized Fourier coefficients (alpha={alpha})")
-    fig.tight_layout()
-    fig.savefig(path / f"optimized_coefficients_{alpha}.svg")
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    for history, _ in results:
-        ax.semilogy(history["val_hist"], label=f"{history['n_modes']} modes")
-    ax.set(
-        xlabel="Iteration", ylabel="Objective value", title=f"Optimization history (alpha={alpha})"
-    )
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(path / f"optimization_history_{alpha}.svg")
+    for column, alpha in enumerate(alphas):
+        ax = axes[0, column]
+        for history, _ in results:
+            if history["alpha_reg"] == alpha:
+                ax.semilogy(history["val_hist"], color=colors[history["n_modes"]])
+        ax.set(xlabel="Iteration", title=f"alpha={alpha:g}")
+    axes[0, 0].set_ylabel("Objective value")
+    fig.suptitle("Optimization history")
+    fig.legend(handles=handles, loc="lower center", ncols=len(handles))
+    fig.tight_layout(rect=(0, 0.07, 1, 0.95))
+    destination = path / "optimization_history.svg"
+    if not destination.exists():
+        fig.savefig(destination)
     plt.close(fig)
