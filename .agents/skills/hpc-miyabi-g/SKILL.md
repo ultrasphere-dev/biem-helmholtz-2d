@@ -3,6 +3,7 @@ name: hpc-miyabi-g
 description: "Usage of Miyabi-G"
 ---
 
+- **Do not do heavy operations on login node!** Use jobs to do so.
 - Documentation:
   - The document cannot be viewed without logging in to the portal and agreeing to the rules, thus you cannot web search it.
 - Specification:
@@ -15,8 +16,7 @@ description: "Usage of Miyabi-G"
   - Only use user directory inside work directory `/work/$group/$user`, where $group is the group name without `g` postfix, $user is the user id of syntax `mXXXXX` where XXXXX is 5-digit integer.
 - Connection:
   - Use ssh to connect to `$user@miyabi-g.jcahpc.jp`. Use something like tmux for persistent session.
-  - After initial log-in, OTP is requested. Since OTP cannot be reused after entered, it is safe to pass to LLM, thus ask OTP to the user. OTP is refreshed every 30 seconds so you have to hurry.
-  - The user should be using ControlMaster so that you can scp without re-entering OTPs. If not, ask the user to do so.
+  - After initial SSH login, OTP is requested. OTP is refreshed every 30 seconds. Since you are too slow to enter it, the user should be using ControlMaster and already connecting using SSH, so that you don't need to enter it. If not, ask the user to do so.
 - Programs:
   - The programs inside the HPC is outdated.
   - To use Python, use via uv. If uv is not installed, install with the uv official shell script.

@@ -17,7 +17,13 @@
       "source": "34j/skills",
       "sourceType": "github",
       "skillPath": "hpc-miyabi-g/SKILL.md",
-      "computedHash": "7187593e04ed224ff94ca59aeb0772ce873020db5a3ca89948c6bd94e642dd5a"
+      "computedHash": "c8bfd472116275e232e6837eb0e8b813cc474a4081e6e9e8012f935ad8edcc32"
+    },
+    "hpc-tsubame-4": {
+      "source": "34j/skills",
+      "sourceType": "github",
+      "skillPath": "hpc-tsubame-4/SKILL.md",
+      "computedHash": "1ea5b42a29383d1506b7dd65ded3bc70ea9baa383d47be37d185dd78fb377baa"
     },
     "python": {
       "source": "34j/skills",
