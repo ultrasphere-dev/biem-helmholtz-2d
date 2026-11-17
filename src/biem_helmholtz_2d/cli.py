@@ -80,14 +80,13 @@ def _configuration(
     if objective == "point":
         config = {
             "centers": [[-2.5, 0], [2.5, 0]],
-            "k": 5,
+            "k": 4,
             "alpha": 1,
             "eta": 1,
             "target": [[0.5, 2.5]],
             "desired_total_field": 0,
-            "n_solve": 200,
-            "n_modes": 10,
-            "mode_counts": (4, 8,12,16, 20),
+            "n_solve": 256,
+            "mode_counts": (4, 8, 12, 16, 20),
             "include_cross_section": False,
         }
     elif objective == "cloaking":
@@ -106,7 +105,6 @@ def _configuration(
             ),
             "desired_total_field": 0,
             "n_solve": 200,
-            "n_modes": 10,
             "mode_counts": (5, 10, 20),
             "include_cross_section": True,
         }
@@ -156,7 +154,6 @@ def optimize(
     path = pathlib.Path(f"optimization/{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     config = _configuration(objective, device=device, target=target)
     n_solve = config.pop("n_solve")
-    config.pop("n_modes")
     mode_counts = config.pop("mode_counts")
     for alpha_reg in (0, 1, 1e-2, 1e-4):
         for n_modes in mode_counts:
@@ -165,7 +162,7 @@ def optimize(
                 n=n_solve,
                 n_quad=n_quad,
                 n_modes=n_modes,
-                n_steps=20,
+                n_steps=100,
                 weight_target=weight_target,
                 alpha_reg=alpha_reg,
                 path=path / f"alpha_reg_{alpha_reg}" / f"n_modes_{n_modes}",
@@ -215,7 +212,7 @@ def accuracy(
     """
     config = _configuration(objective, device=device, target=target)
     default_solve = config.pop("n_solve")
-    config.pop("mode_counts")
+    n_modes = max(config.pop("mode_counts"))
     default_values = [2**power for power in range(1, default_solve.bit_length())]
     if not default_values or default_values[-1] != default_solve:
         default_values.append(default_solve)
@@ -227,6 +224,7 @@ def accuracy(
         n_solve=n_solve.values if n_solve is not None else default_values,
         n_quad=n_quad.values if n_quad is not None else default_values,
         n_reference=n_quad_ref,
+        n_modes=n_modes,
         step=step,
         seed=seed,
     )

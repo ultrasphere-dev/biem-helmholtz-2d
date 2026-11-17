@@ -76,6 +76,10 @@ def test_accuracy_and_plot(
     assert data["settings"]["n_quad"] == [3, 5]
     defaults = _configuration(objective, device=Device("cpu"), target=None)
     assert data["settings"]["centers"] == defaults["centers"].tolist()
+    assert all(
+        len(coefficients) == max(defaults["mode_counts"])
+        for coefficients in data["settings"]["coefficients"]
+    )
     expected_target = (
         [[0, 0.1], [0, 0.6], [0.3, 0.5]] if custom_target else defaults["target"].tolist()
     )
