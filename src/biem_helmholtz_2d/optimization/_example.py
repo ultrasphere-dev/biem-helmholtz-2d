@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import warnings
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -100,8 +101,20 @@ def _two_way_backtracking(
     while step >= xp.finfo(x.dtype).eps:
         candidate = project_coefficients(x - step * direction, weights=weights)
         slope = float(xp.sum(derivative * (candidate - x)))
-        if not math.isfinite(slope) or slope >= 0:
-            break
+        if not math.isfinite(slope):
+            raise FloatingPointError(f"Projected slope is not finite: {slope}")
+        if slope >= 0:
+            # Projection can round a stationary step by a few ulps.
+            scale = xp.sum(xp.abs(derivative) * (xp.abs(candidate) + xp.abs(x)))
+            roundoff = 8 * xp.finfo(x.dtype).eps * float(scale)
+            if slope > roundoff:
+                raise RuntimeError(f"Projected slope is positive: {slope}")
+            warnings.warn(
+                f"Projected slope is nonnegative ({slope}); no descent can be verified.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return best
         trial = fun(candidate)
         if math.isfinite(trial) and trial <= value + 0.1 * slope:
             best = candidate, trial, step
@@ -113,6 +126,8 @@ def _two_way_backtracking(
                 break
             shrinking = True
             step /= 2
+    if best is None:
+        raise RuntimeError("Armijo line search failed to find a decreasing step")
     return best
 
 
@@ -330,7 +345,12 @@ def example_optimization(
         derivative = jac(x)
         riesz = derivative / weights[:, None]
         norm = xp.sqrt(xp.sum(weights[:, None] * riesz**2))
-        if not bool(xp.isfinite(norm)) or not bool(norm > 0):
+        if not bool(xp.isfinite(norm)):
+            raise FloatingPointError("Optimization gradient norm is not finite")
+        if not bool(norm > 0):
+            warnings.warn(
+                "Optimization stopped: gradient norm is zero.", RuntimeWarning, stacklevel=2
+            )
             break
         # Project in the same Hilbert metric as the Riesz direction. This
         # preserves descent even at an active constraint.
