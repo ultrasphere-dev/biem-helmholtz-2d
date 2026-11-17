@@ -83,11 +83,11 @@ def _configuration(
             "k": 5,
             "alpha": 1,
             "eta": 1,
-            "target": [[0, 0]],
+            "target": [[0.5, 2.5]],
             "desired_total_field": 0,
             "n_solve": 200,
             "n_modes": 10,
-            "mode_counts": (5, 10, 20),
+            "mode_counts": (4, 8,12,16, 20),
             "include_cross_section": False,
         }
     elif objective == "cloaking":

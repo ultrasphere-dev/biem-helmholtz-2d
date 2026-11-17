@@ -93,8 +93,74 @@ def _two_way_backtracking(
     direction: Array,
     weights: Array,
     step: float,
+    tau: float,
+    c: float,
 ) -> tuple[Array, float, float] | None:
-    """Find a projected Armijo step, starting from the previous step size."""
+    r"""
+    Find a projected Armijo step using two-way backtracking.
+
+    A trial $y=P_C^W(x-sd)$ is accepted when
+    $f(y)\leq f(x)+c\,\nabla f(x)\cdot(y-x)$. The search expands an
+    accepted step or contracts a rejected step, returning the best accepted
+    trial. Expansion is capped at step size 1.
+
+    Parameters
+    ----------
+    x : Array
+        Current feasible coefficients of shape (..., M, 2).
+    fun : Callable[[Array], float]
+        Objective evaluated at coefficients of shape (..., M, 2).
+    value : float
+        Objective value at ``x``.
+    derivative : Array
+        Euclidean objective derivative of shape (..., M, 2).
+    direction : Array
+        Descent direction of shape (..., M, 2), subtracted from ``x``.
+    weights : Array
+        Positive projection metric weights of shape (M,).
+    step : float
+        Positive initial trial step, normally the previously accepted step.
+    tau : float
+        Contraction factor in $(0, 1)$; expansion divides by this factor.
+    c : float
+        Armijo sufficient-decrease coefficient in $(0, 1)$.
+
+    Returns
+    -------
+    tuple[Array, float, float] or None
+        Accepted coefficients, objective value and step, or None if no descent
+        can be verified for the projected step.
+
+    Raises
+    ------
+    ValueError
+        If ``tau`` or ``c`` is outside $(0, 1)$.
+    FloatingPointError
+        If the projected slope is not finite.
+    RuntimeError
+        If the projected slope is materially positive or the search fails.
+
+    Warns
+    -----
+    RuntimeWarning
+        If the projected slope is zero or nonnegative within roundoff.
+
+    Examples
+    --------
+    >>> _two_way_backtracking(
+    ...     np_compat.asarray([[0., 0.]]),
+    ...     fun=lambda y: float(np_compat.sum((y - np_compat.asarray([[0.2, 0.]])) ** 2) / 2),
+    ...     value=0.02, derivative=np_compat.asarray([[-0.2, 0.]]),
+    ...     direction=np_compat.asarray([[-1., 0.]]), weights=np_compat.ones(1),
+    ...     step=0.1, tau=0.5, c=1e-4,
+    ... )[2]
+    0.2
+
+    """
+    if not 0 < tau < 1:
+        raise ValueError("tau must be between 0 and 1")
+    if not 0 < c < 1:
+        raise ValueError("c must be between 0 and 1")
     xp = array_namespace(x, derivative, direction, weights)
     best = None
     shrinking = False
@@ -116,16 +182,16 @@ def _two_way_backtracking(
             )
             return best
         trial = fun(candidate)
-        if math.isfinite(trial) and trial <= value + 0.1 * slope:
+        if math.isfinite(trial) and trial <= value + c * slope:
             best = candidate, trial, step
             if shrinking or step >= 1:
                 break
-            step = min(2 * step, 1)
+            step = min(step / tau, 1)
         else:
             if best is not None:
                 break
             shrinking = True
-            step /= 2
+            step *= tau
     if best is None:
         raise RuntimeError("Armijo line search failed to find a decreasing step")
     return best
@@ -364,6 +430,8 @@ def example_optimization(
             direction=direction,
             weights=weights,
             step=step,
+            tau=0.5,
+            c=1e-4,
         )
         if accepted is None:
             break

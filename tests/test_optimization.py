@@ -81,6 +81,27 @@ def test_optimization(
     assert bool(xp.any(xp.abs(parameters[0] - parameters[1]) > 1e-8))
 
 
+def test_zero_gradient_is_reported(
+    xp: ArrayNamespace, dtype: Any, device: Any, tmp_path: Path
+) -> None:
+    with pytest.warns(RuntimeWarning, match="gradient norm is zero"):
+        example_optimization(
+            path=tmp_path,
+            centers=xp.asarray([[0, 0]], dtype=dtype, device=device),
+            target=xp.asarray([[-2, 3]], dtype=dtype, device=device),
+            weight_target=1,
+            include_cross_section=False,
+            k=1,
+            alpha=1,
+            eta=1,
+            n=4,
+            n_modes=0,
+            n_steps=1,
+        )
+    history = json.loads((tmp_path / "optimization_history.json").read_text())
+    assert len(history["val_hist"]) == 1
+
+
 def test_cloaking_optimization(xp: ArrayNamespace, dtype: Any, device: Any, tmp_path: Path) -> None:
     example_optimization(
         path=tmp_path,
@@ -106,8 +127,17 @@ def test_cloaking_optimization(xp: ArrayNamespace, dtype: Any, device: Any, tmp_
 
 
 @pytest.mark.parametrize(
-    ("start", "target", "previous_step", "expected_step"),
-    [(0, 0.135, 1, 0.125), (0, 0.135, 0.03125, 0.125), (0.8, 1.4, 1, 1)],
+    ("start", "target", "previous_step", "tau", "c", "expected_step"),
+    [
+        (0, 0.135, 1, 0.5, 1e-4, 0.25),
+        (0, 0.135, 0.03125, 0.5, 1e-4, 0.25),
+        (0, 0.135, 1, 0.5, 0.1, 0.125),
+        (0, 0.135, 0.03125, 0.5, 0.1, 0.125),
+        (0, 0.16, 1, 0.3, 1e-4, 0.3),
+        (0, 0.16, 0.027, 0.3, 1e-4, 0.3),
+        (0, 0.16, 1, 0.3, 0.1, 0.09),
+        (0.8, 1.4, 1, 0.5, 1e-4, 1),
+    ],
 )
 def test_two_way_backtracking(
     xp: ArrayNamespace,
@@ -116,6 +146,8 @@ def test_two_way_backtracking(
     start: float,
     target: float,
     previous_step: float,
+    tau: float,
+    c: float,
     expected_step: float,
 ) -> None:
     x = xp.asarray([[start, 0]], dtype=dtype, device=device)
@@ -134,12 +166,80 @@ def test_two_way_backtracking(
         direction=derivative / xp.linalg.vector_norm(derivative),
         weights=xp.ones(1, dtype=dtype, device=device),
         step=previous_step,
+        tau=tau,
+        c=c,
     )
     assert result is not None
     candidate, trial, step = result
     assert step == pytest.approx(expected_step)
-    assert trial <= value + 0.1 * float(xp.sum(derivative * (candidate - x)))
+    assert trial <= value + c * float(xp.sum(derivative * (candidate - x)))
     assert float(xp.linalg.vector_norm(candidate)) <= 1
+
+
+@pytest.mark.parametrize(
+    ("start", "gradient", "direction", "step", "error", "message"),
+    [
+        (0, float("nan"), -1, 1, FloatingPointError, "not finite"),
+        (0, float("inf"), -1, 1, FloatingPointError, "not finite"),
+        (0, 1, -1, 1, RuntimeError, "positive"),
+        (1, -1, -1, 1, RuntimeWarning, "nonnegative"),
+        (1, -1, 1, None, RuntimeWarning, "nonnegative"),
+        (0, 1, 1, 1, RuntimeError, "Armijo line search failed"),
+    ],
+)
+def test_two_way_backtracking_reports_stop(
+    xp: ArrayNamespace,
+    dtype: Any,
+    device: Any,
+    start: float,
+    gradient: float,
+    direction: float,
+    step: float | None,
+    error: type[Exception],
+    message: str,
+) -> None:
+    x = xp.asarray([[start, 0]], dtype=dtype, device=device)
+    context = (
+        pytest.warns(RuntimeWarning, match=message)
+        if error is RuntimeWarning
+        else pytest.raises(error, match=message)
+    )
+    result = None
+    with context:
+        result = _two_way_backtracking(
+            x,
+            fun=lambda candidate: float(xp.sum(candidate**2)),
+            value=0,
+            derivative=xp.asarray([[gradient, 0]], dtype=dtype, device=device),
+            direction=xp.asarray([[direction, 0]], dtype=dtype, device=device),
+            weights=xp.ones(1, dtype=dtype, device=device),
+            step=xp.finfo(dtype).eps if step is None else step,
+            tau=0.5,
+            c=1e-4,
+        )
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    ("tau", "c"),
+    [(0, 1e-4), (1, 1e-4), (float("nan"), 1e-4), (0.5, 0), (0.5, 1), (0.5, float("nan"))],
+)
+def test_two_way_backtracking_invalid_parameters(
+    xp: ArrayNamespace, dtype: Any, device: Any, tau: float, c: float
+) -> None:
+    x = xp.asarray([[0, 0]], dtype=dtype, device=device)
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        _two_way_backtracking(
+            x,
+            fun=lambda candidate: 0.0,
+            value=0,
+            derivative=x,
+            direction=x,
+            weights=xp.ones(1, dtype=dtype, device=device),
+            step=1,
+            tau=tau,
+            c=c,
+        )
 
 
 @pytest.mark.parametrize(
