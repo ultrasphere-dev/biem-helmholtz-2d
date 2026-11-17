@@ -86,7 +86,7 @@ def _configuration(
             "target": [[0.5, 2.5]],
             "desired_total_field": 0,
             "n_solve": 256,
-            "mode_counts": (4, 8, 12, 16, 20),
+            "mode_counts": (3, 6, 9, 12),
             "include_cross_section": False,
         }
     elif objective == "cloaking":
@@ -162,7 +162,7 @@ def optimize(
                 n=n_solve,
                 n_quad=n_quad,
                 n_modes=n_modes,
-                n_steps=100,
+                n_steps=25,
                 weight_target=weight_target,
                 alpha_reg=alpha_reg,
                 path=path / f"alpha_reg_{alpha_reg}" / f"n_modes_{n_modes}",
