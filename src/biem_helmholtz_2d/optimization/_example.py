@@ -582,10 +582,15 @@ def example_optimization_plot(path: Path, /) -> None:
                 markeredgewidth=2,
                 markeredgecolor="white",
             )
-        ax.set(xlim=extent[:2], ylim=extent[2:], xlabel="x", title=f"alpha={alpha:g}")
+        ax.set(
+            xlim=extent[:2],
+            ylim=extent[2:],
+            xlabel="x-coordinate",
+            title=f"Sobolev parameter alpha={alpha:g}",
+        )
         ax.set_aspect("equal")
-    axes[0, 0].set_ylabel("y")
-    fig.suptitle("Optimized shapes")
+    axes[0, 0].set_ylabel("y-coordinate")
+    fig.suptitle("Optimized scatterer boundaries")
     fig.legend(handles=handles, loc="lower center", ncols=len(handles))
     fig.tight_layout(rect=(0, 0.18, 1, 0.95))
     destination = path / "optimized_shape.svg"
@@ -632,12 +637,12 @@ def example_optimization_plot(path: Path, /) -> None:
                     "o-",
                     color=colors[history["n_modes"]],
                 )
-        axes[0, column].set_title(f"alpha={alpha:g}")
-        axes[-1, column].set_xlabel("Mode number")
+        axes[0, column].set_title(f"Sobolev parameter alpha={alpha:g}")
+        axes[-1, column].set_xlabel("Fourier mode number")
     for body in range(n_bodies):
-        axes[2 * body, 0].set_ylabel(f"Body {body + 1} |cos|")
-        axes[2 * body + 1, 0].set_ylabel(f"Body {body + 1} |sin|")
-    fig.suptitle("Optimized Fourier coefficient magnitudes")
+        axes[2 * body, 0].set_ylabel(f"Body {body + 1}: |cosine coefficient|")
+        axes[2 * body + 1, 0].set_ylabel(f"Body {body + 1}: |sine coefficient|")
+    fig.suptitle("Magnitude of optimized Fourier coefficients")
     fig.legend(handles=handles, loc="lower center", ncols=len(handles))
     fig.tight_layout(rect=(0, 0.04, 1, 0.96))
     destination = path / "optimized_coefficients.svg"
@@ -653,7 +658,7 @@ def example_optimization_plot(path: Path, /) -> None:
         for history, _ in results:
             if history["alpha_reg"] == alpha:
                 ax.semilogy(history["val_hist"], color=colors[history["n_modes"]])
-        ax.set(xlabel="Iteration", title=f"alpha={alpha:g}")
+        ax.set(xlabel="Iteration", title=f"Sobolev parameter alpha={alpha:g}")
     axes[0, 0].set_ylabel("Objective value")
     fig.suptitle("Optimization history")
     fig.legend(handles=handles, loc="lower center", ncols=len(handles))

@@ -73,7 +73,10 @@ def test_optimization(
         assert all(f"alpha={alpha}" in text for alpha in ("0", "0.1"))
     coefficients = (tmp_path / "optimized_coefficients.svg").read_text()
     for body in range(n_scatterers):
-        assert all(f"Body {body + 1} |{component}|" in coefficients for component in ("cos", "sin"))
+        assert all(
+            f"Body {body + 1}: |{component} coefficient|" in coefficients
+            for component in ("cosine", "sine")
+        )
     assert all(
         (tmp_path / f"alpha_reg_{alpha}" / "old-plot.svg").read_text() == "preserve"
         for alpha in (0, 0.1)

@@ -32,13 +32,15 @@ from biem_helmholtz_2d.optimization._shape import ParameterShape
 
 
 def test_masked_plot_is_gray() -> None:
-    fig, ax = plt.subplots()
-    field: FieldData = {
-        "uscat": {"re": {"data": [[None], [1]], "extent": [0, 1, 0, 1], "vmin": -1, "vmax": 1}}
-    }
-    plot_near_field(field, ax_uscat_re=ax)
+    fig, (ax, ax_total) = plt.subplots(1, 2)
+    entry = {"data": [[None], [1]], "extent": [0, 1, 0, 1], "vmin": -1, "vmax": 1}
+    field: FieldData = {"uscat": {"re": entry}, "utot": {"re": entry}}
+    plot_near_field(field, ax_uscat_re=ax, ax_utot_re=ax_total)
     assert tuple(ax.images[0].get_cmap().get_bad()) == to_rgba("gray")
     assert bool(ax.images[0].get_array().mask[0, 0])
+    assert ax_total.get_title() == "Real part of the total field"
+    assert ax_total.get_xlabel() == "x-coordinate"
+    assert ax_total.get_ylabel() == "y-coordinate"
     plt.close(fig)
 
 

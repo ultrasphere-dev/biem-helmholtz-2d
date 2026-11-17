@@ -85,7 +85,7 @@ def test_accuracy_and_plot(
     assert data["settings"]["weight_target"] == pytest.approx(0.7 if custom_target else 1)
     assert data["settings"]["include_cross_section"] is (objective == "cloaking")
     assert data["total_field"]["extent"] == pytest.approx(
-        [-5, 5, -3, 3] if objective == "point" else [-5.7, 5.7, -6.2, 6.2]
+        [-5, 5, -3, 3.5] if objective == "point" else [-5.7, 5.7, -6.2, 6.2]
     )
     assert len(data["central_difference"]["steps"]) == 7
     assert len(data["central_difference"]["values"]) == 7
@@ -98,12 +98,25 @@ def test_accuracy_and_plot(
     assert all((directory / name).is_file() for name in figures)
     invoke(["plot-accuracy", "--path", str(directory)])
     assert all((directory / name).is_file() for name in figures)
+    scattered = (directory / "scattered_field.svg").read_text()
+    title = (
+        "Maximum scattered-field difference over targets"
+        if len(expected_target) > 1
+        else "Scattered-field difference at the target"
+    )
+    assert title in scattered
+    assert "reference: solve and integration $n=8$" in scattered
+    assert "Integration parameter $n$ ($2n-1$ nodes)" in scattered
+    assert "Real part of the total field" in (directory / "total_field.svg").read_text()
+    central = (directory / "highest_mode" / "central_difference.svg").read_text()
+    assert "Central-difference validation: highest Fourier mode" in central
+    assert "Finite-difference step size $h$" in central
 
 
 def test_configurations() -> None:
     point = _configuration("point", device=Device("cpu"), target=None)
     cloak = _configuration("cloaking", device=Device("cpu"), target=None)
-    assert point["target"].tolist() == [[0, 0]]
+    assert point["target"].tolist() == [[0.5, 2.5]]
     centers, targets = cloak["centers"], cloak["target"]
     assert len(centers) == 4 and len(targets) == 16
     assert min(dist(a, b) for a, b in combinations(centers, 2)) > 4

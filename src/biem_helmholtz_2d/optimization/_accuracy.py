@@ -289,6 +289,7 @@ def example_accuracy_plot(path: Path, /) -> None:
         return
     settings = data["settings"]
     n_solve, n_quad = settings["n_solve"], settings["n_quad"]
+    reference_label = f"reference: solve and integration $n={settings['n_reference']}$"
 
     def error_plot(values: Any, reference: Any, title: str, destination: Path) -> None:
         fig, ax = plt.subplots()
@@ -298,15 +299,15 @@ def example_accuracy_plot(path: Path, /) -> None:
             errors = np_compat.abs(np_compat.asarray(sampled_values) - reference)
             if errors.ndim > 1:
                 errors = np_compat.max(errors, axis=tuple(range(1, errors.ndim)))
-            ax.loglog(orders, np_compat.maximum(errors, 1e-300), "o-", label=f"solve n={solve}")
+            ax.loglog(orders, np_compat.maximum(errors, 1e-300), "o-", label=f"n = {solve}")
         ticks = sorted(set(n_quad))
         ax.set_xticks(ticks, [str(n) for n in ticks])
         ax.xaxis.set_minor_locator(NullLocator())
-        ax.set_xlabel("Integration n (2n-1 nodes)")
-        ax.set_ylabel("Absolute error vs. numerical reference")
-        ax.set_title(title)
+        ax.set_xlabel(r"Integration parameter $n$ ($2n-1$ nodes)")
+        ax.set_ylabel("Absolute difference from reference")
+        ax.set_title(f"{title}\n({reference_label})")
         ax.grid(True, which="both", alpha=0.3)
-        ax.legend()
+        ax.legend(title="Solve parameter")
         fig.tight_layout()
         fig.savefig(destination)
         plt.close(fig)
@@ -319,18 +320,23 @@ def example_accuracy_plot(path: Path, /) -> None:
     field_values = np_compat.asarray(field_values["real"]) + 1j * np_compat.asarray(
         field_values["imag"]
     )
-    title = "Scattered field (max over targets)" if field_reference.size > 1 else "Scattered field"
+    title = (
+        "Maximum scattered-field difference over targets"
+        if field_reference.size > 1
+        else "Scattered-field difference at the target"
+    )
     error_plot(field_values, field_reference, title, path / "scattered_field.svg")
     derivative_reference = np_compat.asarray(data["derivative"]["reference"])
     derivative_values = np_compat.asarray(data["derivative"]["values"])
     central = np_compat.asarray(data["central_difference"]["values"])
-    for index, case in enumerate(("highest_mode", "random")):
+    cases = (("highest_mode", "highest Fourier mode"), ("random", "random perturbation"))
+    for index, (case, case_label) in enumerate(cases):
         directory = path / case
         directory.mkdir(exist_ok=True)
         error_plot(
             derivative_values[..., index],
             derivative_reference[index],
-            f"Objective shape derivative: {case}",
+            f"Objective-derivative difference: {case_label}",
             directory / "shape_derivative.svg",
         )
         fig, ax = plt.subplots()
@@ -341,10 +347,11 @@ def example_accuracy_plot(path: Path, /) -> None:
             ),
             "o-",
         )
-        ax.set_xlabel("Central-difference step")
+        ax.set_xlabel(r"Finite-difference step size $h$")
         ax.set_ylabel("Absolute difference from reference adjoint")
-        ax.set_title(f"Central difference: {case}")
-        ax.grid(True, which="both", alpha=0.3)
+        ax.set_title(f"Central-difference validation: {case_label}\n({reference_label})")
+        ax.grid(True, which="major", alpha=0.3)
+        ax.grid(True, which="minor", alpha=0.1)
         fig.tight_layout()
         fig.savefig(directory / "central_difference.svg")
         plt.close(fig)

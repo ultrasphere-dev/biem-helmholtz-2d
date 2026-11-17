@@ -154,14 +154,14 @@ FieldEntry = Mapping[str, Any]
 FieldData = Mapping[FieldKind, Mapping[FieldComponent, FieldEntry]]
 
 _FIELD_NAMES: dict[FieldKind, str] = {
-    "uin": "Incident",
-    "uscat": "Scattered",
-    "utot": "Total",
+    "uin": "incident",
+    "uscat": "scattered",
+    "utot": "total",
 }
 _COMPONENT_NAMES: dict[FieldComponent, str] = {
-    "re": "real part",
-    "im": "imaginary part",
-    "abs": "amplitude",
+    "re": "Real part",
+    "im": "Imaginary part",
+    "abs": "Magnitude",
 }
 
 
@@ -376,10 +376,10 @@ def plot_near_field(
             vmin=entry["vmin"],
             vmax=entry["vmax"],
         )
-        plt.colorbar(im, ax=ax)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_title(f"{_FIELD_NAMES[key[0]]} field {_COMPONENT_NAMES[key[1]]}")
+        plt.colorbar(im, ax=ax, label=_COMPONENT_NAMES[key[1]])
+        ax.set_xlabel("x-coordinate")
+        ax.set_ylabel("y-coordinate")
+        ax.set_title(f"{_COMPONENT_NAMES[key[1]]} of the {_FIELD_NAMES[key[0]]} field")
 
 
 def _field_quadrature(
