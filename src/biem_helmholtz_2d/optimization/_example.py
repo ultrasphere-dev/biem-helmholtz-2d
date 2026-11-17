@@ -524,7 +524,7 @@ def example_optimization(
 
 
 def example_optimization_plot(path: Path, /) -> None:
-    """Compare regularization values and mode counts in three study-level figures."""
+    """Compare regularization values and mode counts in study-level figures."""
     files = sorted([
         *path.glob("alpha_reg_*/n_modes_*/optimization_history.json"),
         *path.glob("alpha_reg_*/optimization_history.json"),
@@ -667,3 +667,83 @@ def example_optimization_plot(path: Path, /) -> None:
     if not destination.exists():
         fig.savefig(destination)
     plt.close(fig)
+
+    destination = path / "optimized_total_field.svg"
+    if not destination.exists():
+        fields = sorted(
+            (
+                (
+                    history,
+                    shape,
+                    json.loads((file.parent / "optimized_near_field.json").read_text())["utot"][
+                        "re"
+                    ],
+                )
+                for file, (history, shape) in zip(files, results, strict=True)
+            ),
+            key=lambda item: (item[0]["alpha_reg"], item[0]["n_modes"]),
+        )
+        columns = len(modes)
+        rows = (len(fields) + columns - 1) // columns
+        fig, axes = plt.subplots(
+            rows,
+            columns,
+            figsize=(3.4 * columns, 2.5 * rows),
+            sharex=True,
+            sharey=True,
+            squeeze=False,
+            layout="constrained",
+        )
+        vmax = max(max(abs(field["vmin"]), abs(field["vmax"])) for _, _, field in fields)
+        cmap = plt.get_cmap("seismic").with_extremes(bad="gray")
+        for index, (history, shape, field) in enumerate(fields):
+            row, column = divmod(index, columns)
+            ax = axes[row, column]
+            image = ax.imshow(
+                np_compat.asarray(field["data"], dtype=np_compat.float64).T,
+                extent=field["extent"],
+                origin="lower",
+                cmap=cmap,
+                vmin=-vmax,
+                vmax=vmax,
+            )
+            xs, ys = shape["x"], shape["y"]
+            if xs and isinstance(xs[0], (int, float)):
+                xs, ys = [xs], [ys]
+            for x, y in zip(xs, ys, strict=True):
+                ax.plot(x, y, color="black", linewidth=0.8)
+            targets = history.get("target")
+            if targets is None:
+                targets = (
+                    [history["target_point"]] if history.get("target_point") is not None else []
+                )
+            if targets:
+                points = np_compat.asarray(targets)
+                ax.plot(
+                    points[:, 0],
+                    points[:, 1],
+                    "x",
+                    color="yellow",
+                    markersize=8 if len(targets) == 1 else 4,
+                )
+            ax.set_title(f"alpha={history['alpha_reg']:g}, {history['n_modes']} modes")
+            if column == 0:
+                ax.set_ylabel("y-coordinate")
+            if index + columns >= len(fields):
+                ax.set_xlabel("x-coordinate")
+        for ax in axes.flat[len(fields) :]:
+            ax.set_visible(False)
+        axes[0, 0].set(
+            xlim=(
+                min(field["extent"][0] for _, _, field in fields),
+                max(field["extent"][1] for _, _, field in fields),
+            ),
+            ylim=(
+                min(field["extent"][2] for _, _, field in fields),
+                max(field["extent"][3] for _, _, field in fields),
+            ),
+        )
+        fig.suptitle("Real part of the optimized total field")
+        fig.colorbar(image, ax=axes.ravel().tolist(), label="Real part")
+        fig.savefig(destination)
+        plt.close(fig)

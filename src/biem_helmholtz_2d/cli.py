@@ -289,6 +289,7 @@ def plot_optimize(*, path: pathlib.Path | None = None, verbose: bool = False) ->
                 "optimized_shape.svg",
                 "optimized_coefficients.svg",
                 "optimization_history.svg",
+                "optimized_total_field.svg",
             )
         ):
             continue

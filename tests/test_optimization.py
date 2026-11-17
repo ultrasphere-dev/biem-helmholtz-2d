@@ -66,11 +66,23 @@ def test_optimization(
         "optimized_shape.svg",
         "optimized_coefficients.svg",
         "optimization_history.svg",
+        "optimized_total_field.svg",
     }
     for figure in figures:
         text = figure.read_text()
         assert all(f"{n_modes} modes" in text for n_modes in (2, 3, 4))
         assert all(f"alpha={alpha}" in text for alpha in ("0", "0.1"))
+    total_field = tmp_path / "optimized_total_field.svg"
+    assert total_field.read_text().count("<image ") == 7
+    existing = {figure: figure.read_bytes() for figure in figures if figure != total_field}
+    total_field.unlink()
+    app(
+        ["plot-optimize", "--path", str(tmp_path)],
+        exit_on_error=False,
+        result_action="return_value",
+    )
+    assert total_field.is_file()
+    assert all(figure.read_bytes() == contents for figure, contents in existing.items())
     coefficients = (tmp_path / "optimized_coefficients.svg").read_text()
     for body in range(n_scatterers):
         assert all(
